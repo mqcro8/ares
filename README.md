@@ -42,7 +42,7 @@ ares/
 ```
 ## Contributions
 
-| Workstream | Folders | Suggested owner |
+| Workstream | Folders | People |
 | --- | --- | --- |
 | Core | `scripts/mission`, `resource_manager`, `scripts/data`, `data/equipment`, `scenes/mission_planning` |  |
 | Minigames + input | `scripts/systems`, `scenes/minigames`, `data/failures` |  |
