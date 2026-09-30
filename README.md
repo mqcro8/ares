@@ -1,9 +1,11 @@
-Project for the Nasa Space Apps Challenge 
+# Mission: Ares
 
-We are making a game
+## Nasa Space Apps Challenge 2026
 
-Project architecture:
+We will (probably) participate in the Space Mission Design Game challenge
 
+## Architecture
+```
 ares/
 ├── project.godot, README.md
 ├── credits.md                    asset + license ledger (M0 task)
@@ -12,28 +14,39 @@ ares/
 │   ├── main_menu/ intro/ training/ mission_planning/
 │   ├── spacecraft/ transit_failure/ mars/ rover/ gateway/
 │   ├── ending/ credits/
-│   ├── minigames/                NEW: puzzle scenes that stages launch
-│   └── ui/                       NEW: dialogue overlay, HUD, failure screen
+│   ├── minigames/                puzzle scenes that stages launch
+│   └── ui/                       dialogue overlay, HUD, failure screen
 │
 ├── scripts/
 │   ├── player/  rover/
-│   ├── stages/                   NEW: one controller script per stage scene
+│   ├── stages/                   one controller script per stage scene
 │   ├── mission/                  MissionState (the only autoload), MissionStage
 │   ├── resource_manager/         loadout rules + consequences, holds no state
 │   ├── systems/
 │   │   ├── minigames/            shared minigame contract
 │   │   └── input/                keyboard now, Arduino later, same interface
 │   ├── ui/
-│   └── data/                     NEW: Resource class definitions (schemas)
+│   └── data/                     Resource class definitions (schemas)
 │
 ├── data/                         .tres instances of those schemas
 │   ├── equipment/  mission_parameters/  events/
-│   └── failures/                 NEW: one per failure cause + advice line
+│   └── failures/                 one per failure cause + advice line
 │
 ├── art/
 │   ├── player/ rover/ mars/ spacecraft/ gateway/
-│   ├── cinematics/               NEW: parallax backdrops
-│   └── ui/                       NEW: retro-NASA panels, mono font
+│   ├── cinematics/               parallax backdrops
+│   └── ui/                       retro-NASA panels, mono font
 │
-├── audio/  (music/ sfx/)         NEW
-└── hardware/                     NEW, optional: Arduino firmware, .gdignore
+├── audio/  (music/ sfx/)         
+└── hardware/                     optional: Arduino firmware, .gdignore
+```
+## Contributions
+
+| Workstream | Folders | Suggested owner |
+| --- | --- | --- |
+| Core | `scripts/mission`, `resource_manager`, `scripts/data`, `data/equipment`, `scenes/mission_planning` |  |
+| Minigames + input | `scripts/systems`, `scenes/minigames`, `data/failures` |  |
+| World | `scripts/player`, `rover`, `stages`, and the Training/Spacecraft/Mars/Rover/Gateway scenes |  |
+| Shell + UI | main menu, intro, ending, credits, `scenes/ui`, `scripts/ui` |  |
+| Art | `art/`, plus assembling their own tilemap scenes | Niki + Pasaye + Eva |
+| Audio | `audio/` | Sergio + Macqro |
