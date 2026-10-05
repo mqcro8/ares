@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://s1weuggvb138" path="res://art/menu_placeholder/placeholder.jpeg" id="1_23im7"]
 [ext_resource type="Script" uid="uid://borxkqy50a0v5" path="res://scenes/main_menu/main_menu_take_3.gd" id="1_pdgn1"]
 [ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="2_pdgn1"]
+[ext_resource type="AudioStream" uid="uid://cw0ulyau3tde2" path="res://audio/music/Old Home Not Yet Built.mp3" id="4_pix2a"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pix2a"]
 texture = ExtResource("1_23im7")
@@ -40,6 +41,14 @@ shadow_size = 5
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_144r3"]
 
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_wh6rv"]
+color = Color(1, 1, 1, 1)
+thickness = 6
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_t5r01"]
+color = Color(0.17566934, 0.40769812, 1, 1)
+thickness = 6
+
 [node name="MainMenuTake3" type="Control" unique_id=725423804]
 layout_mode = 3
 anchors_preset = 15
@@ -60,7 +69,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_pix2a")
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="." unique_id=1968579550]
+[node name="MainButtons" type="VBoxContainer" parent="." unique_id=1968579550]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -74,7 +83,7 @@ offset_bottom = 206.5
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Start" type="Button" parent="VBoxContainer2" unique_id=626597286]
+[node name="Start" type="Button" parent="MainButtons" unique_id=626597286]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
@@ -89,7 +98,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_pix2a")
 text = "Start Game"
 
-[node name="Options" type="Button" parent="VBoxContainer2" unique_id=698796058]
+[node name="Options" type="Button" parent="MainButtons" unique_id=698796058]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
@@ -104,7 +113,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_bi6q1")
 text = "Options"
 
-[node name="Credits" type="Button" parent="VBoxContainer2" unique_id=71027163]
+[node name="Credits" type="Button" parent="MainButtons" unique_id=71027163]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
@@ -119,7 +128,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_a6glg")
 text = "Credits"
 
-[node name="QuitGame" type="Button" parent="VBoxContainer2" unique_id=133489492]
+[node name="QuitGame" type="Button" parent="MainButtons" unique_id=133489492]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
@@ -152,7 +161,85 @@ theme_override_font_sizes/font_size = 64
 text = "Ares
 "
 
-[connection signal="pressed" from="VBoxContainer2/Start" to="." method="_on_start_pressed"]
-[connection signal="pressed" from="VBoxContainer2/Options" to="." method="_on_options_pressed"]
-[connection signal="pressed" from="VBoxContainer2/Credits" to="." method="_on_credits_pressed"]
-[connection signal="pressed" from="VBoxContainer2/QuitGame" to="." method="_on_quit_game_pressed"]
+[node name="Options" type="Panel" parent="." unique_id=2063870885]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -229.5
+offset_top = -98.0
+offset_right = 229.5
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Options" unique_id=1974293560]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 1.5
+offset_top = 1.0
+offset_right = 1.5
+offset_bottom = 52.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 30
+text = "Options"
+horizontal_alignment = 1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="Options" unique_id=1243513045]
+position = Vector2(41, 252)
+stream = ExtResource("4_pix2a")
+volume_db = 2.0
+autoplay = true
+bus = &"Music"
+parameters/looping = false
+
+[node name="Back" type="Button" parent="Options" unique_id=2094236618]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -188.5
+offset_top = 88.0
+offset_right = 188.5
+offset_bottom = 136.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_pdgn1")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_ybbji")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_els5k")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_144r3")
+text = "Quit Game"
+
+[node name="HSlider" type="HSlider" parent="Options" unique_id=296516535]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.022000002
+anchor_top = 0.051000003
+anchor_right = 0.87900007
+anchor_bottom = 0.082
+offset_left = 47.402
+offset_top = 72.272
+offset_right = 3.038971
+offset_bottom = 137.104
+theme_override_styles/slider = SubResource("StyleBoxLine_wh6rv")
+theme_override_styles/grabber_area = SubResource("StyleBoxLine_t5r01")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxLine_t5r01")
+value = 50.0
+
+[connection signal="pressed" from="MainButtons/Start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="MainButtons/Options" to="." method="_on_options_pressed"]
+[connection signal="pressed" from="MainButtons/Credits" to="." method="_on_credits_pressed"]
+[connection signal="pressed" from="MainButtons/QuitGame" to="." method="_on_quit_game_pressed"]
+[connection signal="pressed" from="Options/Back" to="." method="_on_back_options_pressed"]

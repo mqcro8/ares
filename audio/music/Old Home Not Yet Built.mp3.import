@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cw0ulyau3tde2"
+path="res://.godot/imported/Old Home Not Yet Built.mp3-60f82854c56beeac0f85e0558fff76b4.mp3str"
+
+[deps]
+
+source_file="res://audio/music/Old Home Not Yet Built.mp3"
+dest_files=["res://.godot/imported/Old Home Not Yet Built.mp3-60f82854c56beeac0f85e0558fff76b4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

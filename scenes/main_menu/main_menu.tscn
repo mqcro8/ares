@@ -1,0 +1,68 @@
+[gd_scene format=3 uid="uid://621jmxmeuwbn"]
+
+[ext_resource type="Texture2D" uid="uid://s1weuggvb138" path="res://art/menu_placeholder/placeholder.jpeg" id="1_0ebjn"]
+[ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="1_fsom3"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wh6rv"]
+texture = ExtResource("1_0ebjn")
+modulate_color = Color(0.66162944, 0.6616294, 0.6616294, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0ebjn"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[node name="MainMenu" type="Node2D" unique_id=1795389186]
+position = Vector2(155, 170)
+
+[node name="Panel" type="Panel" parent="." unique_id=852823915]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_wh6rv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1985577915]
+offset_left = -72.5
+offset_top = -56.5
+offset_right = 72.5
+offset_bottom = 56.5
+theme_override_constants/separation = 8
+
+[node name="Button" type="Button" parent="VBoxContainer" unique_id=56855597]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_fsom3")
+theme_override_styles/normal = SubResource("StyleBoxFlat_0ebjn")
+text = "Start Game"
+
+[node name="Button2" type="Button" parent="VBoxContainer" unique_id=2064966472]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/h_separation = 0
+theme_override_fonts/font = ExtResource("1_fsom3")
+theme_override_styles/normal = SubResource("StyleBoxFlat_0ebjn")
+text = "Options"
+
+[node name="Button3" type="Button" parent="VBoxContainer" unique_id=1855808772]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/h_separation = 0
+theme_override_fonts/font = ExtResource("1_fsom3")
+theme_override_styles/normal = SubResource("StyleBoxFlat_0ebjn")
+text = "Credits"
+
+[node name="Button4" type="Button" parent="VBoxContainer" unique_id=1091107869]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/h_separation = 0
+theme_override_fonts/font = ExtResource("1_fsom3")
+theme_override_styles/normal = SubResource("StyleBoxFlat_0ebjn")
+text = "Exit Game"
