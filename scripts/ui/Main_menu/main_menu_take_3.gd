@@ -10,18 +10,14 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	pass
 
-
 func _on_start_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/intro/")
 	
 func _on_options_pressed() -> void:
-	print("options")
-
-
+	get_tree().change_scene_to_file("res://scenes/main_menu/Options.tscn")
 
 func _on_credits_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/credits/")
-
 
 func _on_quit_game_pressed() -> void:
 	get_tree().quit()

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cbip11fpgj65k"]
 
 [ext_resource type="Texture2D" uid="uid://s1weuggvb138" path="res://art/menu_placeholder/placeholder.jpeg" id="1_23im7"]
-[ext_resource type="Script" uid="uid://borxkqy50a0v5" path="res://scenes/main_menu/main_menu_take_3.gd" id="1_pdgn1"]
+[ext_resource type="Script" uid="uid://borxkqy50a0v5" path="res://scripts/ui/Main_menu/main_menu_take_3.gd" id="1_pdgn1"]
 [ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="2_pdgn1"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pix2a"]
@@ -134,17 +134,17 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_144r3")
 text = "Quit Game"
 
-[node name="Label" type="Label" parent="." unique_id=1503587382]
+[node name="Label" type="Label" parent="." unique_id=2067251723]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -96.0
-offset_top = -173.5
-offset_right = 96.0
-offset_bottom = -74.5
+offset_left = -90.0
+offset_top = -228.0
+offset_right = 102.0
+offset_bottom = -129.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("2_pdgn1")
