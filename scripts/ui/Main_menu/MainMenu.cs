@@ -4,13 +4,11 @@ namespace Ares.Ui.MainMenu;
 
 public partial class MainMenu : Control
 {
+	
+	
 	public void OnStartPressed()
 	{
-		const string introScene = "res://scenes/intro/intro.tscn";
-		if (ResourceLoader.Exists(introScene))
-			GetTree().ChangeSceneToFile(introScene);
-		else
-			GD.PushWarning("Start: intro scene not implemented yet.");
+		GetTree().ChangeSceneToFile("res://scripts/test_scene.tscn");
 	}
 
 	public void OnOptionsPressed()
