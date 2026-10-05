@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cbip11fpgj65k"]
 
 [ext_resource type="Texture2D" uid="uid://s1weuggvb138" path="res://art/menu_placeholder/placeholder.jpeg" id="1_23im7"]
-[ext_resource type="Script" uid="uid://borxkqy50a0v5" path="res://scripts/ui/Main_menu/main_menu_take_3.gd" id="1_pdgn1"]
+[ext_resource type="Script" path="res://scripts/ui/Main_menu/MainMenu.cs" id="1_pdgn1"]
 [ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="2_pdgn1"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pix2a"]
@@ -152,7 +152,7 @@ theme_override_font_sizes/font_size = 64
 text = "Ares
 "
 
-[connection signal="pressed" from="VBoxContainer2/Start" to="." method="_on_start_pressed"]
-[connection signal="pressed" from="VBoxContainer2/Options" to="." method="_on_options_pressed"]
-[connection signal="pressed" from="VBoxContainer2/Credits" to="." method="_on_credits_pressed"]
-[connection signal="pressed" from="VBoxContainer2/QuitGame" to="." method="_on_quit_game_pressed"]
+[connection signal="pressed" from="VBoxContainer2/Start" to="." method="OnStartPressed"]
+[connection signal="pressed" from="VBoxContainer2/Options" to="." method="OnOptionsPressed"]
+[connection signal="pressed" from="VBoxContainer2/Credits" to="." method="OnCreditsPressed"]
+[connection signal="pressed" from="VBoxContainer2/QuitGame" to="." method="OnQuitGamePressed"]
