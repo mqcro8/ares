@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://ifeo8e1nnc0h" path="res://art/tmp/ominous_red_ball.png" id="1_h8tc6"]
 [ext_resource type="Texture2D" uid="uid://c8020bmbiaim1" path="res://art/tmp/meowl.png" id="2_bcmv0"]
 [ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="2_j83x7"]
+[ext_resource type="PackedScene" uid="uid://qn5y7vpbblo4" path="res://scripts/Hotbar.tscn" id="4_bcmv0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oco33"]
 
@@ -12,6 +13,7 @@
 script = ExtResource("2_j83x7")
 
 [node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D" unique_id=1906779812]
+position = Vector2(0, 2)
 texture = ExtResource("2_bcmv0")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1362464775]
@@ -22,3 +24,7 @@ shape = SubResource("RectangleShape2D_oco33")
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1605711993]
 position = Vector2(55, 28)
 texture = ExtResource("1_h8tc6")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1826041075]
+
+[node name="Hotbar" parent="CanvasLayer" unique_id=1118999955 instance=ExtResource("4_bcmv0")]
