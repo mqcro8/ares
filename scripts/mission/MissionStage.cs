@@ -1,4 +1,4 @@
-namespace Ares.Mission;
+namespace ares.scripts.mission;
 
 // One value per stage scene, in playthrough order.
 public enum MissionStage
