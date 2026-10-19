@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dvxfwp2p4d1f1"
-path="res://.godot/imported/walking_front_frame_2.png-3fb9643864e43df17342e180cb92aa44.ctex"
+uid="uid://bon0e1k84xbo6"
+path="res://.godot/imported/walking_front_frame_1.png-419891c45c81745a206036668f089b5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/player/walking_front_frame_2.png"
-dest_files=["res://.godot/imported/walking_front_frame_2.png-3fb9643864e43df17342e180cb92aa44.ctex"]
+source_file="res://art/player/walking/walking_front_frame_1.png"
+dest_files=["res://.godot/imported/walking_front_frame_1.png-419891c45c81745a206036668f089b5e.ctex"]
 
 [params]
 

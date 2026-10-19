@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://b6cu1c4qklpis"]
+
+[ext_resource type="Script" uid="uid://plr7a5io0lre" path="res://scripts/systems/inventory/HotbarSlot.cs" id="13_vd7ai"]
+[ext_resource type="Texture2D" uid="uid://d3flhxnjrxj3t" path="res://art/player/inventory/hotbar-single-segment.png" id="14_wegk6"]
+[ext_resource type="Texture2D" uid="uid://be2x4skb7fd0w" path="res://art/player/inventory/selected-hotbar-single-segment.png" id="15_56p4s"]
+
+[node name="HotbarSlot" type="Control" unique_id=248818523]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("13_vd7ai")
+
+[node name="Background" type="TextureRect" parent="." unique_id=2084538901]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("14_wegk6")
+expand_mode = 1
+
+[node name="Selected" type="TextureRect" parent="." unique_id=265459055]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("15_56p4s")
+expand_mode = 1
+
+[node name="Icon" type="TextureRect" parent="." unique_id=257523280]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(2, 2)
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Count" type="Label" parent="." unique_id=1908448975]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+horizontal_alignment = 2

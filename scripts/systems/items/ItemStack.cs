@@ -1,3 +1,5 @@
+namespace ares.scripts.systems.items;
+
 using System;
 
 public class ItemStack
@@ -25,7 +27,7 @@ public class ItemStack
 		return amount - added;
 	}
 
-	// Removes up to `amount`; returns how many were actually removed.
+	/// Removes up to `amount`; returns how many were actually removed.
 	public int Remove(int amount)
 	{
 		int removed = Math.Min(amount, Count);
