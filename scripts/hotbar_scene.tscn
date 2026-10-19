@@ -6,6 +6,7 @@
 
 [node name="HotbarSlot" type="Control" unique_id=248818523]
 custom_minimum_size = Vector2(16, 16)
+custom_maximum_size = Vector2(16, 16)
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0

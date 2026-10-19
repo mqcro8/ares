@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="1_dieyc"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="2_b8bwg"]
+[ext_resource type="Script" uid="uid://dwjon8uvl1oul" path="res://scripts/systems/items/ItemData.cs" id="2_i1r08"]
+[ext_resource type="Resource" uid="uid://dwnqor12mkqb7" path="res://data/equipment/items/test_item.tres" id="3_d64md"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="3_i1r08"]
 [ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="4_d64md"]
 [ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="5_r4vgq"]
@@ -79,6 +81,7 @@ animations = [{
 [node name="CharacterBody2D" type="CharacterBody2D" unique_id=1340268917 node_paths=PackedStringArray("Hotbar")]
 script = ExtResource("1_dieyc")
 Hotbar = NodePath("HotbarLayer/Hotbar")
+StartingItems = Array[ExtResource("2_i1r08")]([ExtResource("3_d64md")])
 
 [node name="HotbarLayer" type="CanvasLayer" parent="." unique_id=1650540922]
 
