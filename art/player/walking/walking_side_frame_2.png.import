@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clqnvqpq83oyx"
-path="res://.godot/imported/walking_side_frame_1.png-0541ab469986e29aa045fa415fa6f95b.ctex"
+uid="uid://bphqxv6s1c2f7"
+path="res://.godot/imported/walking_side_frame_2.png-b8a6367480dac0df6b24aa9ea6158e3a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/player/walking_side_frame_1.png"
-dest_files=["res://.godot/imported/walking_side_frame_1.png-0541ab469986e29aa045fa415fa6f95b.ctex"]
+source_file="res://art/player/walking/walking_side_frame_2.png"
+dest_files=["res://.godot/imported/walking_side_frame_2.png-b8a6367480dac0df6b24aa9ea6158e3a.ctex"]
 
 [params]
 

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dwnqor12mkqb7"]
+
+[ext_resource type="Script" uid="uid://dwjon8uvl1oul" path="res://scripts/systems/items/ItemData.cs" id="1_bgaso"]
+[ext_resource type="Texture2D" uid="uid://ifeo8e1nnc0h" path="res://art/tmp/ominous_red_ball.png" id="1_lqwnd"]
+
+[resource]
+script = ExtResource("1_bgaso")
+Id = "test_item"
+DisplayName = "Test Item"
+Icon = ExtResource("1_lqwnd")
+metadata/_custom_type_script = "uid://dwjon8uvl1oul"

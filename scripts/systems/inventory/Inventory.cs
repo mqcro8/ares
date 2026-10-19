@@ -1,22 +1,36 @@
+namespace ares.scripts.systems.inventory;
+
 using Godot;
 using System;
+using items;
 
 [GlobalClass]
 public partial class Inventory : Resource
 {
 	[Signal] public delegate void InventoryChangedEventHandler();
 
-	public const int DefaultSlots = 6;
+	public const int DefaultSlots = 5;
 
 	private ItemStack[] _slots = new ItemStack[DefaultSlots];
 
 	public int SlotCount => _slots.Length;
+	
+	[Export(PropertyHint.Range, "1,20")]
+	public int Size
+	{
+		get => _slots.Length;
+		set
+		{
+			value = Math.Max(1, value);
+			if (value != _slots.Length) Array.Resize(ref _slots, value);
+		}
+	}
 
 	public ItemStack GetStack(int slot) => IsValidSlot(slot) ? _slots[slot] : null;
 
 	public bool IsValidSlot(int slot) => slot >= 0 && slot < _slots.Length;
 
-	public int AddItem(ItemData item, int amount = 1)
+	public int AddItem(ares.scripts.systems.items.ItemData item, int amount = 1)
 	{
 		if (item == null || amount <= 0) return amount;
 
@@ -41,7 +55,7 @@ public partial class Inventory : Resource
 		return remaining;
 	}
 
-	public int RemoveItem(ItemData item, int amount = 1)
+	public int RemoveItem(ares.scripts.systems.items.ItemData item, int amount = 1)
 	{
 		if (item == null || amount <= 0) return 0;
 
@@ -71,7 +85,7 @@ public partial class Inventory : Resource
 		return removed;
 	}
 
-	public int CountOf(ItemData item)
+	public int CountOf(ares.scripts.systems.items.ItemData item)
 	{
 		int total = 0;
 		foreach (var stack in _slots)
@@ -79,9 +93,9 @@ public partial class Inventory : Resource
 		return total;
 	}
 
-	public bool Contains(ItemData item, int amount = 1) => CountOf(item) >= amount;
+	public bool Contains(ares.scripts.systems.items.ItemData item, int amount = 1) => CountOf(item) >= amount;
 
-	public bool CanFit(ItemData item, int amount = 1)
+	public bool CanFit(ares.scripts.systems.items.ItemData item, int amount = 1)
 	{
 		int space = 0;
 		foreach (var stack in _slots)
