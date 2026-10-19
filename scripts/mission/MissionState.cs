@@ -1,6 +1,6 @@
-using Godot;
+namespace ares.scripts.mission;
 
-namespace Ares.Mission;
+using Godot;
 
 // Single source of truth for the run. Registered as an autoload.
 // Every scene reads and writes here; nothing is duplicated locally.
