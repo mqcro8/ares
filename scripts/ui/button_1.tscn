@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://chrmb1owyj1fq"]
 
 [ext_resource type="Texture2D" uid="uid://ifeo8e1nnc0h" path="res://art/tmp/ominous_red_ball.png" id="1_lifuf"]
-[ext_resource type="Script" uid="uid://vesuppl6cxst" path="res://scripts/ui/button_1.gd" id="2_gbskp"]
+[ext_resource type="Script" uid="uid://vesuppl6cxst" path="res://scripts/ui/ItemButton.cs" id="2_gbskp"]
 
 [node name="Button1" type="Button" unique_id=1485267947]
 icon = ExtResource("1_lifuf")

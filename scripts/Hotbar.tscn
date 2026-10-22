@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://qn5y7vpbblo4"]
 
-[ext_resource type="Script" uid="uid://dr2tfvtatn8p2" path="res://scripts/ui/hotbar.gd" id="1_chos7"]
+[ext_resource type="Script" uid="uid://dr2tfvtatn8p2" path="res://scripts/ui/HotbarUI.cs" id="1_chos7"]
 [ext_resource type="PackedScene" uid="uid://chrmb1owyj1fq" path="res://scripts/ui/button_1.tscn" id="2_tuwvc"]
 
 [node name="Hotbar" type="Control" unique_id=1118999955]

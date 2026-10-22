@@ -1,0 +1,190 @@
+[gd_scene format=3 uid="uid://dm2yjyn1rkp3g"]
+
+[ext_resource type="Script" uid="uid://c211la5jqn8u8" path="res://scripts/training/TrainingManager.cs" id="1_tmgr"]
+[ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="2_player"]
+[ext_resource type="Script" uid="uid://dvpwfus68hw2o" path="res://scripts/player/HandEquip.cs" id="3_hequip"]
+[ext_resource type="Script" uid="uid://dbo4eteeood0r" path="res://scripts/player/PlayerAnimation.cs" id="4_anim"]
+[ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="5_idle_front"]
+[ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="6_idle_side"]
+[ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="7_idle_back"]
+[ext_resource type="Texture2D" uid="uid://bon0e1k84xbo6" path="res://art/player/walking/walking_front_frame_1.png" id="8_walk_front_1"]
+[ext_resource type="Texture2D" uid="uid://dvxfwp2p4d1f1" path="res://art/player/walking/walking_front_frame_2.png" id="9_walk_front_2"]
+[ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="10_walk_side_1"]
+[ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="11_walk_side_2"]
+[ext_resource type="Texture2D" uid="uid://bpu38kcwp634q" path="res://art/player/walking/walking_back_frame_1.png" id="12_walk_back_1"]
+[ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="13_walk_back_2"]
+
+[sub_resource type="SpriteFrames" id="sprite_frames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_idle_front")
+}],
+"loop": 1,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_idle_side")
+}],
+"loop": 1,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_idle_back")
+}],
+"loop": 1,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_walk_front_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_walk_front_2")
+}],
+"loop": 1,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_walk_side_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_walk_side_2")
+}],
+"loop": 1,
+"name": &"walk_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("12_walk_back_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_walk_back_2")
+}],
+"loop": 1,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="rect_player"]
+size = Vector2(24, 32)
+
+[sub_resource type="RectangleShape2D" id="rect_movement_zone"]
+size = Vector2(900, 500)
+
+[node name="Training" type="Node2D" unique_id=1721182763]
+script = ExtResource("1_tmgr")
+
+[node name="player" type="CharacterBody2D" parent="." unique_id=1059767596 groups=["player"]]
+position = Vector2(400, 420)
+script = ExtResource("2_player")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player" unique_id=1566187761]
+sprite_frames = SubResource("sprite_frames_player")
+animation = &"idle_down"
+script = ExtResource("4_anim")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="player" unique_id=1965554749]
+shape = SubResource("rect_player")
+
+[node name="HandEquip" type="Node" parent="player" unique_id=855775539]
+script = ExtResource("3_hequip")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1146803784]
+position = Vector2(392, 257)
+
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=313850018]
+position = Vector2(400, 420)
+
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1300696580]
+position = Vector2(400, 500)
+
+[node name="PlatformHigh" type="StaticBody2D" parent="." unique_id=753501519]
+position = Vector2(400, 290)
+
+[node name="PlatformLow" type="StaticBody2D" parent="." unique_id=1987976112]
+position = Vector2(240, 380)
+
+[node name="ExitTrigger" type="Area2D" parent="." unique_id=2073992223]
+position = Vector2(720, 460)
+
+[node name="MovementZone" type="Area2D" parent="." unique_id=1359776434]
+position = Vector2(400, 250)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MovementZone" unique_id=883379884]
+position = Vector2(8, -2)
+shape = SubResource("rect_movement_zone")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1498423658]
+
+[node name="DialoguePanel" type="Control" parent="UI" unique_id=1474418261]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -488.0
+offset_top = -192.0
+offset_right = 152.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+metadata/_edit_use_anchors_ = true
+
+[node name="SpeakerLabel" type="Label" parent="UI/DialoguePanel" unique_id=116987471]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.0375
+anchor_top = 0.4125
+anchor_right = 0.9625
+anchor_bottom = 0.44375
+offset_top = 6.0
+offset_bottom = 24.0
+theme_override_font_sizes/font_size = 16
+metadata/_edit_use_anchors_ = true
+
+[node name="DialogueLabel" type="Label" parent="UI/DialoguePanel" unique_id=592315326]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.0125
+anchor_top = -0.1125
+anchor_right = 1.0
+anchor_bottom = 0.7875
+offset_top = 26.0
+offset_bottom = 4.0
+theme_override_font_sizes/font_size = 20
+metadata/_edit_use_anchors_ = true
+
+[node name="NextButton" type="Button" parent="UI" unique_id=958306648]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -80.0
+offset_right = -30.0
+offset_bottom = -30.0
+text = "Siguiente"
+
+[node name="ProgressLabel" type="Label" parent="UI" unique_id=958209686]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 260.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 18
+text = "Módulo: Movimiento"
+metadata/_edit_use_anchors_ = true
+
+[connection signal="body_entered" from="ExitTrigger" to="." method="OnExitTriggerEntered"]
+[connection signal="pressed" from="UI/NextButton" to="." method="OnNextPressed"]
