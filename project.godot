@@ -22,7 +22,6 @@ MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
 [display]
 
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
 
 [dotnet]
 

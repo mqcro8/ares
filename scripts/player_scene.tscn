@@ -79,6 +79,7 @@ animations = [{
 }]
 
 [node name="CharacterBody2D" type="CharacterBody2D" unique_id=1340268917 node_paths=PackedStringArray("Hotbar")]
+position = Vector2(0, -96)
 script = ExtResource("1_dieyc")
 Hotbar = NodePath("HotbarLayer/Hotbar")
 StartingItems = Array[ExtResource("2_i1r08")]([ExtResource("3_d64md")])
