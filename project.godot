@@ -8,16 +8,16 @@
 
 config_version=5
 
-[autoload]
-
-MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
-
 [application]
 
 config/name="ares"
 run/main_scene="uid://cbip11fpgj65k"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
 
 [display]
 
