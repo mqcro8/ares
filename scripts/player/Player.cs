@@ -1,4 +1,8 @@
+namespace ares.scripts.player;
+
 using Godot;
+using systems.inventory;
+using systems.items;
 
 public partial class Player : CharacterBody2D
 {
@@ -7,6 +11,24 @@ public partial class Player : CharacterBody2D
 	[Export] public float Acceleration { get; set; } = 1600f;
 
 	[Export] public float Friction { get; set; } = 1400f;
+
+	[Export] public Hotbar Hotbar { get; set; }
+
+	// NOTE TO OTHERS: Use this to set default items on your particular scenes
+	[Export] public Godot.Collections.Array<systems.items.ItemData> StartingItems { get; set; } = new();
+
+	public Inventory Inventory { get; private set; }
+
+	public override void _Ready()
+	{
+		int size = Hotbar?.SlotCount ?? Inventory.DefaultSlots;
+		Inventory = new Inventory { Size = size };
+
+		foreach (var item in StartingItems)
+			Inventory.AddItem(item);
+
+		Hotbar?.Bind(Inventory);
+	}
 
 	public override void _PhysicsProcess(double delta)
 	{
@@ -25,4 +47,7 @@ public partial class Player : CharacterBody2D
 
 		MoveAndSlide();
 	}
+
+	/// Currently selected stack
+	public ItemStack SelectedStack => Hotbar?.SelectedStack;
 }
