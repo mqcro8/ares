@@ -17,6 +17,7 @@ public partial class MissionState : Node
 	public int Energy { get; set; }
 	public int Communications { get; set; }
 	public int SpareParts { get; set; }
-
+	public int RoverImpacts { get; set; }
+ public int RoverCollisions { get; set; }
 	public override void _EnterTree() => Instance = this;
 }

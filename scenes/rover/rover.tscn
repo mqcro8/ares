@@ -1,19 +1,21 @@
-[gd_scene load_steps=4 format=3 uid="uid://dpwiqcdhlu3i"]
+﻿[gd_scene format=3 uid="uid://dpwiqcdhlu3i"]
 
 [ext_resource type="Script" uid="uid://hv0f5qhggujv" path="res://scripts/rover/Rover.cs" id="1_rover"]
 [ext_resource type="Texture2D" uid="uid://b0hu53hrxwlj6" path="res://art/rover/rover.svg" id="2_rover"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rover"]
-size = Vector2(140, 80)
+size = Vector2(20, 14)
 
 [node name="Rover" type="CharacterBody2D" unique_id=40390572]
+texture_filter = 1
 script = ExtResource("1_rover")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1906779813]
-scale = Vector2(0.2, 0.2)
+scale = Vector2(0.03, 0.03)
 texture = ExtResource("2_rover")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1362464776]
 shape = SubResource("RectangleShape2D_rover")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=570410371]
+zoom = Vector2(3, 3)
