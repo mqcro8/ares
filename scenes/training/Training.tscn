@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://bimfvp1udfbfj" path="res://art/training/tilesets/Room_Builder_free_16x16.png" id="14_38mx3"]
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="15_pixel_font"]
 [ext_resource type="Script" uid="uid://cixyklmvqo4m" path="res://scripts/training/TrainingIntro.cs" id="16_training_intro"]
-[ext_resource type="Script" uid="uid://6qprdbhhx0tm" path="res://scripts/training/TrainingCamera.gd" id="17_training_camera"]
+[ext_resource type="Script" path="res://scripts/training/TrainingCamera.cs" id="17_training_camera"]
 [ext_resource type="PackedScene" path="res://scenes/training/ControlFurniture.tscn" id="control_furniture"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5x7l7"]
@@ -1877,7 +1877,7 @@ position = Vector2(400, 300)
 zoom = Vector2(1.5, 1.5)
 process_callback = 0
 script = ExtResource("17_training_camera")
-target_path = NodePath("../Tilemaps_layers/Player")
+TargetPath = NodePath("../Tilemaps_layers/Player")
 
 [node name="Tilemaps_layers" type="Node2D" parent="." unique_id=761881211]
 y_sort_enabled = true
