@@ -1,21 +1,50 @@
-﻿[gd_scene format=3 uid="uid://dpwiqcdhlu3i"]
+[gd_scene format=3 uid="uid://dpwiqcdhlu3i"]
 
-[ext_resource type="Script" uid="uid://hv0f5qhggujv" path="res://scripts/rover/Rover.cs" id="1_rover"]
-[ext_resource type="Texture2D" uid="uid://b0hu53hrxwlj6" path="res://art/rover/rover.svg" id="2_rover"]
+[ext_resource type="Texture2D" uid="uid://b2g6bfwx03go4" path="res://art/rover/rover_idle.png" id="1_cmnbs"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rover"]
-size = Vector2(20, 14)
+[sub_resource type="AtlasTexture" id="AtlasTexture_67jln"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(0, 0, 48, 56)
 
-[node name="Rover" type="CharacterBody2D" unique_id=40390572]
-texture_filter = 1
-script = ExtResource("1_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_cdng5"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(48, 0, 48, 56)
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1906779813]
-scale = Vector2(0.03, 0.03)
-texture = ExtResource("2_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_ao5c6"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(96, 0, 48, 56)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1362464776]
-shape = SubResource("RectangleShape2D_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_d6r02"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(144, 0, 48, 56)
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=570410371]
-zoom = Vector2(3, 3)
+[sub_resource type="SpriteFrames" id="SpriteFrames_ansna"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_67jln")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cdng5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ao5c6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d6r02")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Rover" type="Node2D" unique_id=1347983366]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=717094537]
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="." unique_id=680365441]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
+sprite_frames = SubResource("SpriteFrames_ansna")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
