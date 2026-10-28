@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://cdg7uptvkotts"]
+
+[ext_resource type="Texture2D" uid="uid://b64j5ihxbt6dl" path="res://art/training/tilesets/Interiors_free_16x16.png" id="atlas"]
+
+[sub_resource type="RectangleShape2D" id="cabinet_base"]
+size = Vector2(28, 36)
+
+[node name="ControlFurniture" type="Node2D" unique_id=168706872]
+editor_description = "Control only. All visuals use original atlas at 2x; base-anchored Y-sort shares Player z=1. Keep central x352..448 clear to the south. No runtime furniture generation."
+z_index = 1
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="WestBench" type="StaticBody2D" parent="." unique_id=202270214]
+position = Vector2(688, 184)
+metadata/_edit_group_ = true
+
+[node name="NorthStatusWest" type="Sprite2D" parent="." unique_id=382214101]
+position = Vector2(216, 128)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="NorthStatusEast" type="Sprite2D" parent="." unique_id=970238071]
+position = Vector2(576, 130)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="ArchiveA2" type="StaticBody2D" parent="." unique_id=1304370752]
+position = Vector2(112, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveA2" unique_id=1417636690]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveA2" unique_id=404862288]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
+
+[node name="ArchiveB2" type="StaticBody2D" parent="." unique_id=281636858]
+position = Vector2(144, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveB2" unique_id=1401775239]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveB2" unique_id=2115249345]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
+
+[node name="ArchiveA3" type="StaticBody2D" parent="." unique_id=2095560884]
+position = Vector2(80, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveA3" unique_id=1255738129]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveA3" unique_id=1436389404]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
+
+[node name="ArchiveA4" type="StaticBody2D" parent="." unique_id=1267319240]
+position = Vector2(656, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveA4" unique_id=977059123]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveA4" unique_id=963994499]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
+
+[node name="ArchiveB3" type="StaticBody2D" parent="." unique_id=1342229857]
+position = Vector2(720, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveB3" unique_id=1405834449]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveB3" unique_id=334901388]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
+
+[node name="ArchiveA5" type="StaticBody2D" parent="." unique_id=1608919889]
+position = Vector2(688, 190)
+metadata/_edit_group_ = true
+
+[node name="Visual" type="Sprite2D" parent="ArchiveA5" unique_id=1503864061]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(192, 640, 16, 32)
+
+[node name="Base" type="CollisionShape2D" parent="ArchiveA5" unique_id=1992460258]
+position = Vector2(0, -22)
+shape = SubResource("cabinet_base")
