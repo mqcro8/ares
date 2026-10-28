@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/main_menu/MenuTheme.tres" id="1_theme"]
+
+[node name="MenuShell" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_theme")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"MenuBackground"
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.05
+anchor_top = 0.08
+anchor_right = 0.60
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel2" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Brand" type="Label" parent="Panel/Panel2"]
+layout_mode = 2
+theme_type_variation = &"MenuTitle"
+text = "ARES"
+horizontal_alignment = 1
+
+[node name="TitleRule" type="ColorRect" parent="Panel/Panel2"]
+custom_minimum_size = Vector2(72, 2)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+color = Color(0.8, 0.65, 0.4, 0.85)
+
+[node name="Label" type="Label" parent="Panel/Panel2"]
+layout_mode = 2
+theme_type_variation = &"MenuHeading"
+horizontal_alignment = 1

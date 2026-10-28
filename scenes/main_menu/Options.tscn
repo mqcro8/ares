@@ -1,141 +1,41 @@
 [gd_scene format=3 uid="uid://5m1n5mh0kfhq"]
 
-[ext_resource type="Script" path="res://scripts/ui/Main_menu/OptionsMenu.cs" id="1_wxm4j"]
-[ext_resource type="Texture2D" uid="uid://s1weuggvb138" path="res://art/menu_placeholder/placeholder.jpeg" id="2_so2rw"]
-[ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="3_p1def"]
+[ext_resource type="PackedScene" path="res://scenes/main_menu/MenuShell.tscn" id="1_shell"]
+[ext_resource type="Script" path="res://scripts/ui/Main_menu/OptionsMenu.cs" id="2_script"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pix2a"]
-texture = ExtResource("2_so2rw")
-modulate_color = Color(0.66162944, 0.6616294, 0.6616294, 1)
+[node name="Options" instance=ExtResource("1_shell")]
+script = ExtResource("2_script")
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybbji"]
-bg_color = Color(0.74470097, 0.7629745, 0.76102567, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_size = 5
+[node name="Label" parent="Panel/Panel2" index="2"]
+text = "Options"
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_els5k"]
-bg_color = Color(0.21518216, 0.21518219, 0.21518207, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hi8mu"]
-bg_color = Color(0.4849202, 0.4849202, 0.48492008, 1)
-border_color = Color(1, 1, 1, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_size = 5
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pix2a"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bi6q1"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_a6glg"]
-
-[node name="Options" type="Control" unique_id=725423804]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("1_wxm4j")
-
-[node name="Panel" type="Panel" parent="." unique_id=2087584041]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 1.0
-offset_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_pix2a")
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="." unique_id=1968579550]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -188.5
-offset_top = -48.5
-offset_right = 188.5
-offset_bottom = 206.5
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Volume" type="Button" parent="VBoxContainer2" unique_id=626597286]
+[node name="Spacer" type="Control" parent="Panel/Panel2" index="3"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("3_p1def")
-theme_override_font_sizes/font_size = 32
-theme_override_styles/normal = SubResource("StyleBoxFlat_ybbji")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_els5k")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_pix2a")
+mouse_filter = 2
+
+[node name="Volume" type="Button" parent="Panel/Panel2" index="4"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
 text = "Volume"
 
-[node name="Controls" type="Button" parent="VBoxContainer2" unique_id=698796058]
+[node name="Controls" type="Button" parent="Panel/Panel2" index="5"]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("3_p1def")
-theme_override_font_sizes/font_size = 32
-theme_override_styles/normal = SubResource("StyleBoxFlat_ybbji")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_els5k")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_bi6q1")
 text = "View controls"
 
-[node name="Back" type="Button" parent="VBoxContainer2" unique_id=71027163]
+[node name="BottomSpacer" type="Control" parent="Panel/Panel2" index="6"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("3_p1def")
-theme_override_font_sizes/font_size = 32
-theme_override_styles/normal = SubResource("StyleBoxFlat_ybbji")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_els5k")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hi8mu")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_a6glg")
+mouse_filter = 2
+
+[node name="Back" type="Button" parent="Panel/Panel2" index="7"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
 text = "Back"
 
-[node name="Label" type="Label" parent="." unique_id=1503587382]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -96.0
-offset_top = -173.5
-offset_right = 96.0
-offset_bottom = -74.5
-grow_horizontal = 2
-grow_vertical = 2
-pivot_offset = Vector2(97, 166.5)
-theme_override_fonts/font = ExtResource("3_p1def")
-theme_override_font_sizes/font_size = 64
-text = "Options
-"
-
-[connection signal="pressed" from="VBoxContainer2/Volume" to="." method="OnVolumePressed"]
-[connection signal="pressed" from="VBoxContainer2/Controls" to="." method="OnControlsPressed"]
-[connection signal="pressed" from="VBoxContainer2/Back" to="." method="OnBackPressed"]
+[connection signal="pressed" from="Panel/Panel2/Volume" to="." method="OnVolumePressed"]
+[connection signal="pressed" from="Panel/Panel2/Controls" to="." method="OnControlsPressed"]
+[connection signal="pressed" from="Panel/Panel2/Back" to="." method="OnBackPressed"]
