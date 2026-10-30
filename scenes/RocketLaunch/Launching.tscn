@@ -1,0 +1,140 @@
+[gd_scene format=3 uid="uid://b5n6gst6x8y3t"]
+
+[ext_resource type="Script" uid="uid://ds7aa53bbfo8m" path="res://scenes/RocketLaunch/Launching.cs" id="1_g8tjv"]
+[ext_resource type="Texture2D" uid="uid://62b3pgut7y3j" path="res://art/gateway/Backgrond/Background.jpeg" id="2_psju1"]
+[ext_resource type="Script" uid="uid://cg7u4gnbp7q34" path="res://scenes/RocketLaunch/Background.cs" id="3_ndnbf"]
+[ext_resource type="Script" uid="uid://ck3oagcwk1b7" path="res://scenes/RocketLaunch/Rocket.cs" id="4_umb18"]
+[ext_resource type="Texture2D" uid="uid://cnktcyxptocd1" path="res://art/rocket/fire/frame1.png" id="5_cl4yc"]
+[ext_resource type="Texture2D" uid="uid://b7yoy1nw15bte" path="res://art/rocket/fire/fire.png" id="5_umb18"]
+[ext_resource type="Texture2D" uid="uid://k1b8une8tjst" path="res://art/rocket/fire/frame2.png" id="6_1hwdt"]
+[ext_resource type="Texture2D" uid="uid://0qqd2bp0q4s7" path="res://art/rocket/fire/succes.png" id="7_8e4j1"]
+[ext_resource type="Texture2D" uid="uid://dcu2huyiae0sk" path="res://art/rocket/fire/failed.png" id="8_2faei"]
+[ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="16_wg3qb"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_y8fwy"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_umb18")
+}],
+"loop": 1,
+"name": &"ascending",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_2faei")
+}],
+"loop": 0,
+"name": &"failed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.2,
+"texture": ExtResource("5_cl4yc")
+}, {
+"duration": 1.2,
+"texture": ExtResource("6_1hwdt")
+}],
+"loop": 0,
+"name": &"ignition",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_8e4j1")
+}],
+"loop": 0,
+"name": &"success",
+"speed": 5.0
+}]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vhiws"]
+load_path = "res://.godot/imported/rocket_sprite.png-0b513722e2300f95c3f0eec6643a8593.ctex"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
+bg_color = Color(0.025, 0.04, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.48, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="RocketLaunch" type="Node2D" unique_id=1721182763]
+script = ExtResource("1_g8tjv")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
+position = Vector2(-1.1444092e-05, -662)
+scale = Vector2(1.4934896, 1.4302325)
+texture = ExtResource("2_psju1")
+script = ExtResource("3_ndnbf")
+
+[node name="Rocket" type="Node2D" parent="." unique_id=303650542]
+script = ExtResource("4_umb18")
+
+[node name="Fire" type="AnimatedSprite2D" parent="Rocket" unique_id=2030782248]
+position = Vector2(0.99999905, 255)
+scale = Vector2(1.6612902, 1.4792725)
+sprite_frames = SubResource("SpriteFrames_y8fwy")
+animation = &"success"
+
+[node name="Rocket" type="Sprite2D" parent="Rocket" unique_id=822104223]
+position = Vector2(1.1920929e-07, 54.093742)
+scale = Vector2(0.19275205, 0.21775326)
+texture = SubResource("CompressedTexture2D_vhiws")
+
+[node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
+layer = 10
+
+[node name="Panel" type="PanelContainer" parent="IntroUI" unique_id=1312481023]
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 1.0
+anchor_right = 0.92
+anchor_bottom = 1.0
+offset_left = -12.159996
+offset_top = -232.0
+offset_right = -12.160034
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
+metadata/_edit_group_ = true
+
+[node name="Margin" type="MarginContainer" parent="IntroUI/Panel" unique_id=1412846953]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="IntroUI/Panel/Margin" unique_id=1424328186]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Speaker" type="Label" parent="IntroUI/Panel/Margin/VBox" unique_id=456795757]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("16_wg3qb")
+theme_override_font_sizes/font_size = 12
+text = "CONTROL"
+
+[node name="Text" type="Label" parent="IntroUI/Panel/Margin/VBox" unique_id=515119591]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
+theme_override_font_sizes/font_size = 18
+text = "Bienvenido."
+autowrap_mode = 3
+
+[node name="Continue" type="Button" parent="IntroUI/Panel/Margin/VBox" unique_id=1098294857]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 18
+text = "Continuar"
