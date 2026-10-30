@@ -68,7 +68,7 @@ corner_radius_bottom_left = 4
 script = ExtResource("1_g8tjv")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
-position = Vector2(-1.1444092e-05, -662)
+position = Vector2(587.00006, -338)
 scale = Vector2(1.4934896, 1.4302325)
 texture = ExtResource("2_psju1")
 script = ExtResource("3_ndnbf")
@@ -77,13 +77,15 @@ script = ExtResource("3_ndnbf")
 script = ExtResource("4_umb18")
 
 [node name="Fire" type="AnimatedSprite2D" parent="Rocket" unique_id=2030782248]
-position = Vector2(0.99999905, 255)
+position = Vector2(595.00006, 512)
 scale = Vector2(1.6612902, 1.4792725)
 sprite_frames = SubResource("SpriteFrames_y8fwy")
-animation = &"success"
+animation = &"ignition"
+frame = 1
+frame_progress = 1.0
 
 [node name="Rocket" type="Sprite2D" parent="Rocket" unique_id=822104223]
-position = Vector2(1.1920929e-07, 54.093742)
+position = Vector2(593.99994, 303)
 scale = Vector2(0.19275205, 0.21775326)
 texture = SubResource("CompressedTexture2D_vhiws")
 
@@ -96,10 +98,10 @@ anchor_left = 0.08
 anchor_top = 1.0
 anchor_right = 0.92
 anchor_bottom = 1.0
-offset_left = -12.159996
-offset_top = -232.0
-offset_right = -12.160034
-offset_bottom = 8.0
+offset_left = -15.159996
+offset_top = 21.0
+offset_right = -15.160034
+offset_bottom = 261.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
