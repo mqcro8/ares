@@ -7,11 +7,13 @@ size = Vector2(48, 16)
 size = Vector2(22, 10)
 
 [node name="ControlDesk" type="StaticBody2D"]
-editor_description = "Original complete computer desk (34,779,28,30), 2x. Origin at front feet. Chair sorts independently through y_sort_enabled; collision only at furniture bases."
+editor_description = "Library scene; not placed in Training. Original desk at 2x, foot origin, independent chair Y-sort and base collisions."
 y_sort_enabled = true
 texture_filter = 1
+collision_layer = 1
+collision_mask = 0
 
-[node name="Desk" type="Sprite2D" parent="."]
+[node name="Visual" type="Sprite2D" parent="."]
 offset = Vector2(0, -15)
 scale = Vector2(2, 2)
 texture = ExtResource("1")
@@ -24,6 +26,8 @@ shape = SubResource("desk_base")
 
 [node name="Chair" type="StaticBody2D" parent="."]
 position = Vector2(0, 24)
+collision_layer = 1
+collision_mask = 0
 
 [node name="Visual" type="Sprite2D" parent="Chair"]
 position = Vector2(0, -24)

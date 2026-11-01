@@ -6,6 +6,7 @@ using Godot;
 public partial class TrainingIntro : Node2D
 {
 	[Export] public string AstronautName { get; set; } = "Commander";
+	[Export] public PhysicalTraining Course { get; set; }
 	[Export] public NodePath PlayerPath { get; set; } = "Tilemaps_layers/Player";
 	[Export] public NodePath PanelPath { get; set; } = "IntroUI/Panel";
 	[Export] public NodePath SpeakerPath { get; set; } = "IntroUI/Panel/Margin/VBox/Speaker";
@@ -20,6 +21,8 @@ public partial class TrainingIntro : Node2D
 	private bool _previousPhysicsProcessing;
 	private bool _ownsPhysicsLock;
 	private bool _active;
+	private bool _completion;
+	private bool _completionShown;
 	private int _line;
 	private ulong _lastAdvanceFrame = ulong.MaxValue;
 
@@ -37,12 +40,28 @@ public partial class TrainingIntro : Node2D
 			return;
 		}
 
-		_previousPhysicsProcessing = _player.IsPhysicsProcessing();
-		_ownsPhysicsLock = true;
-		_player.SetPhysicsProcess(false);
+		AcquirePhysicsLock();
 		_continue.Pressed += Advance;
+		if (Course != null) Course.Completed += QueueCompletion;
 		_active = true;
 		ShowLine();
+		_panel.Show();
+		_continue.GrabFocus();
+	}
+
+	private void QueueCompletion() => Callable.From(ShowCompletion).CallDeferred();
+
+	public void ShowCompletion()
+	{
+		if (!IsInsideTree() || _active || _completionShown || _panel == null || _player == null) return;
+		_completionShown = true;
+		_completion = true;
+		AcquirePhysicsLock();
+		_active = true;
+		_lastAdvanceFrame = Engine.GetProcessFrames();
+		_speaker.Text = "MISSION CONTROL";
+		_text.Text = $"Excellent work, {AstronautName}. You've cleared all three obstacles. Keep practicing at your own pace.";
+		_continue.Text = "Continue";
 		_panel.Show();
 		_continue.GrabFocus();
 	}
@@ -68,7 +87,7 @@ public partial class TrainingIntro : Node2D
 			return;
 		_lastAdvanceFrame = frame;
 		_line++;
-		if (_line < 3)
+		if (!_completion && _line < 3)
 		{
 			ShowLine();
 			return;
@@ -80,17 +99,29 @@ public partial class TrainingIntro : Node2D
 		RestorePhysics();
 	}
 
+	private void AcquirePhysicsLock()
+	{
+		_previousPhysicsProcessing = _player.IsPhysicsProcessing();
+		_ownsPhysicsLock = true;
+		_player.Velocity = Vector2.Zero;
+		_player.SetPhysicsProcess(false);
+	}
+
 	private void RestorePhysics()
 	{
 		if (!_ownsPhysicsLock)
 			return;
 		if (GodotObject.IsInstanceValid(_player))
+		{
+			if (_player is ares.scripts.player.Player player) player.TrainingMovement?.SuppressDialogueJump();
 			_player.SetPhysicsProcess(_previousPhysicsProcessing);
+		}
 		_ownsPhysicsLock = false;
 	}
 
 	public override void _ExitTree()
 	{
+		if (GodotObject.IsInstanceValid(Course)) Course.Completed -= QueueCompletion;
 		if (GodotObject.IsInstanceValid(_continue))
 			_continue.Pressed -= Advance;
 		_active = false;
