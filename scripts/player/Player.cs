@@ -6,6 +6,9 @@ using systems.items;
 
 public partial class Player : CharacterBody2D
 {
+	// Opt-in scene-local controller. Still dispatched only by this body's physics tick,
+	// so TrainingIntro's existing physics lock also blocks every training input.
+	[Export] public ares.scripts.training.TrainingMovement TrainingMovement { get; set; }
 	[Export] public float Speed { get; set; } = 200f;
 
 	[Export] public float Acceleration { get; set; } = 1600f;
@@ -32,6 +35,8 @@ public partial class Player : CharacterBody2D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		if (TrainingMovement != null && TrainingMovement.Tick(this, (float)delta))
+			return;
 		Vector2 direction = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 
 		float dt = (float)delta;

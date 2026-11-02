@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bimfvp1udfbfj"
-path="res://.godot/imported/Room_Builder_free_16x16.png-cc53a7ce1e23502e560e4c138675b5d0.ctex"
+uid="uid://deo16arm68spd"
+path="res://.godot/imported/communications_terminal.png-9453b14dc2138c33811eb88daacc81f9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/trainning/16x16/Room_Builder_free_16x16.png"
-dest_files=["res://.godot/imported/Room_Builder_free_16x16.png-cc53a7ce1e23502e560e4c138675b5d0.ctex"]
+source_file="res://art/training/operations/communications_terminal.png"
+dest_files=["res://.godot/imported/communications_terminal.png-9453b14dc2138c33811eb88daacc81f9.ctex"]
 
 [params]
 

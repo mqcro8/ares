@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://cidk991aeu3"]
+
+[ext_resource type="Script" path="res://scripts/training/PhysicalTraining.cs" id="1"]
+[ext_resource type="Script" path="res://scripts/training/TrainingHUD.cs" id="2"]
+[ext_resource type="PackedScene" uid="uid://c16gdj6jtud" path="res://scenes/training/TrainingBlock.tscn" id="block"]
+
+[node name="PhysicalTraining" type="Node2D" node_paths=PackedStringArray("Hud", "Blocks")]
+z_index = 1
+y_sort_enabled = true
+script = ExtResource("1")
+Hud = NodePath("HUD")
+Blocks = [NodePath("Block1/Base"), NodePath("Block2/Base"), NodePath("Block3/Base")]
+editor_description = "Ordered north-south footprints. Move scene instances, not script coordinates."
+
+[node name="Block1" parent="." instance=ExtResource("block")]
+position = Vector2(400, 608)
+[node name="Block2" parent="." instance=ExtResource("block")]
+position = Vector2(400, 736)
+[node name="Block3" parent="." instance=ExtResource("block")]
+position = Vector2(400, 864)
+
+[node name="HUD" type="CanvasLayer" parent="." node_paths=PackedStringArray("Stats")]
+layer = 5
+script = ExtResource("2")
+Stats = NodePath("Stamina")
+
+[node name="Stamina" type="Label" parent="HUD"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 200.0
+offset_bottom = 36.0
+mouse_filter = 2
+text = "STAMINA  100 / 100"
