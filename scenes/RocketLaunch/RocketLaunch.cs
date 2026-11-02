@@ -9,6 +9,7 @@ public partial class RocketLaunch : Node2D
 	private int clicks = 0;
 	private float elapsedTime = 0f;
 	private bool gameActive = true;
+	private bool launching = false;
 
 	private Rocket rocket;
 	private Background background;
@@ -17,6 +18,8 @@ public partial class RocketLaunch : Node2D
 	{
 		rocket = GetNode<Rocket>("Rocket");
 		background = GetNode<Background>("Background");
+
+		rocket.StartIgnition();
 	}
 
 	public override void _Process(double delta)
@@ -51,6 +54,7 @@ public partial class RocketLaunch : Node2D
 		if (clicked || pressedSpace)
 		{
 			clicks++;
+
 			GD.Print($"Thrust: {clicks}/{TargetClicks}");
 
 			if (clicks >= TargetClicks)
@@ -61,10 +65,25 @@ public partial class RocketLaunch : Node2D
 	private void SuccessfulLaunch()
 	{
 		gameActive = false;
+		launching = true;
 
-		GD.Print("ORBITAL INSERTION SUCCESSFUL!");
+		GD.Print("LAUNCH SUCCESSFUL!");
 
-		rocket.StartLaunch();
+		rocket.LaunchSuccess();
+
+		// Esperar a que termine la animación de éxito
+		rocket.GetNode<AnimatedSprite2D>("Fire")
+			.AnimationFinished += OnSuccessAnimationFinished;
+	}
+
+	private void OnSuccessAnimationFinished()
+	{
+		if (!launching)
+			return;
+
+		launching = false;
+
+		rocket.StartAscending();
 		background.BeginAscend();
 	}
 
@@ -74,6 +93,6 @@ public partial class RocketLaunch : Node2D
 
 		GD.Print("LAUNCH FAILED!");
 
-		rocket.StopLaunch();
+		rocket.LaunchFailed();
 	}
 }

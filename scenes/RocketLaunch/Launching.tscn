@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b5n6gst6x8y3t"]
 
-[ext_resource type="Script" uid="uid://ds7aa53bbfo8m" path="res://scenes/RocketLaunch/Launching.cs" id="1_g8tjv"]
+[ext_resource type="Script" uid="uid://dvlsfvnw8lu8a" path="res://scenes/RocketLaunch/RocketLaunch.cs" id="1_umb18"]
 [ext_resource type="Texture2D" uid="uid://62b3pgut7y3j" path="res://art/gateway/Backgrond/Background.jpeg" id="2_psju1"]
 [ext_resource type="Script" uid="uid://cg7u4gnbp7q34" path="res://scenes/RocketLaunch/Background.cs" id="3_ndnbf"]
 [ext_resource type="Script" uid="uid://ck3oagcwk1b7" path="res://scenes/RocketLaunch/Rocket.cs" id="4_umb18"]
@@ -65,7 +65,7 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="RocketLaunch" type="Node2D" unique_id=1721182763]
-script = ExtResource("1_g8tjv")
+script = ExtResource("1_umb18")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
 position = Vector2(587.00006, -338)
