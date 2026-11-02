@@ -1,21 +1,176 @@
-﻿[gd_scene format=3 uid="uid://dpwiqcdhlu3i"]
+[gd_scene format=3 uid="uid://dpwiqcdhlu3i"]
 
-[ext_resource type="Script" uid="uid://hv0f5qhggujv" path="res://scripts/rover/Rover.cs" id="1_rover"]
-[ext_resource type="Texture2D" uid="uid://b0hu53hrxwlj6" path="res://art/rover/rover.svg" id="2_rover"]
+[ext_resource type="Texture2D" uid="uid://bsfltenevklrt" path="res://art/rover/mars_ground.png" id="1_cdng5"]
+[ext_resource type="Texture2D" uid="uid://b2g6bfwx03go4" path="res://art/rover/rover_idle.png" id="1_cmnbs"]
+[ext_resource type="Script" uid="uid://bglo3nxj5sav6" path="res://scripts/rover/Rover_scence.cs" id="1_g0ker"]
+[ext_resource type="Texture2D" uid="uid://cq6j4avcix2aa" path="res://art/rover/track.png" id="2_67jln"]
+[ext_resource type="Script" uid="uid://hv0f5qhggujv" path="res://scripts/rover/Rover.cs" id="2_d6r02"]
+[ext_resource type="Texture2D" uid="uid://c7wlrwx8akli0" path="res://art/rover/rover_crash.png" id="4_7yjl3"]
+[ext_resource type="Script" uid="uid://bfefxrff8wlfa" path="res://scripts/rover/RoverAnimation.cs" id="4_g0ker"]
+[ext_resource type="Texture2D" uid="uid://yja1dt5e4wwh" path="res://art/rover/rover_moving.png" id="5_gx8jl"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rover"]
-size = Vector2(20, 14)
+[sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(0, 0, 48, 56)
 
-[node name="Rover" type="CharacterBody2D" unique_id=40390572]
-texture_filter = 1
-script = ExtResource("1_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_11f53"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(48, 0, 48, 56)
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1906779813]
-scale = Vector2(0.03, 0.03)
-texture = ExtResource("2_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_qf4a5"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(96, 0, 48, 56)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1362464776]
-shape = SubResource("RectangleShape2D_rover")
+[sub_resource type="AtlasTexture" id="AtlasTexture_3d2ma"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(144, 0, 48, 56)
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=570410371]
-zoom = Vector2(3, 3)
+[sub_resource type="AtlasTexture" id="AtlasTexture_r8xxj"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(192, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mprn4"]
+atlas = ExtResource("4_7yjl3")
+region = Rect2(240, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_67jln"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(0, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cdng5"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(48, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ao5c6"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(96, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d6r02"]
+atlas = ExtResource("1_cmnbs")
+region = Rect2(144, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7yjl3"]
+atlas = ExtResource("5_gx8jl")
+region = Rect2(0, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_23f2b"]
+atlas = ExtResource("5_gx8jl")
+region = Rect2(48, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_neilh"]
+atlas = ExtResource("5_gx8jl")
+region = Rect2(96, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d7bi6"]
+atlas = ExtResource("5_gx8jl")
+region = Rect2(144, 0, 48, 56)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ansna"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qvnwh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_11f53")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qf4a5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3d2ma")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r8xxj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mprn4")
+}],
+"loop": 1,
+"name": &"collision",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_67jln")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cdng5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ao5c6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d6r02")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7yjl3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_23f2b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_neilh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d7bi6")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c2x34"]
+size = Vector2(32, 36.666664)
+
+[node name="Rover" type="Node2D" unique_id=1347983366]
+script = ExtResource("1_g0ker")
+
+[node name="Sprite2D3" type="Sprite2D" parent="." unique_id=832208003]
+position = Vector2(424, -1.0000254)
+scale = Vector2(1.1796875, 2.5546875)
+texture = ExtResource("1_cdng5")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=717094537]
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="." unique_id=680365441]
+z_index = 2
+position = Vector2(0, 45)
+scale = Vector2(3, 3)
+script = ExtResource("2_d6r02")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
+position = Vector2(0, -0.665)
+sprite_frames = SubResource("SpriteFrames_ansna")
+animation = &"collision"
+script = ExtResource("4_g0ker")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
+position = Vector2(0, 2.666668)
+shape = SubResource("RectangleShape2D_c2x34")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=668632409]
+z_index = 1
+position = Vector2(-0.50003123, 8.34465e-07)
+scale = Vector2(2.5375, 2.5312502)
+texture = ExtResource("2_67jln")
+
+[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=862186647]
+position = Vector2(-424.5, 3)
+scale = Vector2(1.1679688, 2.5390625)
+texture = ExtResource("1_cdng5")
+
+[node name="Label" type="Label" parent="." unique_id=1875478735]
+z_index = 1
+offset_left = -180.0
+offset_top = 132.0
+offset_right = 185.0
+offset_bottom = 177.0
+theme_override_font_sizes/font_size = 32
+text = "Press enter to start "
+uppercase = true

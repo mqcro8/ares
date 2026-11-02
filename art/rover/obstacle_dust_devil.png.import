@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0hu53hrxwlj6"
-path="res://.godot/imported/rover.svg-7e06b65fc287c7a06cec87db16dff4f8.ctex"
+uid="uid://dtb5dufh5w0vj"
+path="res://.godot/imported/obstacle_dust_devil.png-b032718a8fc7921863e001b5920ddc77.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/rover/rover.svg"
-dest_files=["res://.godot/imported/rover.svg-7e06b65fc287c7a06cec87db16dff4f8.ctex"]
+source_file="res://art/rover/obstacle_dust_devil.png"
+dest_files=["res://.godot/imported/obstacle_dust_devil.png-b032718a8fc7921863e001b5920ddc77.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
