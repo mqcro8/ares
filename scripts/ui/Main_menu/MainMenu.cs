@@ -8,7 +8,7 @@ public partial class MainMenu : Control
 	
 	public void OnStartPressed()
 	{
-		GetTree().ChangeSceneToFile("res://scenes/intro/Training.tscn");
+		GetTree().ChangeSceneToFile("res://scenes/training/Training.tscn");
 	}
 
 	public void OnOptionsPressed()

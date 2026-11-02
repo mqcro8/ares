@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="18" viewBox="0 0 34 18" shape-rendering="crispEdges">
+<!-- Integer native-pixel shapes. Scene displays at 2x; top atlas is overlaid there. -->
+<path fill="#000000" opacity=".25" d="M2 10h32v8H2z"/>
+<path fill="#63412d" d="M0 8h32v9H0z"/>
+<path fill="#b99869" d="M0 0h32v8H0z"/>
+<path fill="#826044" d="M8 8h1v8H8zm8 0h1v8h-1zm8 0h1v8h-1z"/>
+<path fill="#372c26" d="M0 16h32v1H0z"/>
+</svg>

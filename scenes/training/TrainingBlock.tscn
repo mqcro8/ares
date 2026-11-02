@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://c16gdj6jtud"]
+
+[ext_resource type="Texture2D" path="res://art/training/gym/training_block.svg" id="wood"]
+[ext_resource type="Texture2D" path="res://art/training/gym/ts-gym_room.png" id="atlas"]
+[sub_resource type="AtlasTexture" id="wood_top"]
+atlas = ExtResource("atlas")
+region = Rect2(256, 128, 16, 8)
+[sub_resource type="RectangleShape2D" id="base"]
+size = Vector2(64, 16)
+
+[node name="TrainingBlock" type="StaticBody2D"]
+texture_filter = 1
+collision_layer = 2
+collision_mask = 0
+editor_description = "Low wooden block: 18 high, 64x16 footprint. Native pixels at 2x, half-cell wood top. Origin at front feet; Base is the only footprint source."
+
+[node name="Visual" type="Sprite2D" parent="."]
+position = Vector2(-32, -34)
+scale = Vector2(2, 2)
+centered = false
+texture = ExtResource("wood")
+
+[node name="Top" type="Sprite2D" parent="."]
+position = Vector2(-32, -34)
+scale = Vector2(2, 2)
+centered = false
+texture = SubResource("wood_top")
+
+[node name="Top2" type="Sprite2D" parent="."]
+position = Vector2(0, -34)
+scale = Vector2(2, 2)
+centered = false
+texture = SubResource("wood_top")
+
+[node name="Base" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("base")

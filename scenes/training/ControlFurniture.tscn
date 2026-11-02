@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://cdg7uptvkotts"]
+
+[ext_resource type="Texture2D" uid="uid://b64j5ihxbt6dl" path="res://art/training/tilesets/Interiors_free_16x16.png" id="atlas"]
+[ext_resource type="PackedScene" uid="uid://ch84tnr8tvq" path="res://scenes/training/ControlCabinet.tscn" id="cabinet"]
+
+[node name="ControlFurniture" type="Node2D"]
+editor_description = "Shared composition: reusable physical scenes, foot origins, Y-sort at Player z=1. Original north layout unchanged."
+z_index = 1
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="NorthStatusWest" type="Sprite2D" parent="."]
+position = Vector2(216, 128)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="NorthStatusEast" type="Sprite2D" parent="."]
+position = Vector2(576, 130)
+scale = Vector2(2, 2)
+texture = ExtResource("atlas")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="ArchiveA2" parent="." instance=ExtResource("cabinet")]
+position = Vector2(112, 190)
+[node name="ArchiveB2" parent="." instance=ExtResource("cabinet")]
+position = Vector2(144, 190)
+[node name="ArchiveA3" parent="." instance=ExtResource("cabinet")]
+position = Vector2(80, 190)
+[node name="ArchiveA4" parent="." instance=ExtResource("cabinet")]
+position = Vector2(656, 190)
+[node name="ArchiveB3" parent="." instance=ExtResource("cabinet")]
+position = Vector2(720, 190)
+[node name="ArchiveA5" parent="." instance=ExtResource("cabinet")]
+position = Vector2(688, 190)

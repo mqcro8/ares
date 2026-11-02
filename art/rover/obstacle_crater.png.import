@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0hu53hrxwlj6"
-path="res://.godot/imported/rover.svg-7e06b65fc287c7a06cec87db16dff4f8.ctex"
+uid="uid://csdw66so0ni1"
+path="res://.godot/imported/obstacle_crater.png-71093847f0d7fa7094057ae450cb286b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/rover/rover.svg"
-dest_files=["res://.godot/imported/rover.svg-7e06b65fc287c7a06cec87db16dff4f8.ctex"]
+source_file="res://art/rover/obstacle_crater.png"
+dest_files=["res://.godot/imported/obstacle_crater.png-71093847f0d7fa7094057ae450cb286b.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

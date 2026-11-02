@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b64j5ihxbt6dl"
-path="res://.godot/imported/Interiors_free_16x16.png-19e4779464c1a1fd95eb8d63e93fe0e8.ctex"
+uid="uid://dtb5dufh5w0vj"
+path="res://.godot/imported/obstacle_dust_devil.png-b032718a8fc7921863e001b5920ddc77.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/trainning/16x16/Interiors_free_16x16.png"
-dest_files=["res://.godot/imported/Interiors_free_16x16.png-19e4779464c1a1fd95eb8d63e93fe0e8.ctex"]
+source_file="res://art/rover/obstacle_dust_devil.png"
+dest_files=["res://.godot/imported/obstacle_dust_devil.png-b032718a8fc7921863e001b5920ddc77.ctex"]
 
 [params]
 
