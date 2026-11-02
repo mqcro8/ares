@@ -8,13 +8,16 @@ public partial class Rover_scence : Node2D
 	private Rover _rover;
 	private Label _label;
 	public bool _gameStarted = false;
+	private Hud _hud;
+
 	public override void _Ready()
 	{
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("CharacterBody2D/AnimatedSprite2D");
 		_rover = GetNodeOrNull<Rover>("CharacterBody2D");
 		_label = GetNodeOrNull<Label>("Label");
+		_hud = GetNodeOrNull<Hud>("HUD");
 
-		if (_roverAnimation == null || _rover == null || _label == null)
+		if (_roverAnimation == null || _rover == null || _label == null || _hud == null)
 		{
 			GD.PushError("RoverScene: missing elements");
 			return;
@@ -24,8 +27,21 @@ public partial class Rover_scence : Node2D
 		Blink();
 
 		GD.Print("Node is ready!");
+		_rover.CollisionRegistered += OnCollisionRegistered;
 	}
 
+	// HUD 
+	private void OnCollisionRegistered(int collisions)
+	{
+		_hud.UpdateCollisions(collisions);
+	}
+
+	public override void _ExitTree()
+	{
+		_rover.CollisionRegistered -= OnCollisionRegistered;
+	}
+
+	// Text "Press Enter to start game"
 	private async Task Blink()
 	{
 		while (!_gameStarted)

@@ -2,6 +2,7 @@
 namespace ares.scripts.rover;
 
 using Godot;
+using System;
 
 // Top-down rover with delayed controls: every command takes LagSeconds to reach the wheels.
 // Movement and impact detection only. Counting impacts and changing LagSeconds is the stage's job.
@@ -12,6 +13,7 @@ public partial class Rover : CharacterBody2D
 	private const float LagPerCollision = 0.15f;
 	private int _collisionCount = 0;
 	private float InputLag => _collisionCount * LagPerCollision;
+	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
 	private RoverAnimation _roverAnimation;
 	public bool CanMove { get; set; } = false;
@@ -27,12 +29,7 @@ public partial class Rover : CharacterBody2D
 		GD.Print("Node is ready!");
 	}
 
-	private enum Lane
-	{
-		Left = 0,
-		Middle = 1,
-		Right = 2
-	}
+	private enum Lane {Left = 0, Middle = 1, Right = 2}
 
 	private static readonly float[] LanePositions = {-170.0f, 0.0f, 170.0f};
 
@@ -80,9 +77,14 @@ public partial class Rover : CharacterBody2D
 		}
 	}
 
+	private bool _isColliding = false;
 	private async void RegisterCollision()
 	{
+		if (_isColliding)
+			return;
+
 		_collisionCount++;
+		CollisionRegistered?.Invoke(_collisionCount);
 
 		if (_collisionCount >= MaxCollisions)
 		{
@@ -90,9 +92,15 @@ public partial class Rover : CharacterBody2D
 			return;
 		}
 
-		// Animation sequence isn't really working as intended
+		_isColliding = true;
+
+		_roverAnimation.Play("collision");
+
 		await ToSignal(_roverAnimation, AnimationPlayer.SignalName.AnimationFinished);
+
 		_roverAnimation.Play("walk");
+
+		_isColliding = false;
 
 		GD.Print($"Collisions: {_collisionCount}");
 		GD.Print($"Input lag: {InputLag:F1}s");
@@ -101,7 +109,7 @@ public partial class Rover : CharacterBody2D
 	private void LoseRover()
 	{
 		_gameOver = true;
-
+		_roverAnimation.Play("rover_lost");
 		GD.Print("COMMUNICATION LOST. ROVER DESTROYED.");
 
 		// Trigger game over sequence here.

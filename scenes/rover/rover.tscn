@@ -8,6 +8,10 @@
 [ext_resource type="Texture2D" uid="uid://c7wlrwx8akli0" path="res://art/rover/rover_crash.png" id="4_7yjl3"]
 [ext_resource type="Script" uid="uid://bfefxrff8wlfa" path="res://scripts/rover/RoverAnimation.cs" id="4_g0ker"]
 [ext_resource type="Texture2D" uid="uid://yja1dt5e4wwh" path="res://art/rover/rover_moving.png" id="5_gx8jl"]
+[ext_resource type="Texture2D" uid="uid://btj3etgl2jxdq" path="res://art/rover/rover_malfunction.png" id="6_23f2b"]
+[ext_resource type="Texture2D" uid="uid://dyx70xyf7qfxj" path="res://art/rover/heart_full.png" id="10_d7bi6"]
+[ext_resource type="Script" uid="uid://cdh1fnyq7h007" path="res://scripts/rover/Hud.cs" id="10_qvnwh"]
+[ext_resource type="Texture2D" uid="uid://cv2afqg87gr37" path="res://art/rover/lag_1.png" id="11_qvnwh"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
 atlas = ExtResource("4_7yjl3")
@@ -49,6 +53,38 @@ region = Rect2(96, 0, 48, 56)
 atlas = ExtResource("1_cmnbs")
 region = Rect2(144, 0, 48, 56)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_j05bq"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(0, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0vf35"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(48, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gbaw6"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(96, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4smx6"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(144, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvdi1"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(192, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xfe86"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(240, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d66n6"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(288, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cnx36"]
+atlas = ExtResource("6_23f2b")
+region = Rect2(336, 0, 48, 56)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_7yjl3"]
 atlas = ExtResource("5_gx8jl")
 region = Rect2(0, 0, 48, 56)
@@ -86,7 +122,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_mprn4")
 }],
-"loop": 1,
+"loop": 0,
 "name": &"collision",
 "speed": 5.0
 }, {
@@ -105,6 +141,35 @@ animations = [{
 }],
 "loop": 1,
 "name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j05bq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0vf35")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gbaw6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4smx6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rvdi1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xfe86")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d66n6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cnx36")
+}],
+"loop": 0,
+"name": &"rover_lost",
 "speed": 5.0
 }, {
 "frames": [{
@@ -131,9 +196,78 @@ size = Vector2(32, 36.666664)
 [node name="Rover" type="Node2D" unique_id=1347983366]
 script = ExtResource("1_g0ker")
 
+[node name="HUD" type="CanvasLayer" parent="." unique_id=974421186]
+script = ExtResource("10_qvnwh")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD" unique_id=292595748]
+z_index = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 309.0
+offset_bottom = 71.0
+
+[node name="heart1" type="TextureRect" parent="HUD/HBoxContainer" unique_id=140179939]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_d7bi6")
+expand_mode = 2
+
+[node name="heart2" type="TextureRect" parent="HUD/HBoxContainer" unique_id=1648062648]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_d7bi6")
+expand_mode = 2
+
+[node name="heart3" type="TextureRect" parent="HUD/HBoxContainer" unique_id=1891574086]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_d7bi6")
+expand_mode = 2
+
+[node name="heart4" type="TextureRect" parent="HUD/HBoxContainer" unique_id=1467244644]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_d7bi6")
+expand_mode = 2
+
+[node name="heart5" type="TextureRect" parent="HUD/HBoxContainer" unique_id=1749680456]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_d7bi6")
+expand_mode = 2
+
+[node name="lagometer" type="TextureRect" parent="HUD" unique_id=154141282]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -157.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 79.0
+grow_horizontal = 0
+z_index = 1
+texture = ExtResource("11_qvnwh")
+
+[node name="progress_map" type="TextureRect" parent="HUD" unique_id=203917940]
+visible = false
+z_index = 1
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=862186647]
+position = Vector2(-425.5, 2.0000038)
+scale = Vector2(1.1757813, 2.546875)
+texture = ExtResource("1_cdng5")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=668632409]
+z_index = 1
+position = Vector2(-0.5, 0.0)
+scale = Vector2(2.5375, 2.5312502)
+texture = ExtResource("2_67jln")
+
 [node name="Sprite2D3" type="Sprite2D" parent="." unique_id=832208003]
-position = Vector2(424, -1.0000254)
-scale = Vector2(1.1796875, 2.5546875)
+position = Vector2(424.0, 0.0)
+scale = Vector2(1.1874999, 2.53125)
 texture = ExtResource("1_cdng5")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=717094537]
@@ -147,23 +281,14 @@ script = ExtResource("2_d6r02")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
 position = Vector2(0, -0.665)
 sprite_frames = SubResource("SpriteFrames_ansna")
-animation = &"collision"
+animation = &"rover_lost"
+frame = 7
+frame_progress = 1.0
 script = ExtResource("4_g0ker")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
 position = Vector2(0, 2.666668)
 shape = SubResource("RectangleShape2D_c2x34")
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=668632409]
-z_index = 1
-position = Vector2(-0.50003123, 8.34465e-07)
-scale = Vector2(2.5375, 2.5312502)
-texture = ExtResource("2_67jln")
-
-[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=862186647]
-position = Vector2(-424.5, 3)
-scale = Vector2(1.1679688, 2.5390625)
-texture = ExtResource("1_cdng5")
 
 [node name="Label" type="Label" parent="." unique_id=1875478735]
 z_index = 1
