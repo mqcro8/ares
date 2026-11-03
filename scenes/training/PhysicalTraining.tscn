@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cidk991aeu3"]
+[gd_scene format=3 uid="uid://cidlba1aeu3"]
 
 [ext_resource type="Script" path="res://scripts/training/PhysicalTraining.cs" id="1"]
 [ext_resource type="Script" path="res://scripts/training/TrainingHUD.cs" id="2"]
