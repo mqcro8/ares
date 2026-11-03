@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://btj3etgl2jxdq" path="res://art/rover/rover_malfunction.png" id="6_23f2b"]
 [ext_resource type="Texture2D" uid="uid://dyx70xyf7qfxj" path="res://art/rover/heart_full.png" id="10_d7bi6"]
 [ext_resource type="Script" uid="uid://cdh1fnyq7h007" path="res://scripts/rover/Hud.cs" id="10_qvnwh"]
+[ext_resource type="Shader" uid="uid://dmuucyuei0o40" path="res://scripts/rover/rover.gdshader" id="11_11f53"]
 [ext_resource type="Texture2D" uid="uid://cv2afqg87gr37" path="res://art/rover/lag_1.png" id="11_qvnwh"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
@@ -193,6 +194,10 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_c2x34"]
 size = Vector2(32, 36.666664)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ansna"]
+shader = ExtResource("11_11f53")
+shader_parameter/scroll_speed = Vector2(0, 0.15)
+
 [node name="Rover" type="Node2D" unique_id=1347983366]
 script = ExtResource("1_g0ker")
 
@@ -237,6 +242,7 @@ texture = ExtResource("10_d7bi6")
 expand_mode = 2
 
 [node name="lagometer" type="TextureRect" parent="HUD" unique_id=154141282]
+z_index = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -245,7 +251,6 @@ offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 79.0
 grow_horizontal = 0
-z_index = 1
 texture = ExtResource("11_qvnwh")
 
 [node name="progress_map" type="TextureRect" parent="HUD" unique_id=203917940]
@@ -253,22 +258,6 @@ visible = false
 z_index = 1
 offset_right = 40.0
 offset_bottom = 40.0
-
-[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=862186647]
-position = Vector2(-425.5, 2.0000038)
-scale = Vector2(1.1757813, 2.546875)
-texture = ExtResource("1_cdng5")
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=668632409]
-z_index = 1
-position = Vector2(-0.5, 0.0)
-scale = Vector2(2.5375, 2.5312502)
-texture = ExtResource("2_67jln")
-
-[node name="Sprite2D3" type="Sprite2D" parent="." unique_id=832208003]
-position = Vector2(424.0, 0.0)
-scale = Vector2(1.1874999, 2.53125)
-texture = ExtResource("1_cdng5")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=717094537]
 
@@ -299,3 +288,29 @@ offset_bottom = 177.0
 theme_override_font_sizes/font_size = 32
 text = "Press enter to start "
 uppercase = true
+
+[node name="ground" type="Control" parent="." unique_id=928445322]
+material = SubResource("ShaderMaterial_ansna")
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Sprite2D2" type="Sprite2D" parent="ground" unique_id=862186647]
+use_parent_material = true
+position = Vector2(-425.5, 2.0000038)
+scale = Vector2(1.1757813, 2.546875)
+texture = ExtResource("1_cdng5")
+
+[node name="Sprite2D3" type="Sprite2D" parent="ground" unique_id=832208003]
+use_parent_material = true
+position = Vector2(424, 0)
+scale = Vector2(1.1874999, 2.53125)
+texture = ExtResource("1_cdng5")
+
+[node name="Sprite2D" type="Sprite2D" parent="ground" unique_id=668632409]
+z_index = 1
+use_parent_material = true
+position = Vector2(-0.5, 0)
+scale = Vector2(2.5375, 2.5312502)
+texture = ExtResource("2_67jln")
