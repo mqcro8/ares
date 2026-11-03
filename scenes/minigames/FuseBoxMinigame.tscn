@@ -1,0 +1,371 @@
+[gd_scene format=3 uid="uid://3go6dcujtw7j"]
+
+[ext_resource type="Script" uid="uid://gfltyemn45dq" path="res://scripts/systems/minigames/FuseBoxMinigame.cs" id="1_fuse"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
+bg_color = Color(0.09, 0.098, 0.106, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.227, 0.239, 0.251, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_switch"]
+bg_color = Color(0.839, 0.157, 0.157, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_light"]
+bg_color = Color(0.961, 0.773, 0.259, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="FuseBoxMinigame" type="Control" unique_id=1749497738]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fuse")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=1401361977]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Box" type="Panel" parent="." unique_id=1009871425]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -250.0
+offset_right = 180.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_box")
+
+[node name="TopRow" type="HBoxContainer" parent="Box" unique_id=446321369]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -200.0
+offset_right = 120.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="Sw1" type="Panel" parent="Box/TopRow" unique_id=1809248226]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/TopRow/Sw1" unique_id=1141230196]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/TopRow/Sw1" unique_id=465730047]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sw2" type="Panel" parent="Box/TopRow" unique_id=511498874]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/TopRow/Sw2" unique_id=2096961057]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/TopRow/Sw2" unique_id=308528821]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sw3" type="Panel" parent="Box/TopRow" unique_id=488866613]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/TopRow/Sw3" unique_id=492756415]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/TopRow/Sw3" unique_id=1594745486]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Lights" type="HBoxContainer" parent="Box" unique_id=1076348078]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -76.0
+offset_top = -10.0
+offset_right = 76.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="L1" type="Panel" parent="Box/Lights" unique_id=1306353732]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_light")
+
+[node name="L2" type="Panel" parent="Box/Lights" unique_id=269648036]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_light")
+
+[node name="L3" type="Panel" parent="Box/Lights" unique_id=311073683]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_light")
+
+[node name="L4" type="Panel" parent="Box/Lights" unique_id=729812858]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_light")
+
+[node name="BottomRow" type="HBoxContainer" parent="Box" unique_id=695150439]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 100.0
+offset_right = 120.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="Sw4" type="Panel" parent="Box/BottomRow" unique_id=724992790]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/BottomRow/Sw4" unique_id=627528227]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/BottomRow/Sw4" unique_id=1474228699]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sw5" type="Panel" parent="Box/BottomRow" unique_id=8981540]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/BottomRow/Sw5" unique_id=117836927]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/BottomRow/Sw5" unique_id=960641641]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Sw6" type="Panel" parent="Box/BottomRow" unique_id=1697019883]
+custom_minimum_size = Vector2(60, 100)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_switch")
+
+[node name="OnLabel" type="Label" parent="Box/BottomRow/Sw6" unique_id=2058980184]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 24.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "ON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OffLabel" type="Label" parent="Box/BottomRow/Sw6" unique_id=1845275622]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Effects" type="Node2D" parent="." unique_id=1111396318]
