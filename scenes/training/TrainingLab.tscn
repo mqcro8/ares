@@ -1,0 +1,312 @@
+[gd_scene format=3 uid="uid://dr5rgbjfpagnk"]
+
+[ext_resource type="Script" uid="uid://dbo4eteeood0r" path="res://scripts/player/PlayerAnimation.cs" id="animation"]
+[ext_resource type="Texture2D" uid="uid://bpu38kcwp634q" path="res://art/player/walking/walking_back_frame_1.png" id="back1"]
+[ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="back2"]
+[ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/fuse_cabinet.png" id="cabinet"]
+[ext_resource type="Texture2D" uid="uid://bon0e1k84xbo6" path="res://art/player/walking/walking_front_frame_1.png" id="front1"]
+[ext_resource type="Texture2D" uid="uid://dvxfwp2p4d1f1" path="res://art/player/walking/walking_front_frame_2.png" id="front2"]
+[ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="idle_back"]
+[ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="idle_front"]
+[ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="idle_side"]
+[ext_resource type="Script" uid="uid://c32cgch3a68p0" path="res://scripts/training/TrainingLab.cs" id="lab"]
+[ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="player"]
+[ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="side1"]
+[ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="side2"]
+[ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/wiring_workbench.png" id="workbench"]
+
+[sub_resource type="Shader" id="FloorShader"]
+code = "shader_type canvas_item;
+uniform vec2 cells = vec2(18.0, 12.0);
+uniform vec4 even_color : source_color = vec4(0.152941, 0.207843, 0.266667, 1.0);
+uniform vec4 odd_color : source_color = vec4(0.168627, 0.223529, 0.282353, 1.0);
+void fragment() {
+    vec2 cell = floor(UV * cells);
+    COLOR = mix(even_color, odd_color, mod(cell.x + cell.y, 2.0));
+}
+"
+
+[sub_resource type="ShaderMaterial" id="FloorMaterial"]
+shader = SubResource("FloorShader")
+shader_parameter/cells = Vector2(18, 12)
+shader_parameter/even_color = Color(0.152941, 0.207843, 0.266667, 1)
+shader_parameter/odd_color = Color(0.168627, 0.223529, 0.282353, 1)
+
+[sub_resource type="RectangleShape2D" id="NorthShape"]
+size = Vector2(576, 32)
+
+[sub_resource type="RectangleShape2D" id="SideShape"]
+size = Vector2(16, 384)
+
+[sub_resource type="RectangleShape2D" id="SouthShape"]
+size = Vector2(576, 16)
+
+[sub_resource type="RectangleShape2D" id="WorkbenchShape"]
+size = Vector2(64, 20)
+
+[sub_resource type="RectangleShape2D" id="CabinetShape"]
+size = Vector2(28, 16)
+
+[sub_resource type="SpriteFrames" id="PlayerFrames"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("idle_front")
+}],
+"loop": 1,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("idle_side")
+}],
+"loop": 1,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("idle_back")
+}],
+"loop": 1,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("front1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("front2")
+}],
+"loop": 1,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("side1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("side2")
+}],
+"loop": 1,
+"name": &"walk_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("back1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("back2")
+}],
+"loop": 1,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="PlayerShape"]
+size = Vector2(14, 12)
+
+[node name="TrainingLab" type="Node2D" unique_id=1566292422 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "GymZone", "ArrivalMarkers")]
+texture_filter = 1
+script = ExtResource("lab")
+Player = NodePath("Player")
+Camera = NodePath("Camera2D")
+WiresZone = NodePath("WiringWorkbench/FrontZone")
+FusesZone = NodePath("FuseCabinet/FrontZone")
+GymZone = NodePath("GymDoor/FrontZone")
+ArrivalMarkers = [NodePath("lab_from_gym"), NodePath("WiringWorkbench/lab_wires_return"), NodePath("FuseCabinet/lab_fuses_return")]
+
+[node name="Background" type="CanvasLayer" parent="." unique_id=71666031]
+layer = -100
+
+[node name="Fill" type="ColorRect" parent="Background" unique_id=979554914]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.066667, 0.109804, 0.160784, 1)
+
+[node name="Floor" type="ColorRect" parent="." unique_id=2105311951]
+editor_description = "Single editable checker floor, 18 by 12 cells. Colors and cell counts are in the material; no generated geometry or external texture."
+material = SubResource("FloorMaterial")
+offset_right = 576.0
+offset_bottom = 384.0
+mouse_filter = 2
+
+[node name="Walls" type="Node2D" parent="." unique_id=1341511398]
+
+[node name="North" type="StaticBody2D" parent="Walls" unique_id=1577924552]
+position = Vector2(288, 16)
+
+[node name="Visual" type="Polygon2D" parent="Walls/North" unique_id=941511851]
+color = Color(0.321569, 0.392157, 0.482353, 1)
+polygon = PackedVector2Array(-288, -16, 288, -16, 288, 16, -288, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/North" unique_id=1114653925]
+shape = SubResource("NorthShape")
+
+[node name="West" type="StaticBody2D" parent="Walls" unique_id=421315662]
+position = Vector2(8, 192)
+
+[node name="Visual" type="Polygon2D" parent="Walls/West" unique_id=1105809867]
+color = Color(0.321569, 0.392157, 0.482353, 1)
+polygon = PackedVector2Array(-8, -192, 8, -192, 8, 192, -8, 192)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/West" unique_id=1375042044]
+shape = SubResource("SideShape")
+
+[node name="East" type="StaticBody2D" parent="Walls" unique_id=1417562048]
+position = Vector2(568, 192)
+
+[node name="Visual" type="Polygon2D" parent="Walls/East" unique_id=739242032]
+color = Color(0.321569, 0.392157, 0.482353, 1)
+polygon = PackedVector2Array(-8, -192, 8, -192, 8, 192, -8, 192)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/East" unique_id=552273144]
+shape = SubResource("SideShape")
+
+[node name="South" type="StaticBody2D" parent="Walls" unique_id=846354638]
+position = Vector2(288, 376)
+
+[node name="Visual" type="Polygon2D" parent="Walls/South" unique_id=857530361]
+color = Color(0.321569, 0.392157, 0.482353, 1)
+polygon = PackedVector2Array(-288, -8, 288, -8, 288, 8, -288, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/South" unique_id=1214175806]
+shape = SubResource("SouthShape")
+
+[node name="WiringWorkbench" type="Node2D" parent="." unique_id=868627775]
+editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
+position = Vector2(160, 156)
+
+[node name="Sprite2D" type="Sprite2D" parent="WiringWorkbench" unique_id=1078190885]
+texture_filter = 1
+position = Vector2(0, -16)
+scale = Vector2(2, 2)
+texture = ExtResource("workbench")
+
+[node name="Base" type="StaticBody2D" parent="WiringWorkbench" unique_id=231227528]
+position = Vector2(0, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WiringWorkbench/Base" unique_id=1148442662]
+shape = SubResource("WorkbenchShape")
+
+[node name="Accent" type="Polygon2D" parent="WiringWorkbench" unique_id=2142096518]
+color = Color(0.458824, 0.894118, 1, 1)
+polygon = PackedVector2Array(-36, 8, 36, 8, 36, 11, -36, 11)
+
+[node name="Sign" type="Label" parent="WiringWorkbench" unique_id=661709958]
+z_index = 5
+offset_left = -90.0
+offset_top = -70.0
+offset_right = 90.0
+offset_bottom = -46.0
+theme_override_colors/font_color = Color(0.458824, 0.894118, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "WIRING WORKBENCH"
+horizontal_alignment = 1
+
+[node name="FrontZone" type="ReferenceRect" parent="WiringWorkbench" unique_id=1063746883]
+offset_left = -46.0
+offset_top = 8.0
+offset_right = 46.0
+offset_bottom = 72.0
+mouse_filter = 2
+
+[node name="lab_wires_return" type="Marker2D" parent="WiringWorkbench" unique_id=816045874]
+position = Vector2(0, 46)
+
+[node name="FuseCabinet" type="Node2D" parent="." unique_id=1530691037]
+editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
+position = Vector2(416, 156)
+
+[node name="Sprite2D" type="Sprite2D" parent="FuseCabinet" unique_id=15789549]
+texture_filter = 1
+position = Vector2(0, -22)
+scale = Vector2(2, 2)
+texture = ExtResource("cabinet")
+
+[node name="Base" type="StaticBody2D" parent="FuseCabinet" unique_id=343819824]
+position = Vector2(0, -8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FuseCabinet/Base" unique_id=2042153132]
+shape = SubResource("CabinetShape")
+
+[node name="Accent" type="Polygon2D" parent="FuseCabinet" unique_id=21206143]
+color = Color(1, 0.835294, 0.466667, 1)
+polygon = PackedVector2Array(-36, 8, 36, 8, 36, 11, -36, 11)
+
+[node name="Sign" type="Label" parent="FuseCabinet" unique_id=1731850410]
+z_index = 5
+offset_left = -90.0
+offset_top = -70.0
+offset_right = 90.0
+offset_bottom = -46.0
+theme_override_colors/font_color = Color(1, 0.835294, 0.466667, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "FUSE CABINET"
+horizontal_alignment = 1
+
+[node name="FrontZone" type="ReferenceRect" parent="FuseCabinet" unique_id=969865656]
+offset_left = -32.0
+offset_top = 8.0
+offset_right = 32.0
+offset_bottom = 72.0
+mouse_filter = 2
+
+[node name="lab_fuses_return" type="Marker2D" parent="FuseCabinet" unique_id=1301041467]
+position = Vector2(0, 46)
+
+[node name="GymDoor" type="Node2D" parent="." unique_id=1367211159]
+position = Vector2(288, 348)
+metadata/_edit_group_ = true
+
+[node name="Frame" type="Polygon2D" parent="GymDoor" unique_id=678415675]
+color = Color(0.086275, 0.141176, 0.2, 1)
+polygon = PackedVector2Array(-30, -20, 30, -20, 30, 20, -30, 20)
+
+[node name="Panel" type="Polygon2D" parent="GymDoor" unique_id=1087825139]
+color = Color(0.294118, 0.505882, 0.564706, 1)
+polygon = PackedVector2Array(-26, -16, 26, -16, 26, 16, -26, 16)
+
+[node name="Seam" type="Polygon2D" parent="GymDoor" unique_id=727683263]
+color = Color(0.690196, 0.960784, 1, 1)
+polygon = PackedVector2Array(-1, -16, 1, -16, 1, 16, -1, 16)
+
+[node name="FrontZone" type="ReferenceRect" parent="GymDoor" unique_id=1954321810]
+offset_left = -32.0
+offset_top = -62.0
+offset_right = 32.0
+offset_bottom = -8.0
+mouse_filter = 2
+
+[node name="lab_from_gym" type="Marker2D" parent="." unique_id=675014144]
+position = Vector2(288, 292)
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=301587046]
+position = Vector2(288, 292)
+script = ExtResource("player")
+Speed = 150.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1518599814]
+position = Vector2(0, -13)
+sprite_frames = SubResource("PlayerFrames")
+animation = &"idle_down"
+script = ExtResource("animation")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=313439485]
+position = Vector2(0, -6)
+shape = SubResource("PlayerShape")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=61017354]
+position = Vector2(288, 192)

@@ -12,6 +12,11 @@ public partial class PlayerAnimation : AnimatedSprite2D
 
 	private CharacterBody2D _body;
 	private string _facing = "down";
+	public string Facing => _facing;
+	public void RestoreFacing(string facing, bool flip)
+	{
+		_facing = facing; FlipH = flip; Play($"idle_{facing}");
+	}
 
 	public override void _Ready()
 	{

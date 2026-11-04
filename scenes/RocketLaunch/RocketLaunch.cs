@@ -3,7 +3,7 @@ using Godot;
 
 public partial class RocketLaunch : Node2D
 {
-	private const int TargetClicks = 50;
+	private const int TargetClicks = 10;
 	private const float TimeLimit = 10f;
 
 	private int clicks = 0;

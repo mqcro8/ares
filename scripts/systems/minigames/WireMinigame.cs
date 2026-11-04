@@ -20,6 +20,8 @@ public partial class WireMinigame : Control
 	private int _connectedCount;
 	private Line2D _dragWire;
 	private ColorRect _dragFrom;
+	private int _keyboardTarget;
+	private bool _finished;
 
 	// Bloque 2: asignar colores
 	public override void _Ready()
@@ -47,10 +49,31 @@ public partial class WireMinigame : Control
 			_leftBox.GetChild<ColorRect>(i).Color = WireColors[i];
 			_rightBox.GetChild<ColorRect>(i).Color = right[i];
 		}
+		ares.scripts.training.PracticeReturn.Attach(this);
 	}
 
 	public override void _Input(InputEvent @event)
 	{
+		if (_finished) return;
+		if (@event is InputEventKey { Pressed: true, Echo: false } key)
+		{
+			int index = (int)key.Keycode - (int)Key.Key1;
+			if (index >= 0 && index < WireColors.Count)
+			{
+				var terminal = _leftBox.GetChild<ColorRect>(index);
+				if (!_connected.Contains(terminal)) { StartDrag(terminal); AimKeyboard(); }
+			}
+			else if (_dragWire != null && (key.Keycode == Key.Up || key.Keycode == Key.Down))
+			{
+				_keyboardTarget = (_keyboardTarget + (key.Keycode == Key.Up ? WireColors.Count - 1 : 1)) % WireColors.Count;
+				AimKeyboard();
+			}
+			else if (_dragWire != null && key.Keycode == Key.Enter)
+				EndDrag(_rightBox.GetChild<ColorRect>(_keyboardTarget).GetGlobalRect().GetCenter());
+			else return;
+			GetViewport().SetInputAsHandled();
+			return;
+		}
 		if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 		{
 			if (mb.Pressed)
@@ -89,6 +112,7 @@ public partial class WireMinigame : Control
 	// Bloque 4: crear cable
 	private void StartDrag(ColorRect t)
 	{
+		_dragWire?.QueueFree();
 		_dragFrom = t;
 		_dragWire = new Line2D
 		{
@@ -102,6 +126,19 @@ public partial class WireMinigame : Control
 		_wires.AddChild(_dragWire);
 	}
 
+	private void AimKeyboard() => _dragWire.SetPointPosition(1, Center(_rightBox.GetChild<ColorRect>(_keyboardTarget)));
+
+	private readonly System.Collections.Generic.List<(Line2D Wire, ColorRect From, ColorRect To)> _links = new();
+	public void RefreshWireLayout()
+	{
+		foreach (var link in _links)
+		{
+			link.Wire.SetPointPosition(0, Center(link.From));
+			link.Wire.SetPointPosition(1, Center(link.To));
+		}
+		if (_dragWire != null) _dragWire.SetPointPosition(0, Center(_dragFrom));
+	}
+
 	private void EndDrag(Vector2 pos)
 	{
 		var target = TerminalAt(_rightBox, pos);
@@ -110,12 +147,16 @@ public partial class WireMinigame : Control
 		{
 			// Bloque 8a: fijar cable
 			_dragWire.SetPointPosition(1, Center(target));
+			_links.Add((_dragWire, _dragFrom, target));
 			_connected.Add(_dragFrom);
 			_connected.Add(target);
 			_connectedCount++;
 			// Bloques 9 y 10: ¿ya son cuatro? -> Completed
 			if (_connectedCount == WireColors.Count)
+			{
+				_finished = true;
 				EmitSignal(SignalName.Completed);
+			}
 		}
 		else
 		{

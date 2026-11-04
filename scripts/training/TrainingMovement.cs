@@ -25,6 +25,16 @@ public partial class TrainingMovement : Node
 
     public void SuppressDialogueJump() => _waitForJumpRelease = true;
 
+    public sealed record Progress(float Stamina, float Rest);
+    public Progress Capture() => new(Stamina, _rest);
+    public void Restore(Progress progress)
+    {
+        Stamina = progress.Stamina;
+        _rest = progress.Rest;
+        SuppressDialogueJump();
+        Course.Step(Stamina);
+    }
+
     public override void _Ready()
     {
         IsConfigured = Course != null && Visual != null && Shadow != null

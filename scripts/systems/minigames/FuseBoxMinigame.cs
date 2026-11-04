@@ -23,6 +23,8 @@ public partial class FuseBoxMinigame : Control
 	private int _maxPresses;
 	private int _pressesLeft;
 	private bool _busy;
+	private Timer _pending;
+	private Label _status;
 
 	public override void _Ready()
 	{
@@ -37,8 +39,14 @@ public partial class FuseBoxMinigame : Control
 			if (c is Panel p) _lights.Add(PreparePanel(p));
 
 		_maxPresses = _lights.Count;
+		_pending = new Timer { OneShot = true };
+		AddChild(_pending);
+		_pending.Timeout += ResolvePending;
+		_status = new Label { Position = new Vector2(12, 92) };
+		AddChild(_status);
 		GeneratePuzzle();
 		Refresh();
+		ares.scripts.training.PracticeReturn.Attach(this);
 	}
 
 	// Duplica el estilo de cada interruptor/luz para poder cambiar su color por separado
@@ -79,9 +87,21 @@ public partial class FuseBoxMinigame : Control
 	private void Refresh()
 	{
 		for (int i = 0; i < _switches.Count; i++)
+		{
 			SetPanelColor(_switches[i], _state[i] ? OnColor : OffColor);
+			var label = _switches[i].GetNodeOrNull<Label>("PracticeNumber");
+			if (label == null)
+			{
+				label = new Label { Name = "PracticeNumber", Position = new Vector2(0, 36), MouseFilter = MouseFilterEnum.Ignore };
+				label.AddThemeColorOverride("font_outline_color", Colors.Black);
+				label.AddThemeConstantOverride("outline_size", 5);
+				_switches[i].AddChild(label);
+			}
+			label.Text = $"{i + 1}: {(_state[i] ? "ON" : "OFF")}";
+		}
 		for (int i = 0; i < _lights.Count; i++)
 			SetPanelColor(_lights[i], i < _pressesLeft ? LightOn : LightOff);
+		_status.Text = $"Presses: {_pressesLeft}/{_maxPresses}\nDOUBLE: {_double + 1} → also toggles {_partner + 1}";
 	}
 
 	private void SetPanelColor(Panel p, Color color)
@@ -93,6 +113,16 @@ public partial class FuseBoxMinigame : Control
 	public override void _Input(InputEvent @event)
 	{
 		if (_busy) return;
+		if (@event is InputEventKey { Pressed: true, Echo: false } key)
+		{
+			int index = (int)key.Keycode - (int)Key.Key1;
+			if (index >= 0 && index < _switches.Count)
+			{
+				Press(index);
+				GetViewport().SetInputAsHandled();
+			}
+			return;
+		}
 
 		// Bloque 3: clic en interruptor
 		if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
@@ -126,15 +156,30 @@ public partial class FuseBoxMinigame : Control
 			// Bloque 7a: emitir completed
 			_busy = true;
 			foreach (var sw in _switches) Sparks(sw, OnColor);
-			GetTree().CreateTimer(0.6).Timeout += () => { EmitSignal(SignalName.Completed); };
+			_status.Text = "All switches ON!";
+			_pending.Start(0.6);
 		}
 		// Bloque 7b: ¿quedan intentos?
 		else if (_pressesLeft <= 0)
 		{
 			// Bloque 8: reiniciar caja
 			_busy = true;
-			GetTree().CreateTimer(0.5).Timeout += ResetBox;
+			_status.Text = "No presses left. Resetting the box…";
+			_pending.Start(0.5);
 		}
+	}
+
+	private void ResolvePending()
+	{
+		if (_state.All(s => s)) EmitSignal(SignalName.Completed);
+		else ResetBox();
+	}
+
+	public void StopPending() { _busy = true; _pending.Stop(); }
+	public override void _ExitTree()
+	{
+		_pending.Stop();
+		_pending.Timeout -= ResolvePending;
 	}
 
 	private void ResetBox()
@@ -176,6 +221,9 @@ public partial class FuseBoxMinigame : Control
 			Color = color.Lightened(0.5f)
 		};
 		_effects.AddChild(p);
-		GetTree().CreateTimer(1.0).Timeout += p.QueueFree;
+		var cleanup = new Timer { OneShot = true, WaitTime = 1.0 };
+		p.AddChild(cleanup);
+		cleanup.Timeout += p.QueueFree;
+		cleanup.Start();
 	}
 }
