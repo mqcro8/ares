@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://cdh1fnyq7h007" path="res://scripts/rover/Hud.cs" id="10_qvnwh"]
 [ext_resource type="Shader" uid="uid://dmuucyuei0o40" path="res://scripts/rover/rover.gdshader" id="11_11f53"]
 [ext_resource type="Texture2D" uid="uid://cv2afqg87gr37" path="res://art/rover/lag_1.png" id="11_qvnwh"]
+[ext_resource type="Script" uid="uid://gbb4v1wlcof4" path="res://scripts/rover/Obstacle.cs" id="14_qf4a5"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
 atlas = ExtResource("4_7yjl3")
@@ -196,7 +197,7 @@ size = Vector2(32, 36.666664)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ansna"]
 shader = ExtResource("11_11f53")
-shader_parameter/scroll_speed = Vector2(0, 0.15)
+shader_parameter/scroll_speed = Vector2(0, 0)
 
 [node name="Rover" type="Node2D" unique_id=1347983366]
 script = ExtResource("1_g0ker")
@@ -207,7 +208,7 @@ script = ExtResource("10_qvnwh")
 [node name="HBoxContainer" type="HBoxContainer" parent="HUD" unique_id=292595748]
 z_index = 1
 offset_left = 16.0
-offset_top = 16.0
+offset_top = 27.0
 offset_right = 309.0
 offset_bottom = 71.0
 
@@ -280,7 +281,7 @@ position = Vector2(0, 2.666668)
 shape = SubResource("RectangleShape2D_c2x34")
 
 [node name="Label" type="Label" parent="." unique_id=1875478735]
-z_index = 1
+z_index = 2
 offset_left = -180.0
 offset_top = 132.0
 offset_right = 185.0
@@ -314,3 +315,12 @@ use_parent_material = true
 position = Vector2(-0.5, 0)
 scale = Vector2(2.5375, 2.5312502)
 texture = ExtResource("2_67jln")
+
+[node name="Obstacle" type="Area2D" parent="." unique_id=323195773]
+z_index = 2
+script = ExtResource("14_qf4a5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Obstacle" unique_id=1693504875]
+
+[node name="Sprite2D" type="Sprite2D" parent="Obstacle" unique_id=1387267148]
+position = Vector2(-181, -264)

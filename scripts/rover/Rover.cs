@@ -10,11 +10,12 @@ using System;
 public partial class Rover : CharacterBody2D
 {
 	private const int MaxCollisions = 5;
-	private const float LagPerCollision = 0.15f;
+	private const float LagPerCollision = 0.2f;
 	private int _collisionCount = 0;
 	private float InputLag => _collisionCount * LagPerCollision;
 	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
+	public bool IsGameOver => _gameOver;
 	private RoverAnimation _roverAnimation;
 	public bool CanMove { get; set; } = false;
 	public override void _Ready()
@@ -78,6 +79,12 @@ public partial class Rover : CharacterBody2D
 	}
 
 	private bool _isColliding = false;
+	public void RegisterObstacleCollision()
+	{
+		if (!_gameOver)
+			RegisterCollision();
+	}
+
 	private async void RegisterCollision()
 	{
 		if (_isColliding)

@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform vec2 scroll_speed = vec2(0.0, -0.15);
+uniform vec2 scroll_speed = vec2(0, 0);
 
 void vertex() {
 	// Called for every vertex the material is visible on.
