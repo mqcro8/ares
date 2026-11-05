@@ -9,11 +9,13 @@
 [ext_resource type="Script" uid="uid://bfefxrff8wlfa" path="res://scripts/rover/RoverAnimation.cs" id="4_g0ker"]
 [ext_resource type="Texture2D" uid="uid://yja1dt5e4wwh" path="res://art/rover/rover_moving.png" id="5_gx8jl"]
 [ext_resource type="Texture2D" uid="uid://btj3etgl2jxdq" path="res://art/rover/rover_malfunction.png" id="6_23f2b"]
+[ext_resource type="Texture2D" uid="uid://bhjkh65fnbl44" path="res://art/rover/rover_victory.png" id="9_r8xxj"]
 [ext_resource type="Texture2D" uid="uid://dyx70xyf7qfxj" path="res://art/rover/heart_full.png" id="10_d7bi6"]
 [ext_resource type="Script" uid="uid://cdh1fnyq7h007" path="res://scripts/rover/Hud.cs" id="10_qvnwh"]
 [ext_resource type="Shader" uid="uid://dmuucyuei0o40" path="res://scripts/rover/rover.gdshader" id="11_11f53"]
 [ext_resource type="Texture2D" uid="uid://cv2afqg87gr37" path="res://art/rover/lag_1.png" id="11_qvnwh"]
 [ext_resource type="Script" uid="uid://gbb4v1wlcof4" path="res://scripts/rover/Obstacle.cs" id="14_qf4a5"]
+[ext_resource type="Script" uid="uid://cvn1jmo2pqjrd" path="res://scripts/systems/audio/SfxEmitter2D.cs" id="15_engine"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
 atlas = ExtResource("4_7yjl3")
@@ -85,6 +87,38 @@ region = Rect2(288, 0, 48, 56)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cnx36"]
 atlas = ExtResource("6_23f2b")
+region = Rect2(336, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oh1jg"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(0, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qieyl"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(48, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5vqiw"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(96, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sbne6"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(144, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_of5t4"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(192, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x1r28"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(240, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f5s2x"]
+atlas = ExtResource("9_r8xxj")
+region = Rect2(288, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c7p3m"]
+atlas = ExtResource("9_r8xxj")
 region = Rect2(336, 0, 48, 56)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_7yjl3"]
@@ -172,6 +206,35 @@ animations = [{
 }],
 "loop": 0,
 "name": &"rover_lost",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oh1jg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qieyl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5vqiw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sbne6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_of5t4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x1r28")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f5s2x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c7p3m")
+}],
+"loop": 1,
+"name": &"victory",
 "speed": 5.0
 }, {
 "frames": [{
@@ -271,14 +334,17 @@ script = ExtResource("2_d6r02")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
 position = Vector2(0, -0.665)
 sprite_frames = SubResource("SpriteFrames_ansna")
-animation = &"rover_lost"
-frame = 7
-frame_progress = 1.0
+animation = &"victory"
 script = ExtResource("4_g0ker")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
 position = Vector2(0, 2.666668)
 shape = SubResource("RectangleShape2D_c2x34")
+
+[node name="EngineSound" type="AudioStreamPlayer2D" parent="CharacterBody2D" unique_id=787192899]
+script = ExtResource("15_engine")
+SoundId = "rover_moving"
+PlayOnReady = false
 
 [node name="Label" type="Label" parent="." unique_id=1875478735]
 z_index = 2

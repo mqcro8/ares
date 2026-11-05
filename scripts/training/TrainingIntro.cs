@@ -1,5 +1,6 @@
 namespace ares.scripts.training;
 
+using Ares.Systems.Audio;
 using Godot;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
@@ -28,6 +29,7 @@ public partial class TrainingIntro : Node2D
 
 	public override void _Ready()
 	{
+		AudioManager.StopMusic(1.0);
 		_player = GetNodeOrNull<CharacterBody2D>(PlayerPath);
 		_panel = GetNodeOrNull<PanelContainer>(PanelPath);
 		_speaker = GetNodeOrNull<Label>(SpeakerPath);

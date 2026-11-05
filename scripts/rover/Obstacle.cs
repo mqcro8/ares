@@ -10,6 +10,8 @@ public partial class Obstacle : Area2D
 	private float _speed;
 	private bool _hasHit;
 
+	public event Action Impact;
+
 	public override void _Ready()
 	{
 		_sprite = GetNode<Sprite2D>("Sprite2D");
@@ -30,6 +32,8 @@ public partial class Obstacle : Area2D
 		SetPhysicsProcess(true);
 	}
 
+	public void SetSpeed(float speed) => _speed = speed;
+
 	public override void _PhysicsProcess(double delta)
 	{
 		Position += Vector2.Down * _speed * (float)delta;
@@ -44,5 +48,7 @@ public partial class Obstacle : Area2D
 
 		_hasHit = true;
 		_rover.RegisterObstacleCollision();
+		Impact?.Invoke();
+		QueueFree();
 	}
 }

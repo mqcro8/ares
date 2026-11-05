@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 namespace ares.scripts.rover;
 
+using Ares.Systems.Audio;
 using Godot;
 using System;
 
@@ -87,8 +88,10 @@ public partial class Rover : CharacterBody2D
 
 	private async void RegisterCollision()
 	{
-		if (_isColliding)
+		if (_isColliding || _gameOver)
 			return;
+
+		AudioManager.PlaySfx2D(SoundIds.RoverCollision, GlobalPosition);
 
 		_collisionCount++;
 		CollisionRegistered?.Invoke(_collisionCount);
@@ -116,6 +119,7 @@ public partial class Rover : CharacterBody2D
 	private void LoseRover()
 	{
 		_gameOver = true;
+		CanMove = false;
 		_roverAnimation.Play("rover_lost");
 		GD.Print("COMMUNICATION LOST. ROVER DESTROYED.");
 
