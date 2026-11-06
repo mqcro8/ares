@@ -18,10 +18,11 @@ public partial class Rover_scence : Node2D
 	// At 260 px/s this leaves over a second of clear lane after each obstacle passes.
 	private const float ObstacleSpawnInterval = 1.5f;
 	private const float DefaultVelocity = 200f;
-	private const float MaximumVelocity = 400f;
+	private const float MaximumVelocity = 500f;
 	private const float MinimumVelocity = DefaultVelocity * 0.5f;
 	private const float VelocityChangeRate = 100f;
 	private float _levelVelocity = DefaultVelocity;
+	private float _groundScroll;
 	private bool _slowingAfterCrash;
 	private static readonly float[] ObstacleLanePositions = { -170.0f, 0.0f, 170.0f };
 	private readonly RandomNumberGenerator _rng = new();
@@ -189,8 +190,8 @@ public partial class Rover_scence : Node2D
 			_levelVelocity = Mathf.MoveToward(_levelVelocity, MinimumVelocity, VelocityChangeRate * delta);
 		}
 
-		float groundHeight = GetGroundHeight();
-		_groundMaterial.SetShaderParameter("scroll_speed", new Vector2(0, -_levelVelocity / groundHeight));
+		_groundScroll -= _levelVelocity / GetGroundHeight() * delta;
+		_groundMaterial.SetShaderParameter("scroll_offset", new Vector2(0, _groundScroll));
 		foreach (var obstacle in _spawnedObstacles)
 		{
 			if (GodotObject.IsInstanceValid(obstacle))
@@ -267,7 +268,7 @@ public partial class Rover_scence : Node2D
 		_spawnTimer = ObstacleSpawnInterval;
 		_levelVelocity = DefaultVelocity;
 		_slowingAfterCrash = false;
-		_groundMaterial.SetShaderParameter("scroll_speed", new Vector2(0, -_levelVelocity / GetGroundHeight()));
+		_groundScroll = 0f;	
 	}
 
 	private void GameOver()
@@ -276,7 +277,6 @@ public partial class Rover_scence : Node2D
 		_engineSound?.Stop(0.25f);
 		AudioManager.StopMusic(0.75);
 		AudioManager.PlaySfx2D(SoundIds.RoverExplode, _rover.GlobalPosition);
-		_groundMaterial.SetShaderParameter("scroll_speed", Vector2.Zero);
 	}
 
 	private void Victory()
@@ -291,7 +291,6 @@ public partial class Rover_scence : Node2D
 
 		_rover.CanMove = false;
 		_roverAnimation.PlayAnimation("victory");
-		_groundMaterial.SetShaderParameter("scroll_speed", Vector2.Zero);
 
 		foreach (var obstacle in _spawnedObstacles)
 		{

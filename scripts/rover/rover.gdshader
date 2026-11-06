@@ -1,13 +1,13 @@
 shader_type canvas_item;
 
-uniform vec2 scroll_speed = vec2(0, 0);
+uniform vec2 scroll_offset = vec2(0, 0);
 
 void vertex() {
 	// Called for every vertex the material is visible on.
 }
 
 void fragment() {
-	vec2 scrolling_uv = fract(UV + TIME * scroll_speed);
+	vec2 scrolling_uv = fract(UV + scroll_offset);
     COLOR = texture(TEXTURE, scrolling_uv);
 }
 
