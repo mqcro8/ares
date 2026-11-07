@@ -103,7 +103,8 @@ public partial class TrainingMovement : Node
         }
         else _rest = 0;
         Visual.Position = _visualOrigin + Vector2.Up * Mathf.Round(Height);
-        Shadow.Visible = Height > 0;
+        // Shadow is a sibling of Visual: stays at the ground footprint even in flight.
+        Shadow.Visible = true;
         Course.Step(Stamina);
         return true;
     }

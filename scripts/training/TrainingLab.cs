@@ -34,6 +34,13 @@ public partial class TrainingLab : Node2D
     {
         var size = GetViewportRect().Size;
         Camera.Zoom = Vector2.One * Mathf.Min(size.X / 640, size.Y / 480);
+        // Gym: 1.5 sprite scale * 1.5 camera zoom = 2.25 screen pixels per art pixel.
+        // Derive every resize from native art coordinates; never scale the physics body.
+        float visualScale = 2.25f / Camera.Zoom.X;
+        var visual = Player.GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+        visual.Scale = Vector2.One * visualScale;
+        visual.Position = new Vector2(0, -11) * visualScale;
+        Player.GetNode<Polygon2D>("GroundShadow").Scale = Vector2.One * (visualScale / 2);
     }
     public override void _ExitTree() => GetViewport().SizeChanged -= FitCamera;
 }

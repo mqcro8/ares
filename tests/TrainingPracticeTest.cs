@@ -37,7 +37,7 @@ public partial class TrainingPracticeTest : Node
     {
         if (!Visual) return;
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-        Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/{name}.png") == Error.Ok, "Screenshot saved");
+        Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/corrected-{name}.png") == Error.Ok, "Screenshot saved");
     }
     private void EnglishUi(Node node)
     {
@@ -137,11 +137,18 @@ public partial class TrainingPracticeTest : Node
         EnglishUi(Scene);
         for (int i = 0; i < 3; i++) { KeyPress(Key.Enter); await Frames(); }
         Check(!Gym.BriefingActive, "Briefing closes");
-        await WalkTo(new(400, 230)); await Capture("gym-door");
+        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Capture("gym-door");
+        var shadow = Player.GetNode<Polygon2D>("JumpShadow");
+        Vector2 shadowOrigin = shadow.Position;
+        Check(shadow.Visible, "Gym shadow visible at rest");
+        Check(Player.GetNode<Node2D>("AnimatedSprite2D").Scale == Vector2.One * 1.5f && Player.Scale == Vector2.One,
+            "Gym reduces visual only, not physics body");
+        await ScreenSizeChecks("gym");
         Input.ActionPress("training_jump");
         for (int i = 0; i < 3; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         Input.ActionRelease("training_jump");
         Check(!Player.TrainingMovement.Grounded, "Real jump starts");
+        Check(shadow.Visible && shadow.Position == shadowOrigin, "Jump shadow stays on ground");
         await Frames(); KeyPress(Key.E); await Frames(); Check(Scene is TrainingIntro, "Airborne travel forbidden");
         for (int i = 0; i < 120 && !Player.TrainingMovement.Grounded; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         Cross(2); Check(Gym.Course.ClearedCount == 1, "Partial reverse circuit");
@@ -157,6 +164,19 @@ public partial class TrainingPracticeTest : Node
         Check(saved.Course.Direction != 0 && saved.Course.Cleared == 1 && saved.Movement.Stamina < 100, "Partial course and stamina saved");
         Check(Player.Position.DistanceTo(new(288, 292)) < 1, "Room-specific entrance, never gym position");
         var lab = (TrainingLab)Scene;
+        Check(Player.GetNode<Polygon2D>("GroundShadow").Visible && Mathf.IsEqualApprox(Player.GetNode<Node2D>("AnimatedSprite2D").Scale.X * lab.Camera.Zoom.X, 2.25f),
+            "Lab uses matching visual scale and ground shadow");
+        Check(!lab.HasNode("Decoration") && Find<Node>(lab, n => n.Name.ToString().StartsWith("Supervision") || n.Name.ToString().StartsWith("Storage")) == null,
+            "No added decoration or orphan storage bodies");
+        Check(lab.GetNode<NinePatchRect>("Floor").RegionRect == new Rect2(192, 192, 16, 16)
+            && lab.GetNode<NinePatchRect>("Floor").Material == null, "Floor uses gym atlas, no checker shader");
+        foreach (string wall in new[] { "North", "South", "West", "East" })
+        {
+            var body = lab.GetNode<StaticBody2D>("Walls/" + wall);
+            Check(body.GetChildCount() == 2 && body.GetNode<NinePatchRect>("Visual").Texture.ResourcePath.EndsWith("Room_Builder_free_16x16.png")
+                && body.GetNode<CollisionShape2D>("CollisionShape2D").Shape is RectangleShape2D, "Atlas wall retains single collision: " + wall);
+        }
+        await ScreenSizeChecks("lab");
         Check(lab.Player.Owner == lab && lab.Camera.Owner == lab && lab.GetNode("Floor").Owner == lab,
             "Lab player, camera and compact floor exist in the editable scene");
         Check(new[] { lab.WiresZone, lab.FusesZone, lab.GymZone }.All(zone => zone.Owner == lab)
@@ -224,13 +244,13 @@ public partial class TrainingPracticeTest : Node
         Check(PracticeSession.Saved == saved, "Gym stamina/rest and course frozen outside gym");
         await WalkTo(new(288, 292)); await Frames(); KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && !Gym.BriefingActive, "Return to gym skips welcome");
-        Check(Player.Position.DistanceTo(new(400, 230)) < 1, "Gym return marker");
+        Check(Player.Position.DistanceTo(Gym.LabReturnMarker.GlobalPosition) < 1, "Gym return marker");
         Check(Gym.Course.Capture() == saved.Course, "Count and direction restored");
         Check(Mathf.Abs(Player.TrainingMovement.Stamina - saved.Movement.Stamina) < 1, "Stamina restored");
         Check(Player.GetNode<PlayerAnimation>("AnimatedSprite2D").Facing == "side" && Player.GetNode<PlayerAnimation>("AnimatedSprite2D").FlipH, "Orientation restored");
         await WalkTo(new(400, 510)); await Frames(); await Capture("gym-circuit-hint");
         Check(Find<Label>(Scene, l => l.Text.StartsWith("WASD: move") && l.IsVisibleInTree()) != null, "Movement and jump hint appears near circuit");
-        await WalkTo(new(400, 230)); await Frames();
+        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames();
         Cross(1); Check(Gym.Course.ClearedCount == 2, "Reverse direction survives travel");
         Cross(0); await Frames(); Check(Gym.CompletionShown && Gym.Course.Congratulated, "Final crossing congratulates once");
         Gym.GetNode<Button>(Gym.ContinuePath).EmitSignal(BaseButton.SignalName.Pressed); await Frames();
@@ -286,13 +306,92 @@ public partial class TrainingPracticeTest : Node
         long labSession = PracticeSession.SessionId;
         await WalkTo(new(288, 292)); await Frames(); KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && PracticeSession.SessionId == labSession && PracticeSession.Wires, "First gym arrival preserves lab repairs and session");
-        Check(Player.Position.DistanceTo(new(400, 230)) < 1, "First gym arrival uses door marker");
+        Check(Player.Position.DistanceTo(Gym.LabReturnMarker.GlobalPosition) < 1, "First gym arrival uses door marker");
         Check(Gym.Course.ClearedCount == 0 && Gym.BriefingActive, "First gym visit initializes course and welcome");
         for (int i = 0; i < 3; i++) { KeyPress(Key.Enter); await Frames(); }
         KeyPress(Key.E); await Frames(8); KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && !Gym.BriefingActive && PracticeSession.Wires, "Subsequent gym arrival skips welcome and keeps repairs");
         Check(initialMission == (mission.Stage, mission.MissionTime, mission.Budget, mission.Mass,
             mission.Energy, mission.Communications, mission.SpareParts, mission.RoverImpacts, mission.RoverCollisions), "No mission changes");
+        await PhysicalRoutes();
+    }
+
+    private async Task ScreenSizeChecks(string room)
+    {
+        var window = GetWindow(); var size = window.Size;
+        var scale = window.ContentScaleSize; var mode = window.ContentScaleMode;
+        var position = Player.Position;
+        var visual = Player.GetNode<PlayerAnimation>("AnimatedSprite2D");
+        var facing = visual.Facing; bool flip = visual.FlipH;
+        var footprint = Player.GetNode<CollisionShape2D>("CollisionShape2D");
+        var shape = footprint.Shape; var collisionTransform = footprint.Transform;
+        Player.Position = room == "gym" ? new Vector2(320, 230) : new Vector2(288, 252);
+        window.ContentScaleMode = Window.ContentScaleModeEnum.Viewport;
+        foreach (var resolution in new[] { new Vector2I(1024, 768), new Vector2I(1280, 720), new Vector2I(1024, 768) })
+        {
+            window.Size = resolution; window.ContentScaleSize = resolution; await Frames(8);
+            Player.Velocity = Vector2.Zero; visual.RestoreFacing("down", false);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            var screen = visual.GetGlobalTransformWithCanvas();
+            Check(visual.Animation == "idle_down" && visual.Frame == 0, "Same unobstructed idle frame for size comparison");
+            Check(Mathf.IsEqualApprox(screen.X.Length(), 2.25f) && Mathf.IsEqualApprox(screen.Y.Length(), 2.25f), "Equivalent screen art scale at " + resolution);
+            Check(Player.Scale == Vector2.One && footprint.Shape == shape && footprint.Transform == collisionTransform, "Resize preserves physics footprint");
+            Check(visual.Position.IsEqualApprox(new Vector2(room == "gym" ? 1 : 0, -11) * visual.Scale.X), "Feet offset derives from native art without accumulation");
+            await Capture($"{room}-size-{resolution.X}x{resolution.Y}");
+        }
+        window.ContentScaleSize = scale; window.ContentScaleMode = mode; window.Size = size;
+        Player.Position = position; visual.RestoreFacing(facing, flip); await Frames(8);
+    }
+
+    private async Task PhysicalRoutes()
+    {
+        foreach (int direction in new[] { 1, -1 })
+        {
+            GetTree().ChangeSceneToFile(PracticeSession.TrainingScene); await Frames(8);
+            for (int i = 0; i < 3; i++) { KeyPress(Key.Enter); await Frames(); }
+            for (int step = 0; step < 3; step++)
+            {
+                int index = direction == 1 ? step : 2 - step;
+                var movement = Player.TrainingMovement;
+                var block = PhysicalTraining.WorldRect(Gym.Course.Blocks[index]);
+                var body = PhysicalTraining.WorldRect(movement.Footprint);
+                var offset = body.GetCenter() - Player.GlobalPosition;
+                // Set up each approach, then use real input, height and MoveAndSlide across the hurdle.
+                Player.GlobalPosition = new Vector2(block.GetCenter().X,
+                    direction == 1 ? block.Position.Y - body.Size.Y / 2 - 12 : block.End.Y + body.Size.Y / 2 + 12) - offset;
+                Player.Velocity = Vector2.Zero;
+                await Frames(8);
+                Check(Player.TestMove(Player.GlobalTransform, new Vector2(0, direction * 45)), "Hurdle blocks grounded approach");
+                if (direction == 1 && step == 0)
+                {
+                    await Capture("gym-hurdle-rest");
+                    if (Visual)
+                    {
+                        var window = GetWindow(); var size = window.Size;
+                        var scale = window.ContentScaleSize; var mode = window.ContentScaleMode;
+                        window.ContentScaleMode = Window.ContentScaleModeEnum.Viewport;
+                        foreach (var resolution in new[] { new Vector2I(1024, 768), new Vector2I(1280, 720) })
+                        {
+                            window.Size = resolution; window.ContentScaleSize = resolution; await Frames(8);
+                            await Capture($"gym-hurdle-{resolution.X}x{resolution.Y}");
+                        }
+                        window.ContentScaleSize = scale; window.ContentScaleMode = mode; window.Size = size;
+                    }
+                }
+                string action = direction == 1 ? "move_down" : "move_up";
+                Input.ActionPress(action); Input.ActionPress("training_jump");
+                for (int tick = 0; tick < 40; tick++)
+                {
+                    await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                    if (tick == 1) Input.ActionRelease("training_jump");
+                    if (tick == 12 && direction == 1 && step == 0) await Capture("gym-hurdle-jump");
+                }
+                Input.ActionRelease(action); Player.Velocity = Vector2.Zero;
+                Check(movement.Grounded && movement.Height == 0, "Hurdle crossing lands on floor");
+                Check(Gym.Course.ClearedCount == step + 1, $"Physical crossing {index} counts in direction {direction}");
+                Check(Player.GetNode<Polygon2D>("JumpShadow").Visible, "Shadow remains visible after landing");
+            }
+        }
     }
     private void SolveWires()
     {

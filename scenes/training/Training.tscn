@@ -1804,13 +1804,14 @@ Footprint = NodePath("../CollisionShape2D")
 Shadow = NodePath("../JumpShadow")
 
 [node name="JumpShadow" type="Polygon2D" parent="Tilemaps_layers/Player" unique_id=1811380177]
-visible = false
-color = Color(0, 0, 0, 0.35)
-polygon = PackedVector2Array(-9, -7, 13, -7, 13, -1, -9, -1)
+scale = Vector2(0.75, 0.75)
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-12, -4, -7, -8, 11, -8, 16, -4, 11, 0, -7, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Tilemaps_layers/Player" unique_id=411452938]
-position = Vector2(2, -13)
-scale = Vector2(1.1666666, 1.1666666)
+texture_filter = 1
+position = Vector2(1.5, -16.5)
+scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("sprite_frames_player")
 animation = &"idle_down"
 script = ExtResource("4_anim")

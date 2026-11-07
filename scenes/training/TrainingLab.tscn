@@ -11,26 +11,10 @@
 [ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="idle_side"]
 [ext_resource type="Script" uid="uid://c32cgch3a68p0" path="res://scripts/training/TrainingLab.cs" id="lab"]
 [ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="player"]
+[ext_resource type="Texture2D" uid="uid://bimfvp1udfbfj" path="res://art/training/tilesets/Room_Builder_free_16x16.png" id="room_atlas"]
 [ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="side1"]
 [ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="side2"]
 [ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/wiring_workbench.png" id="workbench"]
-
-[sub_resource type="Shader" id="FloorShader"]
-code = "shader_type canvas_item;
-uniform vec2 cells = vec2(18.0, 12.0);
-uniform vec4 even_color : source_color = vec4(0.152941, 0.207843, 0.266667, 1.0);
-uniform vec4 odd_color : source_color = vec4(0.168627, 0.223529, 0.282353, 1.0);
-void fragment() {
-    vec2 cell = floor(UV * cells);
-    COLOR = mix(even_color, odd_color, mod(cell.x + cell.y, 2.0));
-}
-"
-
-[sub_resource type="ShaderMaterial" id="FloorMaterial"]
-shader = SubResource("FloorShader")
-shader_parameter/cells = Vector2(18, 12)
-shader_parameter/even_color = Color(0.152941, 0.207843, 0.266667, 1)
-shader_parameter/odd_color = Color(0.168627, 0.223529, 0.282353, 1)
 
 [sub_resource type="RectangleShape2D" id="NorthShape"]
 size = Vector2(576, 32)
@@ -132,21 +116,28 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.066667, 0.109804, 0.160784, 1)
 
-[node name="Floor" type="ColorRect" parent="." unique_id=2105311951]
-editor_description = "Single editable checker floor, 18 by 12 cells. Colors and cell counts are in the material; no generated geometry or external texture."
-material = SubResource("FloorMaterial")
+[node name="Floor" type="NinePatchRect" parent="." unique_id=2105311951]
+editor_description = "Gym source 1 (12,12), repeated at native pixel size. Local editable drawing only; collision belongs to Walls."
 offset_right = 576.0
 offset_bottom = 384.0
-mouse_filter = 2
+texture = ExtResource("room_atlas")
+region_rect = Rect2(192, 192, 16, 16)
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 
 [node name="Walls" type="Node2D" parent="." unique_id=1341511398]
 
 [node name="North" type="StaticBody2D" parent="Walls" unique_id=1577924552]
 position = Vector2(288, 16)
 
-[node name="Visual" type="Polygon2D" parent="Walls/North" unique_id=941511851]
-color = Color(0.321569, 0.392157, 0.482353, 1)
-polygon = PackedVector2Array(-288, -16, 288, -16, 288, 16, -288, 16)
+[node name="Visual" type="NinePatchRect" parent="Walls/North" unique_id=941511851]
+offset_left = -288.0
+offset_top = -16.0
+offset_right = 288.0
+offset_bottom = 16.0
+texture = ExtResource("room_atlas")
+region_rect = Rect2(0, 272, 48, 32)
+axis_stretch_horizontal = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/North" unique_id=1114653925]
 shape = SubResource("NorthShape")
@@ -154,9 +145,14 @@ shape = SubResource("NorthShape")
 [node name="West" type="StaticBody2D" parent="Walls" unique_id=421315662]
 position = Vector2(8, 192)
 
-[node name="Visual" type="Polygon2D" parent="Walls/West" unique_id=1105809867]
-color = Color(0.321569, 0.392157, 0.482353, 1)
-polygon = PackedVector2Array(-8, -192, 8, -192, 8, 192, -8, 192)
+[node name="Visual" type="NinePatchRect" parent="Walls/West" unique_id=1105809867]
+offset_left = -8.0
+offset_top = -160.0
+offset_right = 8.0
+offset_bottom = 176.0
+texture = ExtResource("room_atlas")
+region_rect = Rect2(176, 32, 16, 16)
+axis_stretch_vertical = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/West" unique_id=1375042044]
 shape = SubResource("SideShape")
@@ -164,9 +160,14 @@ shape = SubResource("SideShape")
 [node name="East" type="StaticBody2D" parent="Walls" unique_id=1417562048]
 position = Vector2(568, 192)
 
-[node name="Visual" type="Polygon2D" parent="Walls/East" unique_id=739242032]
-color = Color(0.321569, 0.392157, 0.482353, 1)
-polygon = PackedVector2Array(-8, -192, 8, -192, 8, 192, -8, 192)
+[node name="Visual" type="NinePatchRect" parent="Walls/East" unique_id=739242032]
+offset_left = -8.0
+offset_top = -160.0
+offset_right = 8.0
+offset_bottom = 176.0
+texture = ExtResource("room_atlas")
+region_rect = Rect2(208, 32, 16, 16)
+axis_stretch_vertical = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/East" unique_id=552273144]
 shape = SubResource("SideShape")
@@ -174,9 +175,14 @@ shape = SubResource("SideShape")
 [node name="South" type="StaticBody2D" parent="Walls" unique_id=846354638]
 position = Vector2(288, 376)
 
-[node name="Visual" type="Polygon2D" parent="Walls/South" unique_id=857530361]
-color = Color(0.321569, 0.392157, 0.482353, 1)
-polygon = PackedVector2Array(-288, -8, 288, -8, 288, 8, -288, 8)
+[node name="Visual" type="NinePatchRect" parent="Walls/South" unique_id=857530361]
+offset_left = -288.0
+offset_top = -8.0
+offset_right = 288.0
+offset_bottom = 8.0
+texture = ExtResource("room_atlas")
+region_rect = Rect2(0, 272, 48, 32)
+axis_stretch_horizontal = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/South" unique_id=1214175806]
 shape = SubResource("SouthShape")
@@ -284,10 +290,10 @@ color = Color(0.690196, 0.960784, 1, 1)
 polygon = PackedVector2Array(-1, -16, 1, -16, 1, 16, -1, 16)
 
 [node name="FrontZone" type="ReferenceRect" parent="GymDoor" unique_id=1954321810]
-offset_left = -32.0
+offset_left = -41.0
 offset_top = -62.0
-offset_right = 32.0
-offset_bottom = -8.0
+offset_right = 41.0
+offset_bottom = 20.0
 mouse_filter = 2
 
 [node name="lab_from_gym" type="Marker2D" parent="." unique_id=675014144]
@@ -298,8 +304,14 @@ position = Vector2(288, 292)
 script = ExtResource("player")
 Speed = 150.0
 
+[node name="GroundShadow" type="Polygon2D" parent="Player" unique_id=189505872]
+scale = Vector2(0.75, 0.75)
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-14, -4, -9, -8, 9, -8, 14, -4, 9, 0, -9, 0)
+
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1518599814]
-position = Vector2(0, -13)
+position = Vector2(0, -16.5)
+scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("PlayerFrames")
 animation = &"idle_down"
 script = ExtResource("animation")
