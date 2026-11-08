@@ -65,6 +65,14 @@ theme_override_font_sizes/font_size = 13
 text = "M I S S I O N   C O N T R O L"
 horizontal_alignment = 1
 
+[node name="Tagline" type="Label" parent="MenuLayout/MenuStack/TitleGroup"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.74, 0.86, 1)
+theme_override_font_sizes/font_size = 11
+text = "Fourteen days of silence. Two probes lost."
+horizontal_alignment = 1
+autowrap_mode = 3
+
 [node name="TitleRule" type="ColorRect" parent="MenuLayout/MenuStack/TitleGroup"]
 custom_minimum_size = Vector2(72, 2)
 layout_mode = 2
@@ -80,7 +88,7 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
-text = "Start Game"
+text = "Begin Mission"
 
 [node name="Options" type="Button" parent="MenuLayout/MenuStack/VBoxContainer2" unique_id=698796058]
 custom_minimum_size = Vector2(0, 54)
@@ -96,6 +104,20 @@ text = "Credits"
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 text = "Quit Game"
+
+[node name="Telemetry" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -44.0
+offset_right = 620.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "// GATEWAY RELAY // SIGNAL LOST - 14D 06H"
 
 [connection signal="pressed" from="MenuLayout/MenuStack/VBoxContainer2/Start" to="." method="OnStartPressed"]
 [connection signal="pressed" from="MenuLayout/MenuStack/VBoxContainer2/Options" to="." method="OnOptionsPressed"]

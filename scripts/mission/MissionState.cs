@@ -37,6 +37,12 @@ public partial class MissionState : Node
 		TrainingCompletionShown = true;
 		return true;
 	}
+	public void BeginFromMainMenu()
+	{
+		BeginLaunchSequence();
+		Stage = MissionStage.Intro;
+	}
+	public void CompleteIntro() => Stage = MissionStage.Training;
 	public void BeginLaunchSequence()
 	{
 		LaunchSequence++;

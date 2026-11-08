@@ -1,12 +1,15 @@
 namespace ares.scripts.training;
 
 using Godot;
+using ares.scripts.dialogue;
 using ares.scripts.mission;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
 public partial class TrainingIntro : Node2D
 {
-	[Export] public string AstronautName { get; set; } = "Commander";
+	[Export] public string AstronautName { get; set; } = "Ares";
+	[Export] public DialogueSequence Briefing { get; set; }
+	[Export] public DialogueSequence CompletionNotice { get; set; }
 	[Export] public PhysicalTraining Course { get; set; }
 	[Export] public Marker2D LabReturnMarker { get; set; }
 	[Export] public Control LabDoorZone { get; set; }
@@ -46,6 +49,10 @@ public partial class TrainingIntro : Node2D
 			return;
 		}
 
+		if (Briefing == null)
+			Briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
+		if (CompletionNotice == null)
+			CompletionNotice = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
 		_continue.Pressed += Advance;
 		if (Course != null) Course.Completed += QueueCompletion;
 		_stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
@@ -97,8 +104,11 @@ public partial class TrainingIntro : Node2D
 		AcquirePhysicsLock();
 		_active = true;
 		_lastAdvanceFrame = Engine.GetProcessFrames();
-		_speaker.Text = "MISSION CONTROL";
-		_text.Text = $"Excellent work, {AstronautName}. All training is complete. Return to the lab, walk to the marked LAUNCH PAD, and press E to begin.";
+		DialogueLine line = null;
+		if (CompletionNotice != null && CompletionNotice.Lines.Count > 0)
+			line = CompletionNotice.Lines[0];
+		_speaker.Text = SpeakerFor(line);
+		_text.Text = line?.Text ?? "All training is complete.";
 		_continue.Text = "Continue";
 		_panel.Show();
 		_continue.GrabFocus();
@@ -106,15 +116,18 @@ public partial class TrainingIntro : Node2D
 
 	private void ShowLine()
 	{
-		_speaker.Text = _line == 1 ? AstronautName.ToUpperInvariant() : "MISSION CONTROL";
-		_text.Text = _line switch
-		{
-			0 => "Welcome, [Name]. Gateway has been silent for two weeks. Before departure, let's prepare you to bring it back online."
-				.Replace("[Name]", AstronautName),
-			1 => "Understood. Let's get started.",
-			_ => "This is a safe place to practice. The gym and repair lab are yours to explore, at your own pace."
-		};
+		DialogueLine line = null;
+		if (Briefing != null && _line >= 0 && _line < Briefing.Lines.Count)
+			line = Briefing.Lines[_line];
+		_speaker.Text = SpeakerFor(line);
+		_text.Text = (line?.Text ?? "").Replace("[Name]", AstronautName);
 		_continue.Text = _line == 2 ? "Start training" : "Continue";
+	}
+
+	private string SpeakerFor(DialogueLine line)
+	{
+		if (line == null || string.IsNullOrEmpty(line.Speaker)) return "MISSION CONTROL";
+		return line.Speaker == "ARES" ? AstronautName.ToUpperInvariant() : line.Speaker;
 	}
 
 	private void Advance()

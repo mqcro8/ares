@@ -2,6 +2,7 @@ namespace ares.scripts.training;
 
 using Godot;
 using System;
+using ares.scripts.dialogue;
 using ares.scripts.mission;
 using ares.scripts.player;
 
@@ -61,7 +62,7 @@ public partial class TrainingCompletionDialog : CanvasLayer
         column.AddChild(title);
         var message = new Label
         {
-            Text = "All training requirements are complete. Return to the laboratory, walk to the marked LAUNCH PAD, and press E to begin the real launch.",
+            Text = CompletionMessage(),
             HorizontalAlignment = HorizontalAlignment.Center,
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(0, 86)
@@ -71,6 +72,14 @@ public partial class TrainingCompletionDialog : CanvasLayer
         _continue.Pressed += Close;
         column.AddChild(_continue);
         _continue.GrabFocus();
+    }
+
+    private static string CompletionMessage()
+    {
+        var sequence = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
+        return sequence != null && sequence.Lines.Count > 0
+            ? sequence.Lines[0].Text
+            : "All training is complete.";
     }
 
     private void Close()

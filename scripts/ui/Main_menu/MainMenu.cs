@@ -4,12 +4,25 @@ namespace Ares.Ui.MainMenu;
 
 public partial class MainMenu : Control
 {
-	
-	
+	public override void _Ready()
+	{
+		GetNodeOrNull<Button>("MenuLayout/MenuStack/VBoxContainer2/Start")?.GrabFocus();
+		var telemetry = GetNodeOrNull<Label>("Telemetry");
+		if (telemetry == null) return;
+		var tween = CreateTween().SetLoops();
+		tween.TweenProperty(telemetry, "modulate:a", 0.35f, 1.4).SetTrans(Tween.TransitionType.Sine);
+		tween.TweenProperty(telemetry, "modulate:a", 1.0f, 1.4).SetTrans(Tween.TransitionType.Sine);
+	}
+
 	public void OnStartPressed()
 	{
-		if (GetTree().ChangeSceneToFile("res://scenes/training/Training.tscn") == Error.Ok)
-			ares.scripts.mission.MissionState.Instance.BeginLaunchSequence();
+		const string introScene = "res://scenes/intro/Intro.tscn";
+		const string trainingScene = "res://scenes/training/Training.tscn";
+		string target = ResourceLoader.Exists(introScene) ? introScene : trainingScene;
+		if (GetTree().ChangeSceneToFile(target) != Error.Ok) return;
+		ares.scripts.mission.MissionState.Instance.BeginFromMainMenu();
+		if (target == trainingScene)
+			ares.scripts.mission.MissionState.Instance.CompleteIntro();
 	}
 
 	public void OnOptionsPressed()
