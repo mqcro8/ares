@@ -13,28 +13,28 @@ public partial class Rocket : Node2D
 		fire.Stop();
 	}
 
-	// Animación inicial de ignición
-	public void StartIgnition()
-	{
-		fire.Visible = true;
-		fire.Play("ignition");
-	}
-
 	// Despegue exitoso
 	public void LaunchSuccess()
 	{
 		fire.Visible = true;
 		fire.Play("success");
 	}
-
-	// Despegue fallido
-	public void LaunchFailed()
+	// Fuego continuo mientras se sostiene el empuje
+	public void BeginThrust()
 	{
 		fire.Visible = true;
-		fire.Play("failed");
+		fire.Play("thrust");
 	}
 
-	// Fuego continuo durante el ascenso
+	public void SetThrust(double thrust)
+	{
+		if (!fire.Visible || fire.Animation != "thrust") return;
+		float strength = Mathf.Clamp((float)thrust / 100, 0, 1);
+		fire.SpeedScale = .4f + strength * 1.6f;
+		fire.Modulate = new Color(1, .85f + strength * .15f, .85f + strength * .15f);
+	}
+
+	// Fuego continuo durante el ascenso real
 	public void StartAscending()
 	{
 		fire.Visible = true;

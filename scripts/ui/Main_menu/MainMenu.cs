@@ -8,7 +8,8 @@ public partial class MainMenu : Control
 	
 	public void OnStartPressed()
 	{
-		GetTree().ChangeSceneToFile("res://scenes/training/Training.tscn");
+		if (GetTree().ChangeSceneToFile("res://scenes/training/Training.tscn") == Error.Ok)
+			ares.scripts.mission.MissionState.Instance.BeginLaunchSequence();
 	}
 
 	public void OnOptionsPressed()

@@ -1,0 +1,232 @@
+using Godot;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using ares.scripts.mission;
+using ares.scripts.training;
+
+public partial class RocketLaunchTest : Node
+{
+    private int assertions;
+    private RocketLaunch launch;
+    private double now;
+    private bool holding;
+    private bool Visual => OS.GetCmdlineUserArgs().Contains("--visual");
+    private const string Ui = "IntroUI/Panel/Margin/VBox/";
+    private const string BriefingUi = "IntroUI/Briefing/Margin/VBox/";
+
+    private void Advance(double seconds) { now += seconds; launch._Process(seconds); }
+    private void Check(bool ok, string message)
+    { assertions++; if (!ok) throw new Exception(message); }
+
+    public override async void _Ready()
+    {
+        try
+        {
+            LaunchHoldModelTest.Run(Check);
+            await Run();
+            GD.Print($"LAUNCH PASS ({assertions} assertions)");
+            GetTree().Quit();
+        }
+        catch (Exception ex) { GD.PushError(ex.ToString()); GetTree().Quit(1); }
+    }
+
+    private async Task Frames(int count = 3)
+    { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
+
+    private async Task Load(PracticeSession.LaunchMode mode = PracticeSession.LaunchMode.Real)
+    {
+        if (launch != null) { launch.QueueFree(); launch = null; await Frames(); }
+        if (PracticeSession.PendingLaunch == null)
+            PracticeSession.RequestLaunch(mode, new Vector2(12, 34));
+        launch = GD.Load<PackedScene>("res://scenes/RocketLaunch/Launching.tscn").Instantiate<RocketLaunch>();
+        now = 0; holding = false; launch.Clock = () => now;
+        AddChild(launch); launch.SetProcess(false); await Frames();
+    }
+
+    private void SendKey(Key key, bool down, bool echo = false)
+    {
+        Input.ParseInputEvent(new InputEventKey { PhysicalKeycode = key, Keycode = key, Pressed = down, Echo = echo });
+        Input.FlushBufferedEvents();
+    }
+
+    private void SendMouse(bool down)
+    {
+        Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = down });
+        Input.FlushBufferedEvents();
+    }
+
+    private void ClickPath(string path)
+    {
+        var point = launch.GetNode<Button>(path).GetGlobalRect().GetCenter();
+        foreach (bool down in new[] { true, false })
+            GetViewport().PushInput(new InputEventMouseButton
+            {
+                Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = down
+            }, true);
+    }
+
+    private async Task Capture(string name)
+    {
+        if (!Visual) return;
+        foreach (var size in new[] { new Vector2I(640, 480), new Vector2I(1024, 768), new Vector2I(1280, 720) })
+        {
+            GetWindow().ContentScaleMode = Window.ContentScaleModeEnum.Viewport;
+            GetWindow().ContentScaleSize = size; GetWindow().Size = size;
+            await Frames();
+            if (launch.Paused)
+            {
+                SendKey(Key.Escape, true);
+                SendKey(Key.Escape, false);
+            }
+            launch._Process(0);
+            Control overlay = launch.State == RocketLaunch.Phase.Ready
+                ? launch.GetNode<Control>("IntroUI/Briefing") : launch.GetNode<Control>("IntroUI/Panel");
+            Check(GetViewport().GetVisibleRect().Encloses(overlay.GetGlobalRect()), "Overlay fits " + size);
+            if (launch.State == RocketLaunch.Phase.Active)
+                Check(overlay.Size.Y < size.Y * .25f, "Active slider HUD stays compact at " + size);
+            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/launch-{name}-{size.X}x{size.Y}.png") == Error.Ok, "Capture");
+        }
+    }
+
+    private void Start()
+    {
+        ClickPath(BriefingUi + "Actions/Start");
+        Check(launch.State == RocketLaunch.Phase.Active, "Start enters the hold task without countdown");
+    }
+
+    private void Hold(bool down)
+    {
+        if (holding == down) return;
+        SendKey(Key.Space, down); holding = down;
+    }
+
+    private static void CompleteCoreTraining(MissionState mission)
+    {
+        mission.TrainingCourseComplete = true;
+        mission.TrainingWiresComplete = true;
+        mission.TrainingFusesComplete = true;
+    }
+
+    private static void CompleteAllTraining(MissionState mission)
+    {
+        CompleteCoreTraining(mission);
+        mission.TrainingLaunchPracticeComplete = true;
+    }
+
+    private void DriveToComplete()
+    {
+        while (!launch.Model.Complete && now < 50)
+        {
+            Hold(launch.Model.Heat < 50);
+            Advance(.01);
+        }
+        Hold(false);
+        Check(launch.Model.Complete, "Feedback hold completes ten centered seconds");
+    }
+
+    private async Task WaitFor(RocketLaunch.Phase phase)
+    {
+        for (int i = 0; i < 150 && launch.State != phase; i++)
+            await ToSignal(GetTree().CreateTimer(.02), SceneTreeTimer.SignalName.Timeout);
+        Check(launch.State == phase, "State reaches " + phase);
+    }
+
+    private async Task Run()
+    {
+        var mission = MissionState.Instance;
+        mission.BeginLaunchSequence(); mission.Energy = 50;
+        CompleteAllTraining(mission);
+        Check(!mission.RecordLaunch(mission.LaunchSequence, new LaunchResult(.5, 10)),
+            "Real launch rejects a partial center hold");
+        await Load(); await Capture("ready");
+        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launch_site_background.png"),
+            "New launch-site background is used");
+        Check(launch.GetNode<Sprite2D>("Rocket/Rocket").Texture.ResourcePath.EndsWith("rocket_sprite.png"),
+            "Existing rocket sprite is preserved");
+        Check(launch.GetNode<Control>("IntroUI/Briefing").Visible && !launch.GetNode<Control>("IntroUI/Panel").Visible,
+            "Launch Pad shows a compact ready dialog");
+        Check(!launch.GetNode<TextureRect>(BriefingUi + "Tutorial").Visible &&
+            !launch.GetNode<Label>(BriefingUi + "Text").Text.Contains("Hold SPACE"),
+            "Real launch does not repeat the simulator tutorial");
+        Check(launch.Model.Config.GoalSeconds == 10 && launch.Model.Config.Low == 45 && launch.Model.Config.High == 55,
+            "One shared ten-second center band is used");
+        Check(launch.Model.Result == null, "No event schedule, precision score or countdown");
+        var band = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
+        Check(Math.Abs(band.AnchorLeft - .45) < .001 && Math.Abs(band.AnchorRight - .55) < .001,
+            "Slider target is centered");
+
+        Start();
+        Check(!launch.GetNode<Control>(Ui + "Actions").Visible, "Active play shows slider without extra controls");
+        await Capture("active");
+
+        SendKey(Key.Space, true); Advance(.2);
+        Check(launch.Model.Heat > 50, "Holding SPACE raises the marker");
+        SendKey(Key.Space, false); Advance(.6);
+        Check(!launch.Model.InBand, "Released marker leaves the center band");
+        double frozenProgress = launch.Model.CenteredTime;
+        Advance(1);
+        Check(launch.Model.CenteredTime == frozenProgress, "Progress pauses outside the center band");
+        SendMouse(true); Advance(.2); double mouseHeat = launch.Model.Heat;
+        SendMouse(false); Advance(.2);
+        Check(mouseHeat > launch.Model.Heat, "Holding and releasing mouse controls the marker");
+
+        SendMouse(true); Advance(.1);
+        launch.Notification((int)Node.NotificationApplicationFocusOut);
+        double pausedHeat = launch.Model.Heat, pausedProgress = launch.Model.CenteredTime;
+        Advance(2);
+        Check(launch.Paused && launch.Model.Heat == pausedHeat && launch.Model.CenteredTime == pausedProgress,
+            "Pause freezes marker and progress");
+        Check(launch.GetNode<AnimatedSprite2D>("Rocket/Fire").SpeedScale == 0, "Pause freezes thrust animation");
+        launch.GetNode<Button>(Ui + "Actions/Pause").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(!launch.Paused, "Resume clears pause");
+        SendMouse(false); Advance(.1);
+        double releasedHeat = launch.Model.Heat;
+        SendMouse(true); Advance(.1); SendMouse(false);
+        Check(launch.Model.Heat > releasedHeat, "Mouse unlocks after pause and can control thrust again");
+
+        DriveToComplete();
+        Check(launch.Model.Result.CenteredSeconds == 10 && mission.LaunchRecord?.CenteredSeconds == 10,
+            "Real launch records completion without a score");
+        Check(mission.Energy == 50 && mission.TrainingLaunchPracticeComplete,
+            "Real launch has no energy penalty and keeps prior practice completion");
+        var successFire = launch.GetNode<AnimatedSprite2D>("Rocket/Fire"); successFire.SpeedScale = 0;
+        await Capture("success"); successFire.SpeedScale = 1;
+        await WaitFor(RocketLaunch.Phase.Ascending);
+        float ascentStartY = launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y;
+        launch.SetProcess(true);
+        await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
+        Check(launch.IsInsideTree() && launch.State == RocketLaunch.Phase.Complete &&
+            launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y < ascentStartY,
+            $"Rocket visibly ascends and remains in scene without auto-return ({launch.State}, {ascentStartY:F2}->{launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y:F2})");
+        launch.QueueFree(); launch = null; await Frames();
+
+        mission.BeginLaunchSequence(); mission.Energy = 50;
+        CompleteCoreTraining(mission);
+        PracticeSession.RequestLaunch(PracticeSession.LaunchMode.Practice, new Vector2(12, 34));
+        await Load(); await Capture("practice-ready");
+        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("Background.jpeg"),
+            "Practice uses the earlier background");
+        Check(launch.GetNode<TextureRect>(BriefingUi + "Tutorial").Visible,
+            "Simulator keeps visual launch instructions");
+        Check(!mission.LaunchPadUnlocked, "Practice remains the final pad-unlock requirement");
+        Check(launch.Practice && launch.Model.Config == new LaunchHoldConfig(), "Practice uses the exact launch requirement");
+        Start(); DriveToComplete();
+        Check(mission.TrainingLaunchPracticeComplete && mission.LaunchPadUnlocked,
+            "Completing practice fulfills the final training requirement");
+        Check(mission.LaunchRecord == null && mission.Energy == 50 && launch.State == RocketLaunch.Phase.Result,
+            "Practice clears training without recording or launching the mission");
+        await Capture("practice-complete");
+
+        mission.BeginLaunchSequence();
+        Check(!mission.LaunchPadUnlocked && !mission.TrainingLaunchPracticeComplete,
+            "New sequence resets all training requirements");
+        PracticeSession.RequestLaunch(PracticeSession.LaunchMode.Practice, Vector2.Zero);
+        mission.BeginLaunchSequence();
+        await Load();
+        Check(!launch.Practice && launch.State == RocketLaunch.Phase.Result &&
+            launch.GetNode<Label>(Ui + "Text").Text.Contains("LAUNCH PAD LOCKED"),
+            "Launch request from an old mission is rejected");
+    }
+}

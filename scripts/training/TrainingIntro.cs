@@ -1,6 +1,7 @@
 namespace ares.scripts.training;
 
 using Godot;
+using ares.scripts.mission;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
 public partial class TrainingIntro : Node2D
@@ -27,6 +28,7 @@ public partial class TrainingIntro : Node2D
 	private bool _completionShown;
 	private int _line;
 	private ulong _lastAdvanceFrame = ulong.MaxValue;
+	private TrainingStations _stations;
 	public bool BriefingActive => _active;
 	public bool CompletionShown => _completionShown;
 
@@ -46,9 +48,9 @@ public partial class TrainingIntro : Node2D
 
 		_continue.Pressed += Advance;
 		if (Course != null) Course.Completed += QueueCompletion;
-		var stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
-		AddChild(stations);
-		stations.Targets.Add(new("Enter repair lab", LabDoorZone.GetGlobalRect(), PracticeSession.LabScene, "lab.from_gym"));
+		_stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
+		AddChild(_stations);
+		_stations.Targets.Add(new("Enter repair lab", LabDoorZone, PracticeSession.LabScene, "lab.from_gym"));
 		var arrival = PracticeSession.Arrive(PracticeSession.TrainingScene);
 		if (arrival != null)
 		{
@@ -59,7 +61,15 @@ public partial class TrainingIntro : Node2D
 			{
 				Course.Restore(saved.Course);
 				((ares.scripts.player.Player)_player).TrainingMovement.Restore(saved.Movement);
-				_completionShown = saved.CompletionShown;
+				_completionShown = saved.CompletionShown || Course.ClearedCount >= 3;
+				if (_completionShown)
+				{
+					MissionState.Instance.TrainingCourseComplete = true;
+					MissionState.Instance.EvaluateTrainingCompletion();
+					if (TrainingCompletionDialog.Open(this, (ares.scripts.player.Player)_player,
+						() => _stations.InteractionLocked = false))
+						_stations.InteractionLocked = true;
+				}
 				_line = 3;
 				_panel.Hide();
 				return;
@@ -80,13 +90,16 @@ public partial class TrainingIntro : Node2D
 	{
 		if (!IsInsideTree() || _active || _completionShown || _panel == null || _player == null) return;
 		_completionShown = true;
+		MissionState.Instance.TrainingCourseComplete = true;
+		MissionState.Instance.EvaluateTrainingCompletion();
+		if (!MissionState.Instance.TakeTrainingCompletionNotification()) return;
 		_completion = true;
 		AcquirePhysicsLock();
 		_active = true;
 		_lastAdvanceFrame = Engine.GetProcessFrames();
 		_speaker.Text = "MISSION CONTROL";
-		_text.Text = $"Excellent work, {AstronautName}. All three obstacles cleared. The repair lab is through the marked north door whenever you are ready.";
-		_continue.Text = "Keep practicing";
+		_text.Text = $"Excellent work, {AstronautName}. All training is complete. Return to the lab, walk to the marked LAUNCH PAD, and press E to begin.";
+		_continue.Text = "Continue";
 		_panel.Show();
 		_continue.GrabFocus();
 	}

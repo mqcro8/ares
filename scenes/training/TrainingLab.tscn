@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bpu38kcwp634q" path="res://art/player/walking/walking_back_frame_1.png" id="back1"]
 [ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="back2"]
 [ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/fuse_cabinet.png" id="cabinet"]
+[ext_resource type="Texture2D" uid="uid://dlbpoa4ib3vlv" path="res://art/training/operations/launch_simulator_console.png" id="console"]
 [ext_resource type="Texture2D" uid="uid://bon0e1k84xbo6" path="res://art/player/walking/walking_front_frame_1.png" id="front1"]
 [ext_resource type="Texture2D" uid="uid://dvxfwp2p4d1f1" path="res://art/player/walking/walking_front_frame_2.png" id="front2"]
 [ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="idle_back"]
@@ -30,6 +31,9 @@ size = Vector2(64, 20)
 
 [sub_resource type="RectangleShape2D" id="CabinetShape"]
 size = Vector2(28, 16)
+
+[sub_resource type="RectangleShape2D" id="SimulatorShape"]
+size = Vector2(32, 12)
 
 [sub_resource type="SpriteFrames" id="PlayerFrames"]
 animations = [{
@@ -94,7 +98,7 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="PlayerShape"]
 size = Vector2(14, 12)
 
-[node name="TrainingLab" type="Node2D" unique_id=1566292422 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "GymZone", "ArrivalMarkers")]
+[node name="TrainingLab" type="Node2D" unique_id=1566292422 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "GymZone", "SimulatorZone", "LaunchPadZone")]
 texture_filter = 1
 script = ExtResource("lab")
 Player = NodePath("Player")
@@ -102,7 +106,8 @@ Camera = NodePath("Camera2D")
 WiresZone = NodePath("WiringWorkbench/FrontZone")
 FusesZone = NodePath("FuseCabinet/FrontZone")
 GymZone = NodePath("GymDoor/FrontZone")
-ArrivalMarkers = [NodePath("lab_from_gym"), NodePath("WiringWorkbench/lab_wires_return"), NodePath("FuseCabinet/lab_fuses_return")]
+SimulatorZone = NodePath("LaunchSimulator/FrontZone")
+LaunchPadZone = NodePath("LaunchPad/FrontZone")
 
 [node name="Background" type="CanvasLayer" parent="." unique_id=71666031]
 layer = -100
@@ -189,12 +194,13 @@ shape = SubResource("SouthShape")
 
 [node name="WiringWorkbench" type="Node2D" parent="." unique_id=868627775]
 editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
-position = Vector2(160, 156)
+position = Vector2(137, 86)
+metadata/_edit_group_ = true
 
 [node name="Sprite2D" type="Sprite2D" parent="WiringWorkbench" unique_id=1078190885]
 texture_filter = 1
-position = Vector2(0, -16)
-scale = Vector2(2, 2)
+position = Vector2(1.9073486e-06, -16.000004)
+scale = Vector2(1.9999999, 2.5000005)
 texture = ExtResource("workbench")
 
 [node name="Base" type="StaticBody2D" parent="WiringWorkbench" unique_id=231227528]
@@ -203,36 +209,16 @@ position = Vector2(0, -10)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WiringWorkbench/Base" unique_id=1148442662]
 shape = SubResource("WorkbenchShape")
 
-[node name="Accent" type="Polygon2D" parent="WiringWorkbench" unique_id=2142096518]
-color = Color(0.458824, 0.894118, 1, 1)
-polygon = PackedVector2Array(-36, 8, 36, 8, 36, 11, -36, 11)
-
-[node name="Sign" type="Label" parent="WiringWorkbench" unique_id=661709958]
-z_index = 5
-offset_left = -90.0
-offset_top = -70.0
-offset_right = 90.0
-offset_bottom = -46.0
-theme_override_colors/font_color = Color(0.458824, 0.894118, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
-text = "WIRING WORKBENCH"
-horizontal_alignment = 1
-
 [node name="FrontZone" type="ReferenceRect" parent="WiringWorkbench" unique_id=1063746883]
-offset_left = -46.0
-offset_top = 8.0
-offset_right = 46.0
-offset_bottom = 72.0
+offset_left = -48.0
+offset_right = 44.0
+offset_bottom = 64.0
 mouse_filter = 2
-
-[node name="lab_wires_return" type="Marker2D" parent="WiringWorkbench" unique_id=816045874]
-position = Vector2(0, 46)
 
 [node name="FuseCabinet" type="Node2D" parent="." unique_id=1530691037]
 editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
-position = Vector2(416, 156)
+position = Vector2(451, 88)
+metadata/_edit_group_ = true
 
 [node name="Sprite2D" type="Sprite2D" parent="FuseCabinet" unique_id=15789549]
 texture_filter = 1
@@ -246,35 +232,72 @@ position = Vector2(0, -8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FuseCabinet/Base" unique_id=2042153132]
 shape = SubResource("CabinetShape")
 
-[node name="Accent" type="Polygon2D" parent="FuseCabinet" unique_id=21206143]
-color = Color(1, 0.835294, 0.466667, 1)
-polygon = PackedVector2Array(-36, 8, 36, 8, 36, 11, -36, 11)
-
-[node name="Sign" type="Label" parent="FuseCabinet" unique_id=1731850410]
-z_index = 5
-offset_left = -90.0
-offset_top = -70.0
-offset_right = 90.0
-offset_bottom = -46.0
-theme_override_colors/font_color = Color(1, 0.835294, 0.466667, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
-text = "FUSE CABINET"
-horizontal_alignment = 1
-
 [node name="FrontZone" type="ReferenceRect" parent="FuseCabinet" unique_id=969865656]
 offset_left = -32.0
-offset_top = 8.0
 offset_right = 32.0
-offset_bottom = 72.0
+offset_bottom = 64.0
 mouse_filter = 2
 
-[node name="lab_fuses_return" type="Marker2D" parent="FuseCabinet" unique_id=1301041467]
-position = Vector2(0, 46)
+[node name="LaunchSimulator" type="Node2D" parent="." unique_id=37280607]
+editor_description = "Required launch simulator practice. Practice does not spend energy."
+position = Vector2(288, 80)
+metadata/_edit_group_ = true
+
+[node name="Sprite2D" type="Sprite2D" parent="LaunchSimulator" unique_id=1117670579]
+texture_filter = 1
+position = Vector2(0, -16)
+texture = ExtResource("console")
+
+[node name="Base" type="StaticBody2D" parent="LaunchSimulator" unique_id=1658940606]
+position = Vector2(0, -8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LaunchSimulator/Base" unique_id=2091787467]
+shape = SubResource("SimulatorShape")
+
+[node name="FrontZone" type="ReferenceRect" parent="LaunchSimulator" unique_id=1621000767]
+offset_left = -40.0
+offset_right = 40.0
+offset_bottom = 64.0
+mouse_filter = 2
+
+[node name="LaunchPad" type="Node2D" parent="." unique_id=1096195797]
+editor_description = "Manual real launch entry. Requires course, wiring, fuses and simulator practice."
+position = Vector2(557, 208)
+rotation = 1.5718156
+metadata/_edit_group_ = true
+
+[node name="Frame" type="Polygon2D" parent="LaunchPad" unique_id=1306345128]
+color = Color(0.086275, 0.141176, 0.2, 1)
+polygon = PackedVector2Array(-30, -20, 30, -20, 30, 20, -30, 20)
+
+[node name="Panel" type="Polygon2D" parent="LaunchPad" unique_id=1980946225]
+color = Color(0.294118, 0.505882, 0.564706, 1)
+polygon = PackedVector2Array(-26, -16, 26, -16, 26, 16, -26, 16)
+
+[node name="Seam" type="Polygon2D" parent="LaunchPad" unique_id=540860126]
+color = Color(1, 0.647059, 0.294118, 1)
+polygon = PackedVector2Array(-1, -16, 1, -16, 1, 16, -1, 16)
+
+[node name="FrontZone" type="ReferenceRect" parent="LaunchPad" unique_id=204946575]
+offset_left = -41.0
+offset_top = 12.0
+offset_right = 41.0
+offset_bottom = 94.0
+mouse_filter = 2
+
+[node name="FloorBadge" type="Node2D" parent="LaunchPad" unique_id=222571964]
+position = Vector2(0, 53)
+
+[node name="Plate" type="Polygon2D" parent="LaunchPad/FloorBadge" unique_id=357361682]
+color = Color(0.035, 0.075, 0.105, 0.95)
+polygon = PackedVector2Array(-14, -9, 14, -9, 14, 9, -14, 9)
+
+[node name="LaunchArrow" type="Polygon2D" parent="LaunchPad/FloorBadge" unique_id=785370483]
+color = Color(1, 0.647059, 0.294118, 1)
+polygon = PackedVector2Array(-8, 3, 0, -6, 8, 3, 3, 3, 3, 7, -3, 7, -3, 3)
 
 [node name="GymDoor" type="Node2D" parent="." unique_id=1367211159]
-position = Vector2(288, 348)
+position = Vector2(288, 364)
 metadata/_edit_group_ = true
 
 [node name="Frame" type="Polygon2D" parent="GymDoor" unique_id=678415675]
@@ -295,6 +318,7 @@ offset_top = -62.0
 offset_right = 41.0
 offset_bottom = 20.0
 mouse_filter = 2
+metadata/_edit_group_ = true
 
 [node name="lab_from_gym" type="Marker2D" parent="." unique_id=675014144]
 position = Vector2(288, 292)
@@ -310,8 +334,8 @@ color = Color(0, 0, 0, 0.25)
 polygon = PackedVector2Array(-14, -4, -9, -8, 9, -8, 14, -4, 9, 0, -9, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1518599814]
-position = Vector2(0, -16.5)
-scale = Vector2(1.5, 1.5)
+position = Vector2(2.0000038, -13.75)
+scale = Vector2(1.333333, 1.2708333)
 sprite_frames = SubResource("PlayerFrames")
 animation = &"idle_down"
 script = ExtResource("animation")
@@ -322,3 +346,4 @@ shape = SubResource("PlayerShape")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=61017354]
 position = Vector2(288, 192)
+zoom = Vector2(1.5, 1.5)

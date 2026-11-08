@@ -12,6 +12,7 @@ public partial class PracticeReturn : CanvasLayer
     internal System.Func<string, Error> SceneLoader { get; set; }
     private PanelContainer _instructions;
     private Control _overlay;
+    private TextureRect _tutorial;
     private Button _start, _back;
     public static void Attach(Control game) => game.AddChild(new PracticeReturn { Name = "PracticeReturn", Layer = 20 });
     public override void _Ready()
@@ -32,7 +33,22 @@ public partial class PracticeReturn : CanvasLayer
         foreach (string side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 20);
         var box = new VBoxContainer(); box.AddThemeConstantOverride("separation", 12); margin.AddChild(box);
         box.AddChild(new Label { Text = _game is WireMinigame ? "WIRING PRACTICE" : "FUSE PRACTICE" });
-        box.AddChild(new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Text = TrainingStations.Instructions(_game is WireMinigame ? PracticeSession.Exercise.Wires : PracticeSession.Exercise.Fuses) });
+        string tutorialPath = _game is WireMinigame
+            ? "res://art/training/tutorials/wires/cable_connection_tutorial.png"
+            : "res://art/training/tutorials/fuses/fuse_switch_tutorial.png";
+        _tutorial = new TextureRect
+        {
+            Texture = GD.Load<Texture2D>(tutorialPath),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        box.AddChild(_tutorial);
+        string hint = _game is WireMinigame
+            ? "Drag matching colors. Keyboard: 1–4, Up/Down, Enter."
+            : "Turn all six ON in four presses. DOUBLE toggles both linked switches.";
+        box.AddChild(new Label { Text = hint, HorizontalAlignment = HorizontalAlignment.Center, AutowrapMode = TextServer.AutowrapMode.WordSmart });
         _start = new Button { Text = "Start" }; box.AddChild(_start);
         _start.Pressed += () => { _starting = true; _start.ReleaseFocus(); };
         _start.GrabFocus();
@@ -48,6 +64,11 @@ public partial class PracticeReturn : CanvasLayer
         float halfWidth = Mathf.Min(340, (size.X - 32) / 2);
         _instructions.OffsetLeft = -halfWidth;
         _instructions.OffsetRight = halfWidth;
+        float tutorialWidth = Mathf.Max(160, Mathf.Min(480, size.X - 80));
+        _tutorial.CustomMinimumSize = new Vector2(tutorialWidth, tutorialWidth * .4f);
+        float panelHeight = Mathf.Min(size.Y - 24, tutorialWidth * .4f + 224);
+        _instructions.OffsetTop = -panelHeight / 2;
+        _instructions.OffsetBottom = panelHeight / 2;
         if (_game is WireMinigame)
         {
             var left = _game.GetNode<Control>("LeftTerminals");

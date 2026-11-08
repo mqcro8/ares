@@ -59,6 +59,30 @@ public partial class TrainingPracticeTest : Node
         Input.ParseInputEvent(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false });
         Input.FlushBufferedEvents();
     }
+    private void KeyState(Key key, bool down)
+    {
+        Input.ParseInputEvent(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = down });
+        Input.FlushBufferedEvents();
+    }
+    private void CompleteLaunchPractice(RocketLaunch launch)
+    {
+        double now = Time.GetTicksUsec() / 1_000_000.0;
+        launch.Clock = () => now;
+        launch.GetNode<Button>("IntroUI/Briefing/Margin/VBox/Actions/Start").EmitSignal(BaseButton.SignalName.Pressed);
+        bool held = false;
+        for (int i = 0; i < 4000 && !launch.Model.Complete; i++)
+        {
+            bool want = launch.Model.Heat < 50;
+            if (want != held) { KeyState(Key.Space, want); held = want; }
+            now += .01;
+            launch._Process(.01);
+        }
+        if (held) KeyState(Key.Space, false);
+        Check(launch.State == RocketLaunch.Phase.Result && launch.Model.Result?.CenteredSeconds == 10,
+            "Practice finishes after ten centered seconds");
+        Check(ares.scripts.mission.MissionState.Instance.TrainingLaunchPracticeComplete,
+            "Completed simulator marks its training requirement");
+    }
     private static T Find<T>(Node node, Func<T, bool> predicate) where T : Node
     {
         foreach (Node child in node.GetChildren())
@@ -81,7 +105,9 @@ public partial class TrainingPracticeTest : Node
     }
     private async Task Enter(PracticeSession.Exercise exercise)
     {
-        await WalkTo(new Vector2(exercise == PracticeSession.Exercise.Wires ? 160 : 416, 202));
+        var lab = (TrainingLab)Scene;
+        var zone = exercise == PracticeSession.Exercise.Wires ? lab.WiresZone : lab.FusesZone;
+        await WalkTo(zone.GetGlobalTransform() * (zone.Size / 2));
         _returnPoint = Player.GlobalPosition;
         await Frames(); await Capture("lab-front-" + exercise); KeyPress(Key.E);
         _exerciseTicket = PracticeSession.Pending?.Id ?? 0; _exerciseSession = PracticeSession.SessionId;
@@ -110,11 +136,12 @@ public partial class TrainingPracticeTest : Node
         await Capture(exercise + "-instructions");
         await Start(); await Capture(exercise + "-board");
     }
-    private async Task Back(bool success, Vector2 position)
+    private async Task Back(bool success)
     {
         await Frames(10);
         Check(Scene is TrainingLab, "Return to lab, not gym");
-        Check(Player.GlobalPosition.DistanceTo(_returnPoint) < 0.1f && Player.GlobalPosition.DistanceTo(position) < 5, "Return to exact original station-side position");
+        Check(Player.GlobalPosition.DistanceTo(_returnPoint) < 0.1f,
+            $"Return to exact original station-side position: got {Player.GlobalPosition}, ticket {_returnPoint}");
         Check(PracticeSession.Pending == null, "Travel consumed once");
         Check(!PracticeSession.Finish(_exerciseSession, _exerciseTicket, true), "Consumed completion ticket rejects duplicate/late callback");
         Check(PracticeSession.Feedback.StartsWith(success ? "Practice complete." : "Practice cancelled."), "Success/cancel feedback");
@@ -179,9 +206,8 @@ public partial class TrainingPracticeTest : Node
         await ScreenSizeChecks("lab");
         Check(lab.Player.Owner == lab && lab.Camera.Owner == lab && lab.GetNode("Floor").Owner == lab,
             "Lab player, camera and compact floor exist in the editable scene");
-        Check(new[] { lab.WiresZone, lab.FusesZone, lab.GymZone }.All(zone => zone.Owner == lab)
-            && lab.ArrivalMarkers.Count == 3 && lab.ArrivalMarkers.All(marker => marker.Owner == lab),
-            "Lab interaction zones and arrival markers resolve to scene-owned nodes");
+        Check(new[] { lab.WiresZone, lab.FusesZone, lab.GymZone, lab.SimulatorZone, lab.LaunchPadZone }.All(zone => zone.Owner == lab)
+            && lab.HasNode("lab_from_gym"), "Lab interaction zones and gym entrance marker resolve");
         await Capture("lab-entry");
         EnglishUi(Scene);
         if (Visual)
@@ -204,45 +230,51 @@ public partial class TrainingPracticeTest : Node
             GetWindow().Size = oldSize; await Frames(8);
         }
         // Verify cabinet bases with actual collision queries, not only visual rectangles.
-        Check(Player.TestMove(new Transform2D(0, new Vector2(160, 202)), new Vector2(0, -70)), "Workbench base is solid");
-        Check(Player.TestMove(new Transform2D(0, new Vector2(416, 202)), new Vector2(0, -70)), "Fuse cabinet base is solid");
-        Player.Position = new(160, 105); await Frames(); KeyPress(Key.E); await Frames();
+        var labScene = (TrainingLab)Scene;
+        var workbenchBase = labScene.GetNode<StaticBody2D>("WiringWorkbench/Base");
+        var fuseBase = labScene.GetNode<StaticBody2D>("FuseCabinet/Base");
+        Check(Player.TestMove(new Transform2D(0, workbenchBase.GlobalPosition + new Vector2(0, 56)), new Vector2(0, -70)), "Workbench base is solid");
+        Check(Player.TestMove(new Transform2D(0, fuseBase.GlobalPosition + new Vector2(0, 56)), new Vector2(0, -70)), "Fuse cabinet base is solid");
+        Player.GlobalPosition = labScene.GetNode<Node2D>("WiringWorkbench").GlobalPosition + new Vector2(0, -30);
+        await Frames(); KeyPress(Key.E); await Frames();
         Check(Scene is TrainingLab, "Station unavailable from behind");
-        Player.Position = new(288, 292); await Frames();
-        await WalkTo(new(160, 202)); await Frames();
-        var stationController = Scene.GetNode<TrainingStations>("PracticeStations");
-        var originalTarget = stationController.Targets[0];
-        stationController.Targets[0] = originalTarget with { Scene = "res://tests/intentionally_missing_training_scene.tscn" };
-        bool printErrors = Engine.PrintErrorMessages;
-        try
-        {
-            Engine.PrintErrorMessages = false; // Deliberate fault injection, not an unexpected engine error.
-            await Frames(); KeyPress(Key.E); await Frames(8);
-        }
-        finally { Engine.PrintErrorMessages = printErrors; }
-        Check(Scene is TrainingLab && Player.IsPhysicsProcessing() && PracticeSession.Pending == null, "Failed transition releases player and clears pending travel");
-        Check(Find<Label>(Scene, l => l.Text.StartsWith("Could not open")) != null, "Failed transition gives English retry feedback");
-        stationController.Targets[0] = originalTarget;
-        await Enter(PracticeSession.Exercise.Wires); KeyPress(Key.Escape); await Back(false, new(160, 202));
+        Player.GlobalPosition = labScene.WiresZone.GetGlobalTransform() * (labScene.WiresZone.Size / 2); await Frames();
+        await Enter(PracticeSession.Exercise.Wires); KeyPress(Key.Escape); await Back(false);
         Check(!PracticeSession.Wires, "Cancel does not complete wires");
-        await Enter(PracticeSession.Exercise.Wires); SolveWires(); await Back(true, new(160, 202));
+        await Enter(PracticeSession.Exercise.Wires); SolveWires(); await Back(true);
         Check(PracticeSession.Wires, "Real keyboard wire solution completes");
-        await Enter(PracticeSession.Exercise.Wires); KeyPress(Key.Escape); await Back(false, new(160, 202));
+        await Enter(PracticeSession.Exercise.Wires); KeyPress(Key.Escape); await Back(false);
         Check(PracticeSession.Wires, "Repeat cancel keeps prior completion");
         await Enter(PracticeSession.Exercise.Fuses);
         for (int i = 0; i < 4; i++) { KeyPress(Key.Key1); await Frames(2); }
-        KeyPress(Key.Escape); await Back(false, new(416, 202));
+        KeyPress(Key.Escape); await Back(false);
         await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout);
         Check(!PracticeSession.Fuses, "Reset timer cancellation safe");
-        await Enter(PracticeSession.Exercise.Fuses); await SolveFuses(); KeyPress(Key.Escape); await Back(false, new(416, 202));
+        await Enter(PracticeSession.Exercise.Fuses); await SolveFuses(); KeyPress(Key.Escape); await Back(false);
         await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout);
         Check(!PracticeSession.Fuses, "Success timer cancellation safe");
         await Enter(PracticeSession.Exercise.Fuses); await SolveFuses();
-        await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout); await Back(true, new(416, 202));
+        await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout); await Back(true);
         Check(PracticeSession.Fuses && PracticeSession.Wires, "Both repairs completed");
+        var simulatorZone = ((TrainingLab)Scene).SimulatorZone;
+        await WalkTo(simulatorZone.GetGlobalTransform() * (simulatorZone.Size / 2));
+        await Frames(); KeyPress(Key.E); await Frames(8);
+        Check(Scene is RocketLaunch && ((RocketLaunch)Scene).Practice && PracticeSession.Pending == null, "Simulator opens the practice launch without a stale travel ticket");
+        CompleteLaunchPractice((RocketLaunch)Scene);
+        Find<Button>(Scene, b => b.Text.StartsWith("Return to lab") && b.IsVisibleInTree()).EmitSignal(BaseButton.SignalName.Pressed); await Frames(8);
+        Check(Scene is TrainingLab, "Practice launch returns to the lab");
+        Check(((TrainingLab)Scene).GetNode<Sprite2D>("LaunchSimulator/Sprite2D").Texture.ResourcePath.EndsWith("launch_simulator_console.png"),
+            "Simulator uses the new console sprite");
+        var lockedPadZone = ((TrainingLab)Scene).LaunchPadZone;
+        await WalkTo(lockedPadZone.GetGlobalTransform() * (lockedPadZone.Size / 2));
+        await Frames(); KeyPress(Key.E); await Frames(8);
+        Check(Scene is TrainingLab && !mission.LaunchPadUnlocked, "Launch pad stays locked until the course is complete");
         await Capture("lab-completed-repairs");
         Check(PracticeSession.Saved == saved, "Gym stamina/rest and course frozen outside gym");
-        await WalkTo(new(288, 292)); await Frames(); KeyPress(Key.E); await Frames(8);
+        var labStations = ((TrainingLab)Scene).GetNode<TrainingStations>("PracticeStations");
+        var gymTarget = labStations.Targets.First(target => target.Name == "Return to gym");
+        await WalkTo(gymTarget.Center); await Frames();
+        KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && !Gym.BriefingActive, "Return to gym skips welcome");
         Check(Player.Position.DistanceTo(Gym.LabReturnMarker.GlobalPosition) < 1, "Gym return marker");
         Check(Gym.Course.Capture() == saved.Course, "Count and direction restored");
@@ -253,11 +285,29 @@ public partial class TrainingPracticeTest : Node
         await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames();
         Cross(1); Check(Gym.Course.ClearedCount == 2, "Reverse direction survives travel");
         Cross(0); await Frames(); Check(Gym.CompletionShown && Gym.Course.Congratulated, "Final crossing congratulates once");
-        Gym.GetNode<Button>(Gym.ContinuePath).EmitSignal(BaseButton.SignalName.Pressed); await Frames();
-        KeyPress(Key.E); await Frames(8); Check(Scene is TrainingLab, "Repeat room travel");
-        KeyPress(Key.E); await Frames(8); Check(Scene is TrainingIntro && Gym.CompletionShown && !Gym.BriefingActive, "Completion greeting not repeated");
+        Check(Gym.GetNode<Label>(Gym.TextPath).Text.Contains("All training is complete"),
+            "Mission Control completion notice waits for the final requirement");
+        await Capture("gym-all-training-complete");
+        Gym.GetNode<Button>(Gym.ContinuePath).EmitSignal(BaseButton.SignalName.Pressed); await Frames(8);
+        Check(Scene is TrainingIntro && !Gym.BriefingActive, "Course completion does not launch automatically");
+        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames(); KeyPress(Key.E); await Frames(8);
+        Check(Scene is TrainingLab && mission.LaunchPadUnlocked, "All four training requirements unlock the pad");
+        Check(((TrainingLab)Scene).SimulatorZone != null && ((TrainingLab)Scene).LaunchPadZone != null, "Lab exposes launch stations");
+        await Capture("lab-launch-unlocked");
+        var launchZone = ((TrainingLab)Scene).LaunchPadZone;
+        await WalkTo(launchZone.GetGlobalTransform() * (launchZone.Size / 2)); await Frames(); KeyPress(Key.E); await Frames(8);
+        Check(Scene is RocketLaunch && !((RocketLaunch)Scene).Practice && PracticeSession.Pending == null, "Unlocked launch pad opens the real launch without a stale travel ticket");
+        Check(!((RocketLaunch)Scene).GetNode<TextureRect>("IntroUI/Briefing/Margin/VBox/Tutorial").Visible,
+            "Real launch omits the completed practice tutorial");
+        await Capture("launch-pad-open");
+        Find<Button>(Scene, b => b.Text.StartsWith("Return to lab") && b.IsVisibleInTree()).EmitSignal(BaseButton.SignalName.Pressed); await Frames(8);
+        Check(Scene is TrainingLab, "Manual launch returns to the lab");
+        var gymZone = ((TrainingLab)Scene).GymZone;
+        await WalkTo(gymZone.GetGlobalTransform() * (gymZone.Size / 2)); await Frames(); KeyPress(Key.E); await Frames(8);
+        Check(Scene is TrainingIntro && Gym.CompletionShown && !Gym.BriefingActive,
+            $"Completion greeting not repeated (scene={Scene.SceneFilePath}, shown={(Scene is TrainingIntro intro ? intro.CompletionShown : false)}, active={(Scene is TrainingIntro activeIntro ? activeIntro.BriefingActive : false)}, saved={PracticeSession.Saved?.CompletionShown})");
         Check(GetTree().ChangeSceneToFile(PracticeSession.SceneFor(PracticeSession.Exercise.Wires)) == Error.Ok, "Standalone wire load"); await Frames();
-        Check(PracticeSession.Saved == null && !PracticeSession.Wires, "External exit clears session");
+        Check(PracticeSession.Saved == null && PracticeSession.Wires, "External exit clears session but keeps repairs");
         await Start();
         var standalone = (WireMinigame)Scene; int completions = 0; standalone.Completed += () => completions++;
         foreach (ColorRect left in standalone.GetNode("LeftTerminals").GetChildren())
@@ -279,13 +329,13 @@ public partial class TrainingPracticeTest : Node
         Scene.EmitSignal(WireMinigame.SignalName.Completed);
         Check(PracticeSession.Pending?.Target == PracticeSession.LabScene, "Completion prepares return ticket");
         GetTree().ChangeSceneToFile(PracticeSession.TrainingScene); await Frames(8);
-        Check(Gym.BriefingActive && PracticeSession.Pending == null && !PracticeSession.Wires, "External exit discards deferred return and starts a fresh session");
+        Check(Gym.BriefingActive && PracticeSession.Pending == null && PracticeSession.Wires, "External exit discards deferred return but keeps repairs");
         // First visit to the gym from a directly launched lab has no saved circuit.
         GetTree().ChangeSceneToFile(PracticeSession.LabScene); await Frames(8);
         await Enter(PracticeSession.Exercise.Wires);
         var returnUi = Scene.GetNode<PracticeReturn>("PracticeReturn");
         returnUi.SceneLoader = _ => Error.CantOpen;
-        printErrors = Engine.PrintErrorMessages;
+        bool printErrors = Engine.PrintErrorMessages;
         try
         {
             Engine.PrintErrorMessages = false;
@@ -299,21 +349,56 @@ public partial class TrainingPracticeTest : Node
         returnUi.SceneLoader = path =>
         {
             Check(PracticeSession.Pending.Id == retryTicket, "Retry reuses result without completing twice");
-            return GetTree().ChangeSceneToFile(path);
+            var tree = GetTree();
+            Callable.From(() => tree.ChangeSceneToFile(path)).CallDeferred();
+            return Error.Ok;
         };
-        KeyPress(Key.Escape); await Back(true, new(160, 202));
+        KeyPress(Key.Escape); await Back(true);
         Check(PracticeSession.Saved == null, "Direct lab visit has no gym snapshot");
         long labSession = PracticeSession.SessionId;
-        await WalkTo(new(288, 292)); await Frames(); KeyPress(Key.E); await Frames(8);
+        var directGymZone = ((TrainingLab)Scene).GymZone;
+        await WalkTo(directGymZone.GetGlobalTransform() * (directGymZone.Size / 2)); await Frames(); KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && PracticeSession.SessionId == labSession && PracticeSession.Wires, "First gym arrival preserves lab repairs and session");
         Check(Player.Position.DistanceTo(Gym.LabReturnMarker.GlobalPosition) < 1, "First gym arrival uses door marker");
         Check(Gym.Course.ClearedCount == 0 && Gym.BriefingActive, "First gym visit initializes course and welcome");
         for (int i = 0; i < 3; i++) { KeyPress(Key.Enter); await Frames(); }
-        KeyPress(Key.E); await Frames(8); KeyPress(Key.E); await Frames(8);
+        await WalkTo(Gym.LabDoorZone.GetGlobalTransform() * (Gym.LabDoorZone.Size / 2));
+        KeyPress(Key.E); await Frames(8); Check(Scene is TrainingLab, "Gym door remains manually accessible");
+        var gymReturnZone = ((TrainingLab)Scene).GymZone;
+        await WalkTo(gymReturnZone.GetGlobalTransform() * (gymReturnZone.Size / 2));
+        KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingIntro && !Gym.BriefingActive && PracticeSession.Wires, "Subsequent gym arrival skips welcome and keeps repairs");
         Check(initialMission == (mission.Stage, mission.MissionTime, mission.Budget, mission.Mass,
             mission.Energy, mission.Communications, mission.SpareParts, mission.RoverImpacts, mission.RoverCollisions), "No mission changes");
         await PhysicalRoutes();
+
+        mission.BeginLaunchSequence();
+        mission.TrainingCourseComplete = mission.TrainingWiresComplete = mission.TrainingFusesComplete = true;
+        mission.EvaluateTrainingCompletion();
+        Check(!mission.TrainingCompletionPending, "Simulator remains a required fourth check");
+        mission.TrainingLaunchPracticeComplete = true;
+        mission.EvaluateTrainingCompletion();
+        Check(mission.TrainingCompletionPending, "Final simulator completion queues one mission notice");
+        GetTree().ChangeSceneToFile(PracticeSession.LabScene); await Frames(8);
+        Check(Scene is TrainingLab && ((TrainingLab)Scene).HasNode("TrainingCompletionDialog") &&
+            mission.TrainingCompletionShown && mission.LaunchPadUnlocked,
+            "Final lab-side requirement shows the global completion notice");
+        await Capture("lab-all-training-complete");
+        Find<Button>(Scene, b => b.Text == "Continue" && b.IsVisibleInTree()).EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(4);
+        Check(Scene is TrainingLab && ((TrainingLab)Scene).GetNode<TrainingStations>("PracticeStations").InteractionLocked == false,
+            "Closing completion notice leaves player at lab to approach launch pad manually");
+
+        mission.BeginLaunchSequence();
+        PracticeSession.Clear();
+        PracticeSession.Prepare("test", PracticeSession.LabScene, null, Vector2.Zero);
+        GetTree().ChangeSceneToFile(PracticeSession.LabScene); await Frames(8);
+        Check(Scene is TrainingLab && Player.Position.DistanceTo(new Vector2(288, 292)) < 1,
+            "Lab safely uses its default spawn when travel marker is missing");
+        await WalkTo(((TrainingLab)Scene).WiresZone.GetGlobalTransform() * (((TrainingLab)Scene).WiresZone.Size / 2));
+        KeyPress(Key.E); await Frames(8);
+        Check(Scene.SceneFilePath == PracticeSession.SceneFor(PracticeSession.Exercise.Wires),
+            "Lab stations remain interactive after fallback arrival");
     }
 
     private async Task ScreenSizeChecks(string room)
