@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://1y8yccoeda32"]
+
+[ext_resource type="Script" uid="uid://ni1coycr55vl" path="res://scripts/rover/GameOver.cs" id="1_54dxu"]
+[ext_resource type="Texture2D" uid="uid://cliru8sim36i" path="res://art/rover/scene_rover_gameover.png" id="1_s02np"]
+[ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="3_ygfci"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cuch3"]
+bg_color = Color(0.025, 0.04, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.48, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="GameOver" type="Node2D" unique_id=232697147]
+script = ExtResource("1_54dxu")
+
+[node name="Title" type="Label" parent="." unique_id=1534041546]
+visible = false
+z_index = 1
+offset_left = 499.375
+offset_top = 113.425
+offset_right = 987.3751
+offset_bottom = 226.42511
+theme_override_colors/font_color = Color(0.78, 0.82, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.035, 0.09, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 82
+text = "ROVER LOST"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1976200752]
+visible = false
+z_index = 1
+custom_minimum_size = Vector2(350, 210)
+offset_left = 570.0
+offset_top = 219.805
+offset_right = 920.00006
+offset_bottom = 437.80505
+
+[node name="Retry" type="Button" parent="VBoxContainer" unique_id=25142776]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Try again"
+
+[node name="MainMenu" type="Button" parent="VBoxContainer" unique_id=2069379543]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Main Menu"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=757224190]
+position = Vector2(576, 324)
+texture = ExtResource("1_s02np")
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1870946975]
+visible = false
+custom_maximum_size = Vector2(-1, 175)
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 1.0
+anchor_right = 0.92
+anchor_bottom = 1.0
+offset_left = 526.0
+offset_top = 460.0
+offset_right = 1134.0
+offset_bottom = 635.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_cuch3")
+metadata/_edit_group_ = true
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=1317776107]
+custom_minimum_size = Vector2(604, 160)
+custom_maximum_size = Vector2(-1, 160)
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=286740716]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Speaker" type="Label" parent="Panel/Margin/VBox" unique_id=20227080]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("3_ygfci")
+theme_override_font_sizes/font_size = 12
+text = "MISSION CONTROL"
+
+[node name="Text" type="Label" parent="Panel/Margin/VBox" unique_id=1948680177]
+custom_minimum_size = Vector2(24, 96)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
+theme_override_font_sizes/font_size = 18
+text = "Rover signal lost"
+autowrap_mode = 3
+
+[node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=593500976]
+z_index = 1
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 18
+text = "Continue"
+
+[connection signal="pressed" from="VBoxContainer/Retry" to="." method="_on_retry_pressed"]
+[connection signal="pressed" from="VBoxContainer/MainMenu" to="." method="_on_main_menu_pressed"]
+[connection signal="pressed" from="Panel/Margin/VBox/Continue" to="." method="_on_continue_pressed"]

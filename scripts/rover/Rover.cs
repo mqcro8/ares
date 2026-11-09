@@ -19,6 +19,7 @@ public partial class Rover : CharacterBody2D
 	public bool IsGameOver => _gameOver;
 	private RoverAnimation _roverAnimation;
 	public bool CanMove { get; set; } = false;
+	public bool TutorialEnded { get; set; } = false;
 	public override void _Ready()
 	{
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("AnimatedSprite2D");
@@ -36,6 +37,9 @@ public partial class Rover : CharacterBody2D
 	private static readonly float[] LanePositions = {-170.0f, 0.0f, 170.0f};
 
 	private Lane _currentLane = Lane.Middle;
+
+	public int CurrentLaneIndex => (int)_currentLane;
+	public bool IsChangingLane => !Mathf.IsEqualApprox(Position.X, LanePositions[(int)_currentLane]);
 
 	[Export] public float LaneChangeSpeed { get; set; } = 600.0f;
 	public override void _PhysicsProcess(double delta)
@@ -88,13 +92,19 @@ public partial class Rover : CharacterBody2D
 
 	private async void RegisterCollision()
 	{
+
 		if (_isColliding || _gameOver)
 			return;
 
 		AudioManager.PlaySfx2D(SoundIds.RoverCollision, GlobalPosition);
 
-		_collisionCount++;
+		
+		if (TutorialEnded)
+		{
+			_collisionCount++;
+		}
 		CollisionRegistered?.Invoke(_collisionCount);
+		
 
 		if (_collisionCount >= MaxCollisions)
 		{
@@ -108,9 +118,9 @@ public partial class Rover : CharacterBody2D
 
 		await ToSignal(_roverAnimation, AnimationPlayer.SignalName.AnimationFinished);
 
-		_roverAnimation.Play("walk");
-
 		_isColliding = false;
+		
+		_roverAnimation.Play("walk");
 
 		GD.Print($"Collisions: {_collisionCount}");
 		GD.Print($"Input lag: {InputLag:F1}s");

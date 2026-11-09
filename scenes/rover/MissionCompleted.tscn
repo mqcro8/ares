@@ -1,0 +1,92 @@
+[gd_scene format=3 uid="uid://dfwabfx7qje37"]
+
+[ext_resource type="Script" uid="uid://c78aion12x3m4" path="res://scripts/rover/MissionCompleted.cs" id="1_2tyxm"]
+[ext_resource type="Texture2D" uid="uid://u0kwloy1rcfv" path="res://art/rover/scene_rover_victory.png" id="1_20r2h"]
+[ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="3_kekuh"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rmqsd"]
+bg_color = Color(0.025, 0.04, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.48, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="MissionCompleted" type="Node2D" unique_id=84184234]
+script = ExtResource("1_2tyxm")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=256257588]
+position = Vector2(576, 324)
+texture = ExtResource("1_20r2h")
+
+[node name="Title" type="Label" parent="." unique_id=1659930188]
+visible = false
+z_index = 1
+offset_left = 165.0
+offset_top = 170.0
+offset_right = 1016.0
+offset_bottom = 283.0
+theme_override_colors/font_color = Color(0.78, 0.82, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.035, 0.09, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 70
+text = "MISSION COMPLETED"
+horizontal_alignment = 1
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=680839032]
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 1.0
+anchor_right = 0.92
+anchor_bottom = 1.0
+offset_left = 523.0
+offset_top = 470.0
+offset_right = 1131.0
+offset_bottom = 686.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_rmqsd")
+metadata/_edit_group_ = true
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=288240884]
+custom_minimum_size = Vector2(604, 160)
+custom_maximum_size = Vector2(-1, 160)
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=1434459433]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Speaker" type="Label" parent="Panel/Margin/VBox" unique_id=231135178]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("3_kekuh")
+theme_override_font_sizes/font_size = 12
+text = "MISSION CONTROL"
+
+[node name="Text" type="Label" parent="Panel/Margin/VBox" unique_id=1927180514]
+custom_minimum_size = Vector2(24, 96)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
+theme_override_font_sizes/font_size = 18
+text = "Rover signal lost."
+autowrap_mode = 3
+
+[node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=1818521968]
+z_index = 1
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 18
+text = "Continue"
+
+[connection signal="pressed" from="Panel/Margin/VBox/Continue" to="." method="_on_continue_pressed"]

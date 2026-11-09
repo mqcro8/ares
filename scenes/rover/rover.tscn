@@ -260,12 +260,13 @@ size = Vector2(32, 36.666664)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ansna"]
 shader = ExtResource("11_11f53")
-shader_parameter/scroll_speed = Vector2(0, 0)
+shader_parameter/scroll_offset = Vector2(0, 0)
 
 [node name="Rover" type="Node2D" unique_id=1347983366]
 script = ExtResource("1_g0ker")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=974421186]
+visible = false
 script = ExtResource("10_qvnwh")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HUD" unique_id=292595748]
@@ -334,7 +335,7 @@ script = ExtResource("2_d6r02")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
 position = Vector2(0, -0.665)
 sprite_frames = SubResource("SpriteFrames_ansna")
-animation = &"victory"
+animation = &"collision"
 script = ExtResource("4_g0ker")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
@@ -348,12 +349,17 @@ PlayOnReady = false
 
 [node name="Label" type="Label" parent="." unique_id=1875478735]
 z_index = 2
-offset_left = -180.0
-offset_top = 132.0
-offset_right = 185.0
-offset_bottom = 177.0
+offset_left = -460.0
+offset_top = 90.0
+offset_right = 460.0
+offset_bottom = 240.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 32
 text = "Press enter to start "
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 uppercase = true
 
 [node name="ground" type="Control" parent="." unique_id=928445322]
@@ -390,3 +396,14 @@ script = ExtResource("14_qf4a5")
 
 [node name="Sprite2D" type="Sprite2D" parent="Obstacle" unique_id=1387267148]
 position = Vector2(-181, -264)
+
+[node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=1434577583]
+visible = false
+
+[node name="FadeRect" type="ColorRect" parent="TransitionLayer" unique_id=2068888658]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
