@@ -10,7 +10,7 @@ Text = "Six hours. Course, repairs, simulator. Then you launch."
 
 [sub_resource type="Resource" id="Line1"]
 script = ExtResource("2_line")
-Speaker = "ARES"
+Speaker = "YOU"
 Text = "And the probes?"
 
 [sub_resource type="Resource" id="Line2"]

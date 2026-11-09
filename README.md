@@ -19,7 +19,7 @@ Autoloads: `MusicPlayer` (`scripts/systems/audio/MusicPlayer.cs`) and `MissionSt
 ## Current state
 
 - **Main menu** — `Begin Mission` opens `scenes/intro/Intro.tscn`; Options opens Volume and Controls submenus; Credits warns until the credits scene exists; Quit exits. Menu music plays while the current scene lives under `scenes/main_menu/`.
-- **Intro** — `scenes/intro/Intro.tscn` is a short skippable mission briefing (`Esc` / `E` / `Space` / `Enter`). It reads its dialogue and objectives from `data/dialogue/`, sets `MissionStage.Intro`, then advances to training.
+- **Intro** — `scenes/intro/Intro.tscn` is a short skippable mission briefing (`Esc` / `E` / `Space` / `Enter`) with four pixel-art backdrops that crossfade alongside the dialogue. Gateway is a surface base on Mars. Dialogue and objectives come from `data/dialogue/`; the intro then advances to training.
 - **Training** — `scenes/training/Training.tscn` contains the physical course. `scenes/training/TrainingLab.tscn` contains repair stations, required launch practice, and the manually unlocked Launch Pad. The gym welcome and completion lines come from `data/dialogue/training_intro.tres` and `training_completion.tres`.
 - **Launch** — `scenes/RocketLaunch/Launching.tscn` is the shared practice/real-launch scene. Launch controllers live in `scripts/rocket_launch/`; the practice tutorial uses the older landscape, and real launch uses the industrial launch-site background.
 - **Player + hotbar** — `scripts/player_scene.tscn` is the player prefab: `Player` + a 5-slot hotbar (preloaded with the test item). `Inventory` handles stacking and emits `InventoryChanged`; slots are selected with `1`–`5`.
@@ -91,8 +91,8 @@ ares/
 │   ├── player/                   walk/idle sprites, inventory/ hotbar art
 │   ├── rover/                    rover + crash sprites, mars_ground, obstacles, track
 │   ├── trainning/16x16/          interior/room tilesets (folder name typo)
-│   ├── gateway/                  Background.jpeg (intro/launch backdrop)
-│   ├── cinematics/ mars/ spacecraft/ ui/           (planned, empty)
+│   ├── gateway/                  Background.jpeg (practice launch backdrop)
+│   ├── cinematics/               four pixel-art intro backdrops
 │   ├── fonts/                    Aerospace.ttf, PressStart2P-Regular.ttf
 │   ├── menu_placeholder/         placeholder backgrounds
 │   └── tmp/                      scratch art: meowl.png, ominous_red_ball.png

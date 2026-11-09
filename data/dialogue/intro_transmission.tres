@@ -10,7 +10,7 @@ Text = "Gateway went dark fourteen days ago."
 
 [sub_resource type="Resource" id="Line1"]
 script = ExtResource("2_line")
-Speaker = "ARES"
+Speaker = "YOU"
 Text = "And the probes?"
 
 [sub_resource type="Resource" id="Line2"]
@@ -20,7 +20,7 @@ Text = "They went in. They didn't come back."
 
 [sub_resource type="Resource" id="Line3"]
 script = ExtResource("2_line")
-Speaker = "ARES"
+Speaker = "YOU"
 Text = "I designed both."
 
 [sub_resource type="Resource" id="Line4"]
@@ -30,7 +30,7 @@ Text = "Then you know what we're dealing with."
 
 [sub_resource type="Resource" id="Line5"]
 script = ExtResource("2_line")
-Speaker = "ARES"
+Speaker = "YOU"
 Text = "No. That's why I'm going."
 
 [resource]

@@ -47,8 +47,8 @@ public partial class IntroSequenceTest : Node
         Check(transmission != null, "Intro transmission loads");
         Check(transmission.Lines.Count == 6, "Intro transmission has six lines");
         Check(transmission.Lines[0].Speaker == "MISSION CONTROL", "Intro opens with Mission Control");
-        Check(transmission.Lines[5].Speaker == "ARES" && transmission.Lines[5].Text.Contains("why I'm going"),
-            "Intro closes on Ares");
+        Check(transmission.Lines[5].Speaker == "YOU" && transmission.Lines[5].Text.Contains("why I'm going"),
+            "Intro closes on the player");
 
         var briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
         Check(briefing != null && briefing.Lines.Count == 3, "Training briefing has three lines");
@@ -62,9 +62,13 @@ public partial class IntroSequenceTest : Node
         Check(sequence.GetNodeOrNull<DialogueView>("Dialogue") != null, "Intro exposes its dialogue view");
         Check(sequence.GetNodeOrNull<Control>("Objectives") != null, "Intro exposes objectives");
         Check(sequence.GetNodeOrNull<Control>("TitleCard") != null, "Intro exposes the title card");
+        Check(sequence.BackdropCount == 4, "Intro loads four cinematic backdrops");
+        Check(sequence.GetNodeOrNull<TextureRect>("BackdropA") != null &&
+            sequence.GetNodeOrNull<TextureRect>("BackdropB") != null, "Intro exposes crossfade backdrop layers");
         if (Visual) await CaptureStages(sequence);
         sequence.Advance(100);
         Check(sequence.Finished && !sequence.Skipped, "Timeline finishes");
+        Check(sequence.BackdropIndex == 3, "Timeline reaches the departure backdrop");
         Check(_loads == 1, "Timeline transitions once");
         Check(sequence.LoadedScene == "res://scenes/training/Training.tscn", "Timeline loads training");
         Check(MissionState.Instance.Stage == MissionStage.Training, "Stage advances to training");
@@ -132,18 +136,25 @@ public partial class IntroSequenceTest : Node
     {
         await AdvanceTo(sequence, 4.0);
         await Capture("intro-01-telemetry");
+        await AdvanceTo(sequence, 6.2);
+        await Capture("intro-02-probes");
         await AdvanceTo(sequence, 10.0);
-        await Capture("intro-02-dialogue");
+        await Capture("intro-03-dialogue");
         await AdvanceTo(sequence, 16.0, 0.7);
-        await Capture("intro-03-objectives");
+        await Capture("intro-04-objectives");
         await AdvanceTo(sequence, 21.0, 1.6);
-        await Capture("intro-04-title");
+        await Capture("intro-05-title");
     }
 
     private async Task AdvanceTo(IntroSequence sequence, double target, double settle = 0.35)
     {
         while (sequence.Time < target && !sequence.Finished)
+        {
+            int previousBackdrop = sequence.BackdropIndex;
             sequence.Advance(0.1);
+            if (sequence.BackdropIndex != previousBackdrop)
+                await ToSignal(GetTree().CreateTimer(0.85), SceneTreeTimer.SignalName.Timeout);
+        }
         await ToSignal(GetTree().CreateTimer(settle), SceneTreeTimer.SignalName.Timeout);
         await Frames(2);
     }

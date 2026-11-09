@@ -7,7 +7,6 @@ using ares.scripts.mission;
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
 public partial class TrainingIntro : Node2D
 {
-	[Export] public string AstronautName { get; set; } = "Ares";
 	[Export] public DialogueSequence Briefing { get; set; }
 	[Export] public DialogueSequence CompletionNotice { get; set; }
 	[Export] public PhysicalTraining Course { get; set; }
@@ -120,14 +119,14 @@ public partial class TrainingIntro : Node2D
 		if (Briefing != null && _line >= 0 && _line < Briefing.Lines.Count)
 			line = Briefing.Lines[_line];
 		_speaker.Text = SpeakerFor(line);
-		_text.Text = (line?.Text ?? "").Replace("[Name]", AstronautName);
+		_text.Text = line?.Text ?? "";
 		_continue.Text = _line == 2 ? "Start training" : "Continue";
 	}
 
-	private string SpeakerFor(DialogueLine line)
+	private static string SpeakerFor(DialogueLine line)
 	{
 		if (line == null || string.IsNullOrEmpty(line.Speaker)) return "MISSION CONTROL";
-		return line.Speaker == "ARES" ? AstronautName.ToUpperInvariant() : line.Speaker;
+		return line.Speaker;
 	}
 
 	private void Advance()

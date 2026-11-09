@@ -16,13 +16,19 @@ public partial class IntroSequence : Control
 	public bool Skipped { get; private set; }
 	public string LoadedScene { get; private set; }
 	public double Time { get; private set; }
+	public int BackdropIndex { get; private set; }
+	public int BackdropCount => _backdrops.Count;
 
 	private const double Duration = 23.0;
 	private readonly List<(double At, Action Action)> _events = new();
 	private readonly List<Label> _telemetry = new();
+	private readonly List<Texture2D> _backdrops = new();
 	private int _nextEvent;
 	private bool _paused;
 	private bool _started;
+	private bool _backdropAIsFront = true;
+	private TextureRect _backdropA;
+	private TextureRect _backdropB;
 	private Label _telemetryTitle;
 	private Label _signalLost;
 	private DialogueView _dialogue;
@@ -38,6 +44,7 @@ public partial class IntroSequence : Control
 		MissionState.Instance.Stage = MissionStage.Intro;
 		if (Transmission == null)
 			Transmission = GD.Load<DialogueSequence>("res://data/dialogue/intro_transmission.tres");
+		LoadBackdrops();
 		BuildUi();
 		BuildTimeline();
 		PlayWind();
@@ -107,7 +114,14 @@ public partial class IntroSequence : Control
 
 	private void BuildUi()
 	{
-		AddChild(MakeBackground());
+		_backdropA = MakeBackdrop("BackdropA");
+		_backdropB = MakeBackdrop("BackdropB");
+		_backdropA.Texture = _backdrops[0];
+		_backdropA.Modulate = Colors.White;
+		_backdropB.Modulate = new Color(1, 1, 1, 0);
+		_backdropB.Hide();
+		AddChild(_backdropA);
+		AddChild(_backdropB);
 		AddChild(MakeScreenOverlay());
 		AddChild(MakeTelemetry());
 		AddChild(MakeSignalLost());
@@ -149,10 +163,13 @@ public partial class IntroSequence : Control
 		_events.Add((2.7, () => ShowTelemetry(6)));
 		_events.Add((3.2, ShowSignalLost));
 		_events.Add((3.8, () => ShowDialogue(0)));
+		_events.Add((5.2, () => SetBackdrop(1)));
 		_events.Add((5.6, () => ShowDialogue(1)));
 		_events.Add((7.2, () => ShowDialogue(2)));
+		_events.Add((8.8, () => SetBackdrop(2)));
 		_events.Add((9.2, () => ShowDialogue(3)));
 		_events.Add((11.4, () => ShowDialogue(4)));
+		_events.Add((13.0, () => SetBackdrop(3)));
 		_events.Add((13.4, () => ShowDialogue(5)));
 		_events.Add((15.0, ShowObjectives));
 		_events.Add((17.8, () =>
@@ -164,19 +181,37 @@ public partial class IntroSequence : Control
 		_events.Add((19.2, ShowTitleCard));
 	}
 
-	private static TextureRect MakeBackground()
+	private void LoadBackdrops()
 	{
-		var background = new TextureRect
+		var fallback = GD.Load<Texture2D>("res://art/gateway/Backgrond/Background.jpeg");
+		foreach (string path in new[]
 		{
-			Name = "Background",
-			Texture = GD.Load<Texture2D>("res://art/gateway/Backgrond/Background.jpeg"),
+			"res://art/cinematics/Silent Mars Gateway.png",
+			"res://art/cinematics/two sond.png",
+			"res://art/cinematics/Rustlit Mars Workshop with Cyan Holograms.png",
+			"res://art/cinematics/Indigo Ares launch pad.png",
+		})
+		{
+			var texture = GD.Load<Texture2D>(path) ?? fallback;
+			if (texture != null) _backdrops.Add(texture);
+		}
+
+		if (_backdrops.Count == 0)
+			_backdrops.Add(fallback);
+	}
+
+	private static TextureRect MakeBackdrop(string name)
+	{
+		var backdrop = new TextureRect
+		{
+			Name = name,
 			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 			StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 			MouseFilter = MouseFilterEnum.Ignore,
-			Modulate = new Color(0.55f, 0.62f, 0.75f),
 		};
-		background.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		return background;
+		backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		return backdrop;
 	}
 
 	private static ColorRect MakeScreenOverlay()
@@ -246,12 +281,12 @@ void fragment() {
 
 		foreach (string text in new[]
 		{
-			"GATEWAY STATION // MARS",
+			"GATEWAY BASE // MARS",
 			"LAST CONTACT: 14 DAYS AGO",
 			"LAUNCH WINDOW: 06H",
 			"PROBE 01: LOST",
 			"PROBE 02: LOST",
-			"CREW: ARES-1",
+			"CREW: 01",
 			"ROLE: SYSTEMS ENGINEER // FIRST DEEP-SPACE FLIGHT",
 		})
 		{
@@ -449,6 +484,25 @@ void fragment() {
 	{
 		if (index < 0 || index >= _telemetry.Count) return;
 		FadeIn(_telemetry[index], 0.18);
+	}
+
+	private void SetBackdrop(int index)
+	{
+		if (index < 0 || index >= _backdrops.Count || index == BackdropIndex) return;
+		var incoming = _backdropAIsFront ? _backdropB : _backdropA;
+		var outgoing = _backdropAIsFront ? _backdropA : _backdropB;
+		incoming.Texture = _backdrops[index];
+		incoming.Modulate = new Color(1, 1, 1, 0);
+		incoming.Show();
+
+		var tween = CreateTween();
+		tween.SetTrans(Tween.TransitionType.Sine);
+		tween.TweenProperty(incoming, "modulate:a", 1.0f, 0.8);
+		tween.Parallel().TweenProperty(outgoing, "modulate:a", 0.0f, 0.8);
+		tween.TweenCallback(Callable.From(() => outgoing.Hide()));
+
+		_backdropAIsFront = !_backdropAIsFront;
+		BackdropIndex = index;
 	}
 
 	private void ShowSignalLost()
