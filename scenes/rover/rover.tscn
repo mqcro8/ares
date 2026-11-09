@@ -11,11 +11,13 @@
 [ext_resource type="Texture2D" uid="uid://btj3etgl2jxdq" path="res://art/rover/rover_malfunction.png" id="6_23f2b"]
 [ext_resource type="Texture2D" uid="uid://bhjkh65fnbl44" path="res://art/rover/rover_victory.png" id="9_r8xxj"]
 [ext_resource type="Texture2D" uid="uid://dyx70xyf7qfxj" path="res://art/rover/heart_full.png" id="10_d7bi6"]
+[ext_resource type="Texture2D" uid="uid://xat6o8xpw1yh" path="res://art/rover/rover_wakeup.png" id="10_j05bq"]
 [ext_resource type="Script" uid="uid://cdh1fnyq7h007" path="res://scripts/rover/Hud.cs" id="10_qvnwh"]
 [ext_resource type="Shader" uid="uid://dmuucyuei0o40" path="res://scripts/rover/rover.gdshader" id="11_11f53"]
 [ext_resource type="Texture2D" uid="uid://cv2afqg87gr37" path="res://art/rover/lag_1.png" id="11_qvnwh"]
 [ext_resource type="Script" uid="uid://gbb4v1wlcof4" path="res://scripts/rover/Obstacle.cs" id="14_qf4a5"]
 [ext_resource type="Script" uid="uid://cvn1jmo2pqjrd" path="res://scripts/systems/audio/SfxEmitter2D.cs" id="15_engine"]
+[ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="17_mprn4"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qvnwh"]
 atlas = ExtResource("4_7yjl3")
@@ -120,6 +122,50 @@ region = Rect2(288, 0, 48, 56)
 [sub_resource type="AtlasTexture" id="AtlasTexture_c7p3m"]
 atlas = ExtResource("9_r8xxj")
 region = Rect2(336, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7qpna"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(0, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tce22"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(48, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_26p55"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(96, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h38q2"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(144, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10v3i"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(192, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ikgsk"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(240, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dx24n"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(288, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e2hb4"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(336, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kgdc5"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(384, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8du6q"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(432, 0, 48, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_se6ab"]
+atlas = ExtResource("10_j05bq")
+region = Rect2(480, 0, 48, 56)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_7yjl3"]
 atlas = ExtResource("5_gx8jl")
@@ -239,6 +285,44 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_7qpna")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tce22")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_26p55")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h38q2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10v3i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ikgsk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dx24n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e2hb4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kgdc5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8du6q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_se6ab")
+}],
+"loop": 0,
+"name": &"wakeup",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_7yjl3")
 }, {
 "duration": 1.0,
@@ -261,6 +345,18 @@ size = Vector2(32, 36.666664)
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ansna"]
 shader = ExtResource("11_11f53")
 shader_parameter/scroll_offset = Vector2(0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j05bq"]
+bg_color = Color(0.025, 0.04, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.48, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="Rover" type="Node2D" unique_id=1347983366]
 script = ExtResource("1_g0ker")
@@ -335,7 +431,7 @@ script = ExtResource("2_d6r02")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
 position = Vector2(0, -0.665)
 sprite_frames = SubResource("SpriteFrames_ansna")
-animation = &"collision"
+animation = &"wakeup"
 script = ExtResource("4_g0ker")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D" unique_id=1948185054]
@@ -348,6 +444,7 @@ SoundId = "rover_moving"
 PlayOnReady = false
 
 [node name="Label" type="Label" parent="." unique_id=1875478735]
+visible = false
 z_index = 2
 offset_left = -460.0
 offset_top = 90.0
@@ -407,3 +504,60 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1168886390]
+visible = false
+z_index = 2
+custom_maximum_size = Vector2(-1, 175)
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 1.0
+anchor_right = 0.92
+anchor_bottom = 1.0
+offset_left = -46.0
+offset_top = 135.0
+offset_right = 562.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_j05bq")
+metadata/_edit_group_ = true
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=207446120]
+custom_minimum_size = Vector2(604, 160)
+custom_maximum_size = Vector2(-1, 160)
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin" unique_id=1261889515]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Speaker" type="Label" parent="Panel/Margin/VBox" unique_id=1613345366]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("17_mprn4")
+theme_override_font_sizes/font_size = 12
+text = "MISSION CONTROL"
+
+[node name="Text" type="Label" parent="Panel/Margin/VBox" unique_id=2104637005]
+custom_minimum_size = Vector2(24, 96)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
+theme_override_font_sizes/font_size = 18
+text = "Rover deployed"
+autowrap_mode = 3
+
+[node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=2059502556]
+z_index = 1
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 18
+text = "Continue"
+
+[connection signal="pressed" from="Panel/Margin/VBox/Continue" to="." method="_on_continue_pressed"]

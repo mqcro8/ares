@@ -39,6 +39,12 @@ public partial class Rover_scence : Node2D
 	private float _survivalTime;
 	private readonly List<Obstacle> _spawnedObstacles = new();
 
+	private Label _text;
+	private Label _Speaker;
+	private PanelContainer _panel;
+	private Button _continue;
+	private int _line;
+
 	// Tutorial runs before the mission. While active the world can be soft-paused
 	// (ground and obstacles frozen) so the player can steer out of danger.
 	private bool _tutorialActive;
@@ -64,8 +70,12 @@ public partial class Rover_scence : Node2D
 		_camera = GetNodeOrNull<Camera2D>("Camera2D");
 		_engineSound = GetNodeOrNull<SfxEmitter2D>("CharacterBody2D/EngineSound");
 		_fadeRect = GetNode<ColorRect>("TransitionLayer/FadeRect");
+		_text = GetNodeOrNull<Label>("Panel/Margin/VBox/Text");
+		_Speaker = GetNodeOrNull<Label>("Panel/Margin/VBox/Speaker");
+		_continue = GetNodeOrNull<Button>("Panel/Margin/VBox/Continue");
+		_panel = GetNodeOrNull<PanelContainer>("Panel");
 
-		if (_roverAnimation == null || _rover == null || _label == null || _hud == null || _obstacleTemplate == null || _camera == null || _engineSound == null)
+		if (_roverAnimation == null || _rover == null || _label == null || _hud == null || _obstacleTemplate == null || _camera == null || _engineSound == null || _text == null || _Speaker == null || _panel == null || _continue == null)
 		{
 			GD.PushError("RoverScene: missing elements");
 			return;
@@ -73,8 +83,7 @@ public partial class Rover_scence : Node2D
 
 		AudioManager.PlayMusic(SoundIds.RoverAmbientWind, 1.5);
 
-		_roverAnimation.PlayAnimation("idle");
-		_ = Blink();
+		_ = ShowPanel();
 
 		GD.Print("Node is ready!");
 		_rover.CollisionRegistered += OnCollisionRegistered;
@@ -93,6 +102,46 @@ public partial class Rover_scence : Node2D
 		_obstacleTemplate.SetPhysicsProcess(false);
 		_obstacleTemplate.SetProcess(false);
 		_rng.Randomize();
+	}
+	private void _on_continue_pressed()
+	{	
+		GD.Print($"pressed {_line}");
+		_line++;
+		Showline();
+	}
+
+	private void Showline()
+	{
+		switch (_line)
+		{
+			case 1:
+				_text.Text = "Bring it back to the operations headquarters";
+			break;
+
+			case 2:
+				_text.Text = "Be careful. You might find obstacles along the way.";
+			break;
+
+			case 3:
+				_Speaker.Text = "YOU";
+				_text.Text = "Roger that. Will do";
+			break;
+
+			case 4:
+				_panel.Visible = false;
+				_Speaker.Text = "MISSION CONTROL";
+				_continue.Visible = false;
+				_ = Blink();
+			break;
+		}
+	}
+
+	private async Task ShowPanel()
+	{
+		_roverAnimation.Play("wakeup");
+		await ToSignal(_roverAnimation, AnimatedSprite2D.SignalName.AnimationFinished);
+		_roverAnimation.Play("idle");
+		_panel.Visible = true;
 	}
 
 	public override void _Process(double delta)
@@ -416,13 +465,13 @@ public partial class Rover_scence : Node2D
 
 	private void ShowMessage(string text)
 	{
-		_label.Text = text;
-		_label.Show();
+		_text.Text = text;
+		_panel.Show();
 	}
 
 	private void HideMessage()
 	{
-		_label.Hide();
+		_panel.Hide();
 	}
 
 	private void StartMission()

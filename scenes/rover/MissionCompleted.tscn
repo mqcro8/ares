@@ -38,6 +38,7 @@ text = "MISSION COMPLETED"
 horizontal_alignment = 1
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=680839032]
+visible = false
 anchors_preset = -1
 anchor_left = 0.08
 anchor_top = 1.0
@@ -78,7 +79,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
 theme_override_font_sizes/font_size = 18
-text = "Rover signal lost."
+text = "Operations headquarters localized"
 autowrap_mode = 3
 
 [node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=1818521968]
