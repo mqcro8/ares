@@ -29,7 +29,12 @@ public partial class WireMinigame : Control
 	private Line2D _dragGlow;
 	private ColorRect _dragFrom;
 	private ColorRect _hover;
+	private int _keyboardTarget;
+	private bool _finished;
 
+	private readonly List<(Line2D Wire, Line2D Glow, ColorRect From, ColorRect To)> _links = new();
+
+	// Bloque 2: asignar colores
 	public override void _Ready()
 	{
 		GD.Print("Wires listo, colores: ", WireColors.Count);
@@ -62,10 +67,32 @@ public partial class WireMinigame : Control
 			_leftTerminals.Add(left);
 			_rightTerminals.Add(rightTerminal);
 		}
+		ares.scripts.training.PracticeReturn.Attach(this);
 	}
 
 	public override void _Input(InputEvent @event)
 	{
+		if (_finished) return;
+		if (@event is InputEventKey { Pressed: true, Echo: false } key)
+		{
+			int index = (int)key.Keycode - (int)Key.Key1;
+			if (index >= 0 && index < WireColors.Count)
+			{
+				var terminal = _leftBox.GetChild<ColorRect>(index);
+				if (!_connected.Contains(terminal)) { StartDrag(terminal); AimKeyboard(); }
+			}
+			else if (_dragWire != null && (key.Keycode == Key.Up || key.Keycode == Key.Down))
+			{
+				_keyboardTarget = (_keyboardTarget + (key.Keycode == Key.Up ? WireColors.Count - 1 : 1)) % WireColors.Count;
+				AimKeyboard();
+			}
+			else if (_dragWire != null && key.Keycode == Key.Enter)
+				EndDrag(_rightBox.GetChild<ColorRect>(_keyboardTarget).GetGlobalRect().GetCenter());
+			else return;
+			GetViewport().SetInputAsHandled();
+			return;
+		}
+
 		if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 		{
 			if (mb.Pressed)
@@ -116,6 +143,8 @@ public partial class WireMinigame : Control
 	// Bloque 4: crear cable
 	private void StartDrag(ColorRect t)
 	{
+		_dragWire?.QueueFree();
+		_dragGlow?.QueueFree();
 		_dragFrom = t;
 		var start = Center(t);
 
@@ -148,6 +177,32 @@ public partial class WireMinigame : Control
 		UpdateDragHighlights();
 	}
 
+	private void AimKeyboard()
+	{
+		if (_dragWire == null) return;
+		var end = Center(_rightBox.GetChild<ColorRect>(_keyboardTarget));
+		_dragWire.SetPointPosition(1, end);
+		if (_dragGlow != null)
+			_dragGlow.SetPointPosition(1, end);
+		UpdateDragHighlights();
+	}
+
+	public void RefreshWireLayout()
+	{
+		foreach (var link in _links)
+		{
+			link.Wire.SetPointPosition(0, Center(link.From));
+			link.Wire.SetPointPosition(1, Center(link.To));
+			if (link.Glow != null)
+			{
+				link.Glow.SetPointPosition(0, Center(link.From));
+				link.Glow.SetPointPosition(1, Center(link.To));
+			}
+		}
+		if (_dragWire != null) _dragWire.SetPointPosition(0, Center(_dragFrom));
+		if (_dragGlow != null) _dragGlow.SetPointPosition(0, Center(_dragFrom));
+	}
+
 	private void EndDrag(Vector2 pos)
 	{
 		var from = _dragFrom;
@@ -166,6 +221,7 @@ public partial class WireMinigame : Control
 			if (glow != null)
 				glow.SetPointPosition(1, end);
 
+			_links.Add((wire, glow, from, target));
 			_connected.Add(from);
 			_connected.Add(target);
 			_connectedCount++;
@@ -176,8 +232,9 @@ public partial class WireMinigame : Control
 			// Bloques 9 y 10: ¿ya son cuatro? -> Completed
 			if (_connectedCount == WireColors.Count)
 			{
+				_finished = true;
 				ResetHighlights();
-				GetTree().CreateTimer(0.45, false).Timeout += () => EmitSignal(SignalName.Completed);
+				EmitSignal(SignalName.Completed);
 			}
 		}
 		else

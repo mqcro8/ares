@@ -25,6 +25,16 @@ public partial class TrainingMovement : Node
 
     public void SuppressDialogueJump() => _waitForJumpRelease = true;
 
+    public sealed record Progress(float Stamina, float Rest);
+    public Progress Capture() => new(Stamina, _rest);
+    public void Restore(Progress progress)
+    {
+        Stamina = progress.Stamina;
+        _rest = progress.Rest;
+        SuppressDialogueJump();
+        Course.Step(Stamina);
+    }
+
     public override void _Ready()
     {
         IsConfigured = Course != null && Visual != null && Shadow != null
@@ -93,7 +103,8 @@ public partial class TrainingMovement : Node
         }
         else _rest = 0;
         Visual.Position = _visualOrigin + Vector2.Up * Mathf.Round(Height);
-        Shadow.Visible = Height > 0;
+        // Shadow is a sibling of Visual: stays at the ground footprint even in flight.
+        Shadow.Visible = true;
         Course.Step(Stamina);
         return true;
     }

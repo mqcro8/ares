@@ -17,8 +17,10 @@
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="15_pixel_font"]
 [ext_resource type="Script" uid="uid://cixyklmvqo4m" path="res://scripts/training/TrainingIntro.cs" id="16_training_intro"]
 [ext_resource type="Script" uid="uid://80fyjbwnoscg" path="res://scripts/training/TrainingCamera.cs" id="17_training_camera"]
-[ext_resource type="PackedScene" uid="uid://cdg7uptvkotts" path="res://scenes/training/ControlFurniture.tscn" id="control_furniture"]
-[ext_resource type="PackedScene" path="res://scenes/training/PhysicalTraining.tscn" id="physical_training"]
+[ext_resource type="PackedScene" uid="uid://c16gdj6jtud" path="res://scenes/training/TrainingBlock.tscn" id="block"]
+[ext_resource type="PackedScene" uid="uid://ch84tnr8tvq" path="res://scenes/training/ControlCabinet.tscn" id="cabinet"]
+[ext_resource type="Script" uid="uid://bpm1p1nse5ycm" path="res://scripts/training/PhysicalTraining.cs" id="physical_training"]
+[ext_resource type="Script" uid="uid://dy2bwuvve1i8o" path="res://scripts/training/TrainingHUD.cs" id="training_hud"]
 [ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="training_movement"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5x7l7"]
@@ -1761,9 +1763,11 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="Training" type="Node2D" unique_id=1721182763 node_paths=PackedStringArray("Course")]
+[node name="Training" type="Node2D" unique_id=1721182763 node_paths=PackedStringArray("Course", "LabReturnMarker", "LabDoorZone")]
 script = ExtResource("16_training_intro")
 Course = NodePath("Tilemaps_layers/PhysicalTraining")
+LabReturnMarker = NodePath("gym_from_lab")
+LabDoorZone = NodePath("LabDoor/FrontZone")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1259519819]
 process_physics_priority = 10
@@ -1779,10 +1783,10 @@ y_sort_enabled = true
 
 [node name="Background" type="TileMapLayer" parent="Tilemaps_layers" unique_id=725944284]
 editor_description = "Original world extent x16..784, y80..512. Same 2x source-pixel density as the gym; final row uses a half-height atlas tile to preserve the south boundary."
+z_index = -10
 texture_filter = 1
 position = Vector2(16, 80)
 scale = Vector2(2, 2)
-z_index = -10
 tile_map_data = PackedByteArray("AAAAAAAAAQAMAAwAAAAAAAEAAQAMAAwAAAAAAAIAAQAMAAwAAAAAAAMAAQAMAAwAAAAAAAQAAQAMAAwAAAAAAAUAAQAMAAwAAAAAAAYAAQAMAAwAAAAAAAcAAQAMAAwAAAAAAAgAAQAMAAwAAAAAAAkAAQAMAAwAAAAAAAoAAQAMAAwAAAAAAAsAAQAMAAwAAAAAAAwAAQAMAAwAAAAAAA0AFAAAAAAAAAABAAAAAQAMAAwAAAABAAEAAQAMAAwAAAABAAIAAQAMAAwAAAABAAMAAQAMAAwAAAABAAQAAQAMAAwAAAABAAUAAQAMAAwAAAABAAYAAQAMAAwAAAABAAcAAQAMAAwAAAABAAgAAQAMAAwAAAABAAkAAQAMAAwAAAABAAoAAQAMAAwAAAABAAsAAQAMAAwAAAABAAwAAQAMAAwAAAABAA0AFAAAAAAAAAACAAAAAQAMAAwAAAACAAEAAQAMAAwAAAACAAIAAQAMAAwAAAACAAMAAQAMAAwAAAACAAQAAQAMAAwAAAACAAUAAQAMAAwAAAACAAYAAQAMAAwAAAACAAcAAQAMAAwAAAACAAgAAQAMAAwAAAACAAkAAQAMAAwAAAACAAoAAQAMAAwAAAACAAsAAQAMAAwAAAACAAwAAQAMAAwAAAACAA0AFAAAAAAAAAADAAAAAQAMAAwAAAADAAEAAQAMAAwAAAADAAIAAQAMAAwAAAADAAMAAQAMAAwAAAADAAQAAQAMAAwAAAADAAUAAQAMAAwAAAADAAYAAQAMAAwAAAADAAcAAQAMAAwAAAADAAgAAQAMAAwAAAADAAkAAQAMAAwAAAADAAoAAQAMAAwAAAADAAsAAQAMAAwAAAADAAwAAQAMAAwAAAADAA0AFAAAAAAAAAAEAAAAAQAMAAwAAAAEAAEAAQAMAAwAAAAEAAIAAQAMAAwAAAAEAAMAAQAMAAwAAAAEAAQAAQAMAAwAAAAEAAUAAQAMAAwAAAAEAAYAAQAMAAwAAAAEAAcAAQAMAAwAAAAEAAgAAQAMAAwAAAAEAAkAAQAMAAwAAAAEAAoAAQAMAAwAAAAEAAsAAQAMAAwAAAAEAAwAAQAMAAwAAAAEAA0AFAAAAAAAAAAFAAAAAQAMAAwAAAAFAAEAAQAMAAwAAAAFAAIAAQAMAAwAAAAFAAMAAQAMAAwAAAAFAAQAAQAMAAwAAAAFAAUAAQAMAAwAAAAFAAYAAQAMAAwAAAAFAAcAAQAMAAwAAAAFAAgAAQAMAAwAAAAFAAkAAQAMAAwAAAAFAAoAAQAMAAwAAAAFAAsAAQAMAAwAAAAFAAwAAQAMAAwAAAAFAA0AFAAAAAAAAAAGAAAAAQAMAAwAAAAGAAEAAQAMAAwAAAAGAAIAAQAMAAwAAAAGAAMAAQAMAAwAAAAGAAQAAQAMAAwAAAAGAAUAAQAMAAwAAAAGAAYAAQAMAAwAAAAGAAcAAQAMAAwAAAAGAAgAAQAMAAwAAAAGAAkAAQAMAAwAAAAGAAoAAQAMAAwAAAAGAAsAAQAMAAwAAAAGAAwAAQAMAAwAAAAGAA0AFAAAAAAAAAAHAAAAAQAMAAwAAAAHAAEAAQAMAAwAAAAHAAIAAQAMAAwAAAAHAAMAAQAMAAwAAAAHAAQAAQAMAAwAAAAHAAUAAQAMAAwAAAAHAAYAAQAMAAwAAAAHAAcAAQAMAAwAAAAHAAgAAQAMAAwAAAAHAAkAAQAMAAwAAAAHAAoAAQAMAAwAAAAHAAsAAQAMAAwAAAAHAAwAAQAMAAwAAAAHAA0AFAAAAAAAAAAIAAAAAQAMAAwAAAAIAAEAAQAMAAwAAAAIAAIAAQAMAAwAAAAIAAMAAQAMAAwAAAAIAAQAAQAMAAwAAAAIAAUAAQAMAAwAAAAIAAYAAQAMAAwAAAAIAAcAAQAMAAwAAAAIAAgAAQAMAAwAAAAIAAkAAQAMAAwAAAAIAAoAAQAMAAwAAAAIAAsAAQAMAAwAAAAIAAwAAQAMAAwAAAAIAA0AFAAAAAAAAAAJAAAAAQAMAAwAAAAJAAEAAQAMAAwAAAAJAAIAAQAMAAwAAAAJAAMAAQAMAAwAAAAJAAQAAQAMAAwAAAAJAAUAAQAMAAwAAAAJAAYAAQAMAAwAAAAJAAcAAQAMAAwAAAAJAAgAAQAMAAwAAAAJAAkAAQAMAAwAAAAJAAoAAQAMAAwAAAAJAAsAAQAMAAwAAAAJAAwAAQAMAAwAAAAJAA0AFAAAAAAAAAAKAAAAAQAMAAwAAAAKAAEAAQAMAAwAAAAKAAIAAQAMAAwAAAAKAAMAAQAMAAwAAAAKAAQAAQAMAAwAAAAKAAUAAQAMAAwAAAAKAAYAAQAMAAwAAAAKAAcAAQAMAAwAAAAKAAgAAQAMAAwAAAAKAAkAAQAMAAwAAAAKAAoAAQAMAAwAAAAKAAsAAQAMAAwAAAAKAAwAAQAMAAwAAAAKAA0AFAAAAAAAAAALAAAAAQAMAAwAAAALAAEAAQAMAAwAAAALAAIAAQAMAAwAAAALAAMAAQAMAAwAAAALAAQAAQAMAAwAAAALAAUAAQAMAAwAAAALAAYAAQAMAAwAAAALAAcAAQAMAAwAAAALAAgAAQAMAAwAAAALAAkAAQAMAAwAAAALAAoAAQAMAAwAAAALAAsAAQAMAAwAAAALAAwAAQAMAAwAAAALAA0AFAAAAAAAAAAMAAAAAQAMAAwAAAAMAAEAAQAMAAwAAAAMAAIAAQAMAAwAAAAMAAMAAQAMAAwAAAAMAAQAAQAMAAwAAAAMAAUAAQAMAAwAAAAMAAYAAQAMAAwAAAAMAAcAAQAMAAwAAAAMAAgAAQAMAAwAAAAMAAkAAQAMAAwAAAAMAAoAAQAMAAwAAAAMAAsAAQAMAAwAAAAMAAwAAQAMAAwAAAAMAA0AFAAAAAAAAAANAAAAAQAMAAwAAAANAAEAAQAMAAwAAAANAAIAAQAMAAwAAAANAAMAAQAMAAwAAAANAAQAAQAMAAwAAAANAAUAAQAMAAwAAAANAAYAAQAMAAwAAAANAAcAAQAMAAwAAAANAAgAAQAMAAwAAAANAAkAAQAMAAwAAAANAAoAAQAMAAwAAAANAAsAAQAMAAwAAAANAAwAAQAMAAwAAAANAA0AFAAAAAAAAAAOAAAAAQAMAAwAAAAOAAEAAQAMAAwAAAAOAAIAAQAMAAwAAAAOAAMAAQAMAAwAAAAOAAQAAQAMAAwAAAAOAAUAAQAMAAwAAAAOAAYAAQAMAAwAAAAOAAcAAQAMAAwAAAAOAAgAAQAMAAwAAAAOAAkAAQAMAAwAAAAOAAoAAQAMAAwAAAAOAAsAAQAMAAwAAAAOAAwAAQAMAAwAAAAOAA0AFAAAAAAAAAAPAAAAAQAMAAwAAAAPAAEAAQAMAAwAAAAPAAIAAQAMAAwAAAAPAAMAAQAMAAwAAAAPAAQAAQAMAAwAAAAPAAUAAQAMAAwAAAAPAAYAAQAMAAwAAAAPAAcAAQAMAAwAAAAPAAgAAQAMAAwAAAAPAAkAAQAMAAwAAAAPAAoAAQAMAAwAAAAPAAsAAQAMAAwAAAAPAAwAAQAMAAwAAAAPAA0AFAAAAAAAAAAQAAAAAQAMAAwAAAAQAAEAAQAMAAwAAAAQAAIAAQAMAAwAAAAQAAMAAQAMAAwAAAAQAAQAAQAMAAwAAAAQAAUAAQAMAAwAAAAQAAYAAQAMAAwAAAAQAAcAAQAMAAwAAAAQAAgAAQAMAAwAAAAQAAkAAQAMAAwAAAAQAAoAAQAMAAwAAAAQAAsAAQAMAAwAAAAQAAwAAQAMAAwAAAAQAA0AFAAAAAAAAAARAAAAAQAMAAwAAAARAAEAAQAMAAwAAAARAAIAAQAMAAwAAAARAAMAAQAMAAwAAAARAAQAAQAMAAwAAAARAAUAAQAMAAwAAAARAAYAAQAMAAwAAAARAAcAAQAMAAwAAAARAAgAAQAMAAwAAAARAAkAAQAMAAwAAAARAAoAAQAMAAwAAAARAAsAAQAMAAwAAAARAAwAAQAMAAwAAAARAA0AFAAAAAAAAAASAAAAAQAMAAwAAAASAAEAAQAMAAwAAAASAAIAAQAMAAwAAAASAAMAAQAMAAwAAAASAAQAAQAMAAwAAAASAAUAAQAMAAwAAAASAAYAAQAMAAwAAAASAAcAAQAMAAwAAAASAAgAAQAMAAwAAAASAAkAAQAMAAwAAAASAAoAAQAMAAwAAAASAAsAAQAMAAwAAAASAAwAAQAMAAwAAAASAA0AFAAAAAAAAAATAAAAAQAMAAwAAAATAAEAAQAMAAwAAAATAAIAAQAMAAwAAAATAAMAAQAMAAwAAAATAAQAAQAMAAwAAAATAAUAAQAMAAwAAAATAAYAAQAMAAwAAAATAAcAAQAMAAwAAAATAAgAAQAMAAwAAAATAAkAAQAMAAwAAAATAAoAAQAMAAwAAAATAAsAAQAMAAwAAAATAAwAAQAMAAwAAAATAA0AFAAAAAAAAAAUAAAAAQAMAAwAAAAUAAEAAQAMAAwAAAAUAAIAAQAMAAwAAAAUAAMAAQAMAAwAAAAUAAQAAQAMAAwAAAAUAAUAAQAMAAwAAAAUAAYAAQAMAAwAAAAUAAcAAQAMAAwAAAAUAAgAAQAMAAwAAAAUAAkAAQAMAAwAAAAUAAoAAQAMAAwAAAAUAAsAAQAMAAwAAAAUAAwAAQAMAAwAAAAUAA0AFAAAAAAAAAAVAAAAAQAMAAwAAAAVAAEAAQAMAAwAAAAVAAIAAQAMAAwAAAAVAAMAAQAMAAwAAAAVAAQAAQAMAAwAAAAVAAUAAQAMAAwAAAAVAAYAAQAMAAwAAAAVAAcAAQAMAAwAAAAVAAgAAQAMAAwAAAAVAAkAAQAMAAwAAAAVAAoAAQAMAAwAAAAVAAsAAQAMAAwAAAAVAAwAAQAMAAwAAAAVAA0AFAAAAAAAAAAWAAAAAQAMAAwAAAAWAAEAAQAMAAwAAAAWAAIAAQAMAAwAAAAWAAMAAQAMAAwAAAAWAAQAAQAMAAwAAAAWAAUAAQAMAAwAAAAWAAYAAQAMAAwAAAAWAAcAAQAMAAwAAAAWAAgAAQAMAAwAAAAWAAkAAQAMAAwAAAAWAAoAAQAMAAwAAAAWAAsAAQAMAAwAAAAWAAwAAQAMAAwAAAAWAA0AFAAAAAAAAAAXAAAAAQAMAAwAAAAXAAEAAQAMAAwAAAAXAAIAAQAMAAwAAAAXAAMAAQAMAAwAAAAXAAQAAQAMAAwAAAAXAAUAAQAMAAwAAAAXAAYAAQAMAAwAAAAXAAcAAQAMAAwAAAAXAAgAAQAMAAwAAAAXAAkAAQAMAAwAAAAXAAoAAQAMAAwAAAAXAAsAAQAMAAwAAAAXAAwAAQAMAAwAAAAXAA0AFAAAAAAAAAA=")
 tile_set = SubResource("TileSet_1no0r")
 
@@ -1799,14 +1803,15 @@ Visual = NodePath("../AnimatedSprite2D")
 Footprint = NodePath("../CollisionShape2D")
 Shadow = NodePath("../JumpShadow")
 
-[node name="JumpShadow" type="Polygon2D" parent="Tilemaps_layers/Player"]
-visible = false
-color = Color(0, 0, 0, 0.35)
-polygon = PackedVector2Array(-9, -7, 13, -7, 13, -1, -9, -1)
+[node name="JumpShadow" type="Polygon2D" parent="Tilemaps_layers/Player" unique_id=1811380177]
+scale = Vector2(0.75, 0.75)
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-12, -4, -7, -8, 11, -8, 16, -4, 11, 0, -7, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Tilemaps_layers/Player" unique_id=411452938]
-position = Vector2(2, -13)
-scale = Vector2(1.1666666, 1.1666666)
+texture_filter = 1
+position = Vector2(1.5, -16.5)
+scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("sprite_frames_player")
 animation = &"idle_down"
 script = ExtResource("4_anim")
@@ -1833,7 +1838,42 @@ scale = Vector2(1, 0.5)
 tile_map_data = PackedByteArray("AAAAAB4AEgAAAAAAAAADAB4AEgAAAAAAAAAGAB4AEgAAAAAAAAAPAB4AEgAAAAAAAAASAB4AEgAAAAAAAAAVAB4AEgAAAAAAAAA=")
 tile_set = SubResource("TrainingWalls")
 
-[node name="Furniture" parent="Tilemaps_layers" unique_id=1890236078 instance=ExtResource("control_furniture")]
+[node name="Furniture" type="Node2D" parent="Tilemaps_layers" unique_id=1890236078]
+z_index = 1
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="NorthStatusWest" type="Sprite2D" parent="Tilemaps_layers/Furniture" unique_id=788823257]
+position = Vector2(216, 128)
+scale = Vector2(2, 2)
+texture = ExtResource("13_whebk")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="NorthStatusEast" type="Sprite2D" parent="Tilemaps_layers/Furniture" unique_id=1962509098]
+position = Vector2(576, 130)
+scale = Vector2(2, 2)
+texture = ExtResource("13_whebk")
+region_enabled = true
+region_rect = Rect2(0, 656, 32, 16)
+
+[node name="ArchiveA2" parent="Tilemaps_layers/Furniture" unique_id=744399744 instance=ExtResource("cabinet")]
+position = Vector2(112, 190)
+
+[node name="ArchiveB2" parent="Tilemaps_layers/Furniture" unique_id=1194646890 instance=ExtResource("cabinet")]
+position = Vector2(144, 190)
+
+[node name="ArchiveA3" parent="Tilemaps_layers/Furniture" unique_id=1754672464 instance=ExtResource("cabinet")]
+position = Vector2(80, 190)
+
+[node name="ArchiveA4" parent="Tilemaps_layers/Furniture" unique_id=470840539 instance=ExtResource("cabinet")]
+position = Vector2(656, 190)
+
+[node name="ArchiveB3" parent="Tilemaps_layers/Furniture" unique_id=651203438 instance=ExtResource("cabinet")]
+position = Vector2(720, 190)
+
+[node name="ArchiveA5" parent="Tilemaps_layers/Furniture" unique_id=1988958950 instance=ExtResource("cabinet")]
+position = Vector2(688, 190)
 
 [node name="SouthRoomFloor" type="TileMapLayer" parent="Tilemaps_layers" unique_id=2134261520]
 editor_description = "Gym floor: shared original atlas (12,12) at 2x, matching Background pixel density. World extent x32..768, y512..992; blocks live in PhysicalTraining."
@@ -1858,7 +1898,60 @@ scale = Vector2(1, 0.5)
 tile_map_data = PackedByteArray("AAAAADwAEgAAAAAAAAADADwAEgAAAAAAAAAGADwAEgAAAAAAAAAJADwAEgAAAAAAAAAMADwAEgAAAAAAAAAPADwAEgAAAAAAAAASADwAEgAAAAAAAAAVADwAEgAAAAAAAAA=")
 tile_set = SubResource("TrainingWalls")
 
-[node name="PhysicalTraining" parent="Tilemaps_layers" unique_id=466060575 instance=ExtResource("physical_training")]
+[node name="PhysicalTraining" type="Node2D" parent="Tilemaps_layers" unique_id=466060575 node_paths=PackedStringArray("Blocks", "Hud")]
+editor_description = "Ordered north-south footprints. Move scene instances, not script coordinates."
+z_index = 1
+y_sort_enabled = true
+script = ExtResource("physical_training")
+Blocks = [NodePath("Block1/Base"), NodePath("Block2/Base"), NodePath("Block3/Base")]
+Hud = NodePath("HUD")
+
+[node name="Block1" parent="Tilemaps_layers/PhysicalTraining" unique_id=261321177 instance=ExtResource("block")]
+position = Vector2(400, 608)
+
+[node name="Block2" parent="Tilemaps_layers/PhysicalTraining" unique_id=112330273 instance=ExtResource("block")]
+position = Vector2(400, 736)
+
+[node name="Block3" parent="Tilemaps_layers/PhysicalTraining" unique_id=1719391922 instance=ExtResource("block")]
+position = Vector2(400, 864)
+
+[node name="HUD" type="CanvasLayer" parent="Tilemaps_layers/PhysicalTraining" unique_id=439116034 node_paths=PackedStringArray("Stats")]
+layer = 5
+script = ExtResource("training_hud")
+Stats = NodePath("Stamina")
+
+[node name="Stamina" type="Label" parent="Tilemaps_layers/PhysicalTraining/HUD" unique_id=1204109951]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 200.0
+offset_bottom = 36.0
+text = "STAMINA  100 / 100"
+
+[node name="LabDoor" type="Node2D" parent="." unique_id=1106019914]
+position = Vector2(400, 126)
+
+[node name="Frame" type="Polygon2D" parent="LabDoor" unique_id=380025699]
+position = Vector2(0, -2)
+color = Color(0.086275, 0.141176, 0.2, 1)
+polygon = PackedVector2Array(-30, -20, 30, -20, 30, 20, -30, 20)
+
+[node name="Panel" type="Polygon2D" parent="LabDoor" unique_id=517084768]
+color = Color(0.294118, 0.505882, 0.564706, 1)
+polygon = PackedVector2Array(-26, -16, 26, -16, 26, 16, -26, 16)
+
+[node name="Seam" type="Polygon2D" parent="LabDoor" unique_id=446663536]
+color = Color(0.690196, 0.960784, 1, 1)
+polygon = PackedVector2Array(-1, -16, 1, -16, 1, 16, -1, 16)
+
+[node name="FrontZone" type="ReferenceRect" parent="LabDoor" unique_id=521074005]
+offset_left = -32.0
+offset_top = 18.0
+offset_right = 32.0
+offset_bottom = 86.0
+mouse_filter = 2
+
+[node name="gym_from_lab" type="Marker2D" parent="." unique_id=299131263]
+position = Vector2(401, 191)
 
 [node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
 layer = 10

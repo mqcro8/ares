@@ -1,9 +1,15 @@
+using Ares.Systems.Audio;
 using Godot;
 
 namespace Ares.Ui.MainMenu;
 
 public partial class OptionsMenu : Control
 {
+	public override void _Ready()
+	{
+		AudioManager.PlayMusic(SoundIds.MenuMusic);
+	}
+
 	public void OnVolumePressed()
 	{
 		GetTree().ChangeSceneToFile("res://scenes/main_menu/Volume_menu.tscn");

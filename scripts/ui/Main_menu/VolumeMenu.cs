@@ -1,3 +1,4 @@
+using Ares.Systems.Audio;
 using Godot;
 
 namespace Ares.Ui.MainMenu;
@@ -8,6 +9,7 @@ public partial class VolumeMenu : Control
 
 	public override void _Ready()
 	{
+		AudioManager.PlayMusic(SoundIds.MenuMusic);
 		SyncSlider("Panel/Panel2/MasterSlider", "Master");
 		SyncSlider("Panel/Panel2/MusicSlider", "Music");
 		SyncSlider("Panel/Panel2/VFXSlider", "SFX");

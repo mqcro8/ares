@@ -1,5 +1,6 @@
 namespace ares.scripts.training;
 
+using Ares.Systems.Audio;
 using Godot;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
@@ -7,6 +8,8 @@ public partial class TrainingIntro : Node2D
 {
 	[Export] public string AstronautName { get; set; } = "Commander";
 	[Export] public PhysicalTraining Course { get; set; }
+	[Export] public Marker2D LabReturnMarker { get; set; }
+	[Export] public Control LabDoorZone { get; set; }
 	[Export] public NodePath PlayerPath { get; set; } = "Tilemaps_layers/Player";
 	[Export] public NodePath PanelPath { get; set; } = "IntroUI/Panel";
 	[Export] public NodePath SpeakerPath { get; set; } = "IntroUI/Panel/Margin/VBox/Speaker";
@@ -25,9 +28,12 @@ public partial class TrainingIntro : Node2D
 	private bool _completionShown;
 	private int _line;
 	private ulong _lastAdvanceFrame = ulong.MaxValue;
+	public bool BriefingActive => _active;
+	public bool CompletionShown => _completionShown;
 
 	public override void _Ready()
 	{
+		AudioManager.StopMusic(1.0);
 		_player = GetNodeOrNull<CharacterBody2D>(PlayerPath);
 		_panel = GetNodeOrNull<PanelContainer>(PanelPath);
 		_speaker = GetNodeOrNull<Label>(SpeakerPath);
@@ -40,9 +46,30 @@ public partial class TrainingIntro : Node2D
 			return;
 		}
 
-		AcquirePhysicsLock();
 		_continue.Pressed += Advance;
 		if (Course != null) Course.Completed += QueueCompletion;
+		var stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
+		AddChild(stations);
+		stations.Targets.Add(new("Enter repair lab", LabDoorZone.GetGlobalRect(), PracticeSession.LabScene, "lab.from_gym"));
+		var arrival = PracticeSession.Arrive(PracticeSession.TrainingScene);
+		if (arrival != null)
+		{
+			var saved = PracticeSession.Saved;
+			_player.GlobalPosition = LabReturnMarker.GlobalPosition;
+			PracticeSession.RestoreFacing(PracticeSession.TrainingScene, (ares.scripts.player.Player)_player);
+			if (saved != null)
+			{
+				Course.Restore(saved.Course);
+				((ares.scripts.player.Player)_player).TrainingMovement.Restore(saved.Movement);
+				_completionShown = saved.CompletionShown;
+				_line = 3;
+				_panel.Hide();
+				return;
+			}
+		}
+		// A first visit from the lab has no gym snapshot, but still owns its repairs.
+		if (arrival == null) PracticeSession.Clear();
+		AcquirePhysicsLock();
 		_active = true;
 		ShowLine();
 		_panel.Show();
@@ -60,8 +87,8 @@ public partial class TrainingIntro : Node2D
 		_active = true;
 		_lastAdvanceFrame = Engine.GetProcessFrames();
 		_speaker.Text = "MISSION CONTROL";
-		_text.Text = $"Excellent work, {AstronautName}. You've cleared all three obstacles. Keep practicing at your own pace.";
-		_continue.Text = "Continue";
+		_text.Text = $"Excellent work, {AstronautName}. All three obstacles cleared. The repair lab is through the marked north door whenever you are ready.";
+		_continue.Text = "Keep practicing";
 		_panel.Show();
 		_continue.GrabFocus();
 	}
@@ -71,10 +98,10 @@ public partial class TrainingIntro : Node2D
 		_speaker.Text = _line == 1 ? AstronautName.ToUpperInvariant() : "MISSION CONTROL";
 		_text.Text = _line switch
 		{
-			0 => "Welcome, [Name]. Our Gateway has been silent for two weeks, and you're going to bring it back online. Before you head out, you need to master your movement, your equipment, and your ship."
+			0 => "Welcome, [Name]. Gateway has been silent for two weeks. Before departure, let's prepare you to bring it back online."
 				.Replace("[Name]", AstronautName),
 			1 => "Understood. Let's get started.",
-			_ => "Here, you'll learn how to move. These exercises are just practice, with no lasting consequences."
+			_ => "This is a safe place to practice. The gym and repair lab are yours to explore, at your own pace."
 		};
 		_continue.Text = _line == 2 ? "Start training" : "Continue";
 	}

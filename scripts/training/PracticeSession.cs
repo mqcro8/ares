@@ -1,0 +1,68 @@
+namespace ares.scripts.training;
+using Godot;
+using System.Collections.Generic;
+using ares.scripts.player;
+
+/// <summary>Memory-only room state with single-use, session-scoped travel tickets.</summary>
+public static class PracticeSession
+{
+    public const string TrainingScene = "res://scenes/training/Training.tscn";
+    public const string LabScene = "res://scenes/training/TrainingLab.tscn";
+    public enum Exercise { Wires, Fuses }
+    public sealed record RoomPose(Vector2 Position, string Facing, bool Flip);
+    public sealed record Snapshot(PhysicalTraining.Progress Course, TrainingMovement.Progress Movement, bool CompletionShown);
+    public sealed record Travel(long Session, long Id, string Source, string Target, string Spawn, Vector2 ReturnPosition);
+    public static readonly Dictionary<string, RoomPose> Rooms = new();
+    public static Snapshot Saved { get; set; }
+    public static Travel Pending { get; private set; }
+    public static long SessionId { get; private set; }
+    private static long _serial, _exerciseTicket;
+    public static Exercise Selected { get; private set; }
+    public static bool Wires { get; private set; }
+    public static bool Fuses { get; private set; }
+    public static string Feedback { get; private set; } = "";
+    public static string SceneFor(Exercise exercise) => exercise == Exercise.Wires
+        ? "res://scenes/minigames/wireminigame.tscn" : "res://scenes/minigames/FuseBoxMinigame.tscn";
+    public static void Clear()
+    {
+        SessionId++; Pending = null; Saved = null; Rooms.Clear();
+        _exerciseTicket = 0; Wires = Fuses = false; Feedback = "";
+    }
+    public static Travel Prepare(string source, string target, string spawn, Vector2 returnPosition)
+        => Pending = new(SessionId, ++_serial, source, target, spawn, returnPosition);
+    public static Travel Arrive(string target)
+    {
+        if (Pending == null || Pending.Session != SessionId || Pending.Target != target) return null;
+        var ticket = Pending; Pending = null; return ticket;
+    }
+    public static void Abort() { Pending = null; _exerciseTicket = 0; }
+    public static void Capture(string room, Player player)
+    {
+        var visual = player.GetNode<PlayerAnimation>("AnimatedSprite2D");
+        Rooms[room] = new(player.GlobalPosition, visual.Facing, visual.FlipH);
+    }
+    public static void RestoreFacing(string room, Player player)
+    {
+        if (Rooms.TryGetValue(room, out var pose)) player.GetNode<PlayerAnimation>("AnimatedSprite2D").RestoreFacing(pose.Facing, pose.Flip);
+    }
+    public static Travel Begin(Exercise exercise, Vector2 position)
+    {
+        Selected = exercise;
+        var ticket = Prepare(LabScene, SceneFor(exercise), exercise == Exercise.Wires ? "lab.wires.return" : "lab.fuses.return", position);
+        _exerciseTicket = ticket.Id; return ticket;
+    }
+    public static long EnterExercise(Node root)
+    {
+        var ticket = Arrive(root.SceneFilePath);
+        return ticket != null && ticket.Id == _exerciseTicket ? ticket.Id : 0;
+    }
+    public static bool Finish(long session, long ticket, bool success)
+    {
+        if (session != SessionId || ticket == 0 || ticket != _exerciseTicket) return false;
+        _exerciseTicket = 0;
+        if (success) { if (Selected == Exercise.Wires) Wires = true; else Fuses = true; }
+        Feedback = success ? "Practice complete. You can repeat it anytime." : "Practice cancelled. Previous progress kept.";
+        Prepare(SceneFor(Selected), LabScene, Selected == Exercise.Wires ? "lab.wires.return" : "lab.fuses.return", Rooms[LabScene].Position);
+        return true;
+    }
+}

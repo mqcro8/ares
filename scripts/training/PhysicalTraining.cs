@@ -18,6 +18,18 @@ public partial class PhysicalTraining : Node2D
     private int _direction;
     private Vector2 _halfBody, _offset;
 
+    public sealed record Progress(int Cleared, int Direction, bool Finished);
+    public Progress Capture() => new(ClearedCount, _direction, Congratulated);
+    public void Restore(Progress progress)
+    {
+        ClearedCount = progress.Cleared;
+        _direction = progress.Direction;
+        Congratulated = progress.Finished;
+        // Entry is allowed only on the ground, after the landing was processed.
+        System.Array.Clear(_side);
+        System.Array.Clear(_crossed);
+    }
+
     public override void _Ready()
     {
         IsConfigured = Blocks.Count == 3 && BlockHeight > 0;

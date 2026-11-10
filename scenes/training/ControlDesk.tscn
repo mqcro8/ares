@@ -1,41 +1,34 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://c07em80re2k7y"]
 
-[ext_resource type="Texture2D" path="res://art/training/tilesets/Interiors_free_16x16.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://b64j5ihxbt6dl" path="res://art/training/tilesets/Interiors_free_16x16.png" id="1"]
+
 [sub_resource type="RectangleShape2D" id="desk_base"]
 size = Vector2(48, 16)
+
 [sub_resource type="RectangleShape2D" id="chair_base"]
 size = Vector2(22, 10)
 
-[node name="ControlDesk" type="StaticBody2D"]
+[node name="ControlDesk" type="StaticBody2D" unique_id=1296269303]
 editor_description = "Library scene; not placed in Training. Original desk at 2x, foot origin, independent chair Y-sort and base collisions."
 y_sort_enabled = true
 texture_filter = 1
-collision_layer = 1
 collision_mask = 0
 
-[node name="Visual" type="Sprite2D" parent="."]
-offset = Vector2(0, -15)
+[node name="Visual" type="Sprite2D" parent="." unique_id=1535067283]
 scale = Vector2(2, 2)
 texture = ExtResource("1")
+offset = Vector2(0, -15)
 region_enabled = true
 region_rect = Rect2(34, 779, 28, 30)
 
-[node name="Base" type="CollisionShape2D" parent="."]
+[node name="Base" type="CollisionShape2D" parent="." unique_id=1198350563]
 position = Vector2(0, -8)
 shape = SubResource("desk_base")
 
-[node name="Chair" type="StaticBody2D" parent="."]
+[node name="Chair" type="StaticBody2D" parent="." unique_id=2089877396]
 position = Vector2(0, 24)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Visual" type="Sprite2D" parent="Chair"]
-position = Vector2(0, -24)
-scale = Vector2(2, 2)
-texture = ExtResource("1")
-region_enabled = true
-region_rect = Rect2(16, 608, 16, 32)
-
-[node name="Base" type="CollisionShape2D" parent="Chair"]
+[node name="Base" type="CollisionShape2D" parent="Chair" unique_id=131510601]
 position = Vector2(0, -5)
 shape = SubResource("chair_base")
