@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
+PauseManager="*res://scripts/systems/PauseManager.cs"
 
 [display]
 

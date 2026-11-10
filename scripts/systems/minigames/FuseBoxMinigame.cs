@@ -126,14 +126,14 @@ public partial class FuseBoxMinigame : Control
 			// Bloque 7a: emitir completed
 			_busy = true;
 			foreach (var sw in _switches) Sparks(sw, OnColor);
-			GetTree().CreateTimer(0.6).Timeout += () => { EmitSignal(SignalName.Completed); };
+			GetTree().CreateTimer(0.6, false).Timeout += () => { EmitSignal(SignalName.Completed); };
 		}
 		// Bloque 7b: ¿quedan intentos?
 		else if (_pressesLeft <= 0)
 		{
 			// Bloque 8: reiniciar caja
 			_busy = true;
-			GetTree().CreateTimer(0.5).Timeout += ResetBox;
+			GetTree().CreateTimer(0.5, false).Timeout += ResetBox;
 		}
 	}
 

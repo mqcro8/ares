@@ -1,0 +1,289 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/minigames/FrequencyBoxMinigame.cs" id="1_freq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
+bg_color = Color(0.102, 0.11, 0.118, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.227, 0.239, 0.251, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_screen"]
+bg_color = Color(0.027, 0.075, 0.039, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.122, 0.353, 0.165, 1)
+corner_radius_top_left = 100
+corner_radius_top_right = 100
+corner_radius_bottom_right = 100
+corner_radius_bottom_left = 100
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_knob"]
+bg_color = Color(0.165, 0.173, 0.18, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.416, 0.427, 0.439, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="Shader" id="Shader_crt"]
+code = "shader_type canvas_item;\n\nuniform vec4 tint : source_color = vec4(0.02, 0.08, 0.04, 1.0);\nuniform float scanline_count : hint_range(10.0, 400.0) = 120.0;\nuniform float scanline_strength : hint_range(0.0, 1.0) = 0.5;\nuniform float flicker_strength : hint_range(0.0, 0.5) = 0.06;\nuniform float band_strength : hint_range(0.0, 1.0) = 0.22;\nuniform float noise_strength : hint_range(0.0, 0.5) = 0.06;\nuniform float vignette_strength : hint_range(0.0, 1.0) = 0.8;\n\nfloat hash(vec2 p) {\n\treturn fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);\n}\n\nvoid fragment() {\n\tvec2 uv = UV;\n\tfloat d = distance(uv, vec2(0.5));\n\tif (d > 0.5) {\n\t\tdiscard;\n\t}\n\n\tfloat edge = smoothstep(0.5, 0.45, d);\n\tfloat scan = 0.5 + 0.5 * sin(uv.y * scanline_count * 6.2831853 + TIME * 2.0);\n\tfloat band = smoothstep(0.10, 0.0, abs(uv.y - fract(TIME * 0.15)));\n\tfloat flick = 1.0 - flicker_strength * (0.5 + 0.5 * sin(TIME * 47.0));\n\tfloat noise = hash(floor(uv * vec2(96.0, 96.0)) + floor(TIME * 12.0));\n\n\tfloat a = scanline_strength * (1.0 - scan) * 0.55;\n\ta += band * band_strength;\n\ta += noise * noise_strength;\n\ta += smoothstep(0.28, 0.5, d) * vignette_strength * 0.5;\n\ta *= edge * flick;\n\n\tvec3 col = tint.rgb * (0.55 + 0.75 * scan);\n\tcol += vec3(0.05, 0.25, 0.10) * band;\n\tCOLOR = vec4(col, clamp(a, 0.0, 0.85));\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = SubResource("Shader_crt")
+
+[sub_resource type="Shader" id="Shader_knob"]
+code = "shader_type canvas_item;\n\nuniform vec4 base_color : source_color = vec4(0.165, 0.173, 0.18, 1.0);\nuniform vec4 rim_color : source_color = vec4(0.62, 0.64, 0.67, 1.0);\nuniform vec4 dark_color : source_color = vec4(0.06, 0.065, 0.07, 1.0);\n\nvoid fragment() {\n\tvec2 p = UV * 2.0 - 1.0;\n\tfloat r = length(p);\n\tif (r > 1.0) {\n\t\tdiscard;\n\t}\n\n\tfloat shade = smoothstep(1.0, 0.0, r);\n\tvec3 col = mix(dark_color.rgb, base_color.rgb, 0.45 + 0.55 * shade);\n\n\tfloat bevel = smoothstep(0.72, 0.98, r) * smoothstep(1.0, 0.94, r);\n\tcol = mix(col, rim_color.rgb * 0.55, bevel);\n\n\tfloat hi = smoothstep(0.55, 0.0, length(p - vec2(-0.32, -0.38)));\n\tcol += hi * 0.10;\n\n\tfloat ang = atan(p.y, p.x);\n\tfloat notch = step(0.90, cos(ang * 18.0)) * smoothstep(0.78, 0.92, r);\n\tcol = mix(col, rim_color.rgb, notch * 0.35);\n\n\tCOLOR = vec4(col, 1.0);\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_knob"]
+shader = SubResource("Shader_knob")
+
+[node name="FrequencyBoxMinigame" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_freq")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Box" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -260.0
+offset_right = 160.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_box")
+
+[node name="Screen" type="Panel" parent="Box"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -220.0
+offset_right = 100.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_screen")
+
+[node name="TargetWave" type="Line2D" parent="Box/Screen"]
+position = Vector2(100, 100)
+width = 3.0
+default_color = Color(0.235, 0.863, 0.314, 1)
+antialiased = true
+
+[node name="PlayerWave" type="Line2D" parent="Box/Screen"]
+position = Vector2(100, 100)
+width = 3.0
+default_color = Color(0.839, 0.157, 0.157, 1)
+antialiased = true
+
+[node name="CrtOverlay" type="ColorRect" parent="Box/Screen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_crt")
+
+[node name="Knobs" type="HBoxContainer" parent="Box"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -145.0
+offset_top = 10.0
+offset_right = 145.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="AmplitudeKnob" type="VBoxContainer" parent="Box/Knobs"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Knob" type="Panel" parent="Box/Knobs/AmplitudeKnob"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+material = SubResource("ShaderMaterial_knob")
+
+[node name="Pointer" type="Control" parent="Box/Knobs/AmplitudeKnob/Knob"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = 30.0
+offset_bottom = 30.0
+
+[node name="Tick" type="ColorRect" parent="Box/Knobs/AmplitudeKnob/Knob/Pointer"]
+layout_mode = 0
+offset_left = -2.0
+offset_top = -26.0
+offset_right = 2.0
+offset_bottom = -4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Caption" type="Label" parent="Box/Knobs/AmplitudeKnob"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "1 AMPLITUDE"
+horizontal_alignment = 1
+
+[node name="FrequencyKnob" type="VBoxContainer" parent="Box/Knobs"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Knob" type="Panel" parent="Box/Knobs/FrequencyKnob"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+material = SubResource("ShaderMaterial_knob")
+
+[node name="Pointer" type="Control" parent="Box/Knobs/FrequencyKnob/Knob"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = 30.0
+offset_bottom = 30.0
+
+[node name="Tick" type="ColorRect" parent="Box/Knobs/FrequencyKnob/Knob/Pointer"]
+layout_mode = 0
+offset_left = -2.0
+offset_top = -26.0
+offset_right = 2.0
+offset_bottom = -4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Caption" type="Label" parent="Box/Knobs/FrequencyKnob"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "2 FREQUENCY"
+horizontal_alignment = 1
+
+[node name="StatusLight" type="ColorRect" parent="Box/Knobs/FrequencyKnob"]
+custom_minimum_size = Vector2(50, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+color = Color(0.11, 0.29, 0.133, 1)
+
+[node name="PhaseKnob" type="VBoxContainer" parent="Box/Knobs"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Knob" type="Panel" parent="Box/Knobs/PhaseKnob"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+material = SubResource("ShaderMaterial_knob")
+
+[node name="Pointer" type="Control" parent="Box/Knobs/PhaseKnob/Knob"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = 30.0
+offset_bottom = 30.0
+
+[node name="Tick" type="ColorRect" parent="Box/Knobs/PhaseKnob/Knob/Pointer"]
+layout_mode = 0
+offset_left = -2.0
+offset_top = -26.0
+offset_right = 2.0
+offset_bottom = -4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Caption" type="Label" parent="Box/Knobs/PhaseKnob"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "3 PHASE"
+horizontal_alignment = 1
+
+[node name="BrandLabel" type="Label" parent="Box"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 170.0
+offset_right = 100.0
+offset_bottom = 195.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.541, 0.553, 0.565, 1)
+theme_override_font_sizes/font_size = 11
+text = "ZIKK COMMUNICATION"
+horizontal_alignment = 1
+
+[node name="WordLabel" type="Label" parent="Box"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 205.0
+offset_right = 100.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.235, 0.863, 0.314, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="Effects" type="Node2D" parent="."]
+position = Vector2(0, 0)
