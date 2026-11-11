@@ -3,37 +3,55 @@
 [ext_resource type="Script" uid="uid://dbo4eteeood0r" path="res://scripts/player/PlayerAnimation.cs" id="animation"]
 [ext_resource type="Texture2D" uid="uid://bpu38kcwp634q" path="res://art/player/walking/walking_back_frame_1.png" id="back1"]
 [ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="back2"]
-[ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/fuse_cabinet.png" id="cabinet"]
-[ext_resource type="Texture2D" uid="uid://dlbpoa4ib3vlv" path="res://art/training/operations/launch_simulator_console.png" id="console"]
+[ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/stations/fuse_cabinet.png" id="cabinet"]
+[ext_resource type="Texture2D" uid="uid://bb7imnhcgn2sx" path="res://art/training/stations/launch_simulator_console.png" id="console"]
+[ext_resource type="Texture2D" uid="uid://c7ivrocqbfmlp" path="res://art/training/stations/frequency_workbench.png" id="frequency_workbench"]
 [ext_resource type="Texture2D" uid="uid://bon0e1k84xbo6" path="res://art/player/walking/walking_front_frame_1.png" id="front1"]
 [ext_resource type="Texture2D" uid="uid://dvxfwp2p4d1f1" path="res://art/player/walking/walking_front_frame_2.png" id="front2"]
+[ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="hotbar_script"]
+[ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="hotbar_slot"]
+[ext_resource type="Texture2D" uid="uid://begn8rj0pamf1" path="res://art/training/stations/hull_repair_workbench.png" id="hull_repair_workbench"]
 [ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="idle_back"]
 [ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="idle_front"]
 [ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="idle_side"]
 [ext_resource type="Script" uid="uid://c32cgch3a68p0" path="res://scripts/training/TrainingLab.cs" id="lab"]
+[ext_resource type="Texture2D" uid="uid://4sk40dtnsrrq" path="res://art/training/equipment/casillero_cerrado.png" id="locker_closed"]
+[ext_resource type="Texture2D" uid="uid://ccb5h6hp2e20p" path="res://art/training/equipment/casillero_abierto.png" id="locker_open"]
+[ext_resource type="Script" uid="uid://b87ve2noy0ntc" path="res://scripts/training/EquipmentLocker.cs" id="locker_script"]
+[ext_resource type="Resource" path="res://data/equipment/items/maintenance_kit.tres" id="maintenance_kit"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="mission_monitor"]
 [ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="player"]
 [ext_resource type="Texture2D" uid="uid://bimfvp1udfbfj" path="res://art/training/tilesets/Room_Builder_free_16x16.png" id="room_atlas"]
 [ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="side1"]
 [ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="side2"]
-[ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/wiring_workbench.png" id="workbench"]
+[ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/stations/wiring_workbench.png" id="workbench"]
 
 [sub_resource type="RectangleShape2D" id="NorthShape"]
-size = Vector2(576, 32)
+size = Vector2(768, 32)
 
 [sub_resource type="RectangleShape2D" id="SideShape"]
-size = Vector2(16, 384)
+size = Vector2(16, 432)
 
 [sub_resource type="RectangleShape2D" id="SouthShape"]
-size = Vector2(576, 16)
+size = Vector2(768, 16)
 
 [sub_resource type="RectangleShape2D" id="WorkbenchShape"]
 size = Vector2(64, 20)
 
 [sub_resource type="RectangleShape2D" id="CabinetShape"]
-size = Vector2(28, 16)
+size = Vector2(28, 32)
+
+[sub_resource type="RectangleShape2D" id="FrequencyShape"]
+size = Vector2(64, 20)
+
+[sub_resource type="RectangleShape2D" id="HullRepairShape"]
+size = Vector2(64, 20)
 
 [sub_resource type="RectangleShape2D" id="SimulatorShape"]
-size = Vector2(32, 12)
+size = Vector2(40, 30)
+
+[sub_resource type="RectangleShape2D" id="LockerShape"]
+size = Vector2(40, 50)
 
 [sub_resource type="SpriteFrames" id="PlayerFrames"]
 animations = [{
@@ -98,16 +116,22 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="PlayerShape"]
 size = Vector2(14, 12)
 
-[node name="TrainingLab" type="Node2D" unique_id=1566292422 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "GymZone", "SimulatorZone", "LaunchPadZone")]
+[node name="TrainingLab" type="Node2D" unique_id=1566292422 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "FrequencyZone", "HullRepairZone", "GymZone", "SimulatorZone", "LaunchPadZone", "Locker", "Monitor")]
 texture_filter = 1
 script = ExtResource("lab")
 Player = NodePath("Player")
 Camera = NodePath("Camera2D")
 WiresZone = NodePath("WiringWorkbench/FrontZone")
 FusesZone = NodePath("FuseCabinet/FrontZone")
+FrequencyZone = NodePath("FrequencyWorkbench/FrontZone")
+HullRepairZone = NodePath("HullRepairWorkbench/FrontZone")
 GymZone = NodePath("GymDoor/FrontZone")
 SimulatorZone = NodePath("LaunchSimulator/FrontZone")
 LaunchPadZone = NodePath("LaunchPad/FrontZone")
+Locker = NodePath("SupplyLocker")
+Monitor = NodePath("MissionMonitor")
+
+[node name="MissionMonitor" parent="." unique_id=332875581 instance=ExtResource("mission_monitor")]
 
 [node name="Background" type="CanvasLayer" parent="." unique_id=71666031]
 layer = -100
@@ -119,12 +143,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.066667, 0.109804, 0.160784, 1)
+color = Color(0.301961, 0.301961, 0.301961, 1)
 
 [node name="Floor" type="NinePatchRect" parent="." unique_id=2105311951]
-editor_description = "Gym source 1 (12,12), repeated at native pixel size. Local editable drawing only; collision belongs to Walls."
-offset_right = 576.0
-offset_bottom = 384.0
+editor_description = "Gym-sized workshop floor; collision belongs to Walls."
+offset_right = 768.0
+offset_bottom = 432.0
 texture = ExtResource("room_atlas")
 region_rect = Rect2(192, 192, 16, 16)
 axis_stretch_horizontal = 1
@@ -133,12 +157,12 @@ axis_stretch_vertical = 1
 [node name="Walls" type="Node2D" parent="." unique_id=1341511398]
 
 [node name="North" type="StaticBody2D" parent="Walls" unique_id=1577924552]
-position = Vector2(288, 16)
+position = Vector2(384, 16)
 
 [node name="Visual" type="NinePatchRect" parent="Walls/North" unique_id=941511851]
-offset_left = -288.0
+offset_left = -384.0
 offset_top = -16.0
-offset_right = 288.0
+offset_right = 384.0
 offset_bottom = 16.0
 texture = ExtResource("room_atlas")
 region_rect = Rect2(0, 272, 48, 32)
@@ -148,13 +172,13 @@ axis_stretch_horizontal = 1
 shape = SubResource("NorthShape")
 
 [node name="West" type="StaticBody2D" parent="Walls" unique_id=421315662]
-position = Vector2(8, 192)
+position = Vector2(8, 216)
 
 [node name="Visual" type="NinePatchRect" parent="Walls/West" unique_id=1105809867]
 offset_left = -8.0
-offset_top = -160.0
+offset_top = -216.0
 offset_right = 8.0
-offset_bottom = 176.0
+offset_bottom = 216.0
 texture = ExtResource("room_atlas")
 region_rect = Rect2(176, 32, 16, 16)
 axis_stretch_vertical = 1
@@ -163,13 +187,13 @@ axis_stretch_vertical = 1
 shape = SubResource("SideShape")
 
 [node name="East" type="StaticBody2D" parent="Walls" unique_id=1417562048]
-position = Vector2(568, 192)
+position = Vector2(760, 216)
 
 [node name="Visual" type="NinePatchRect" parent="Walls/East" unique_id=739242032]
 offset_left = -8.0
-offset_top = -160.0
+offset_top = -216.0
 offset_right = 8.0
-offset_bottom = 176.0
+offset_bottom = 216.0
 texture = ExtResource("room_atlas")
 region_rect = Rect2(208, 32, 16, 16)
 axis_stretch_vertical = 1
@@ -178,12 +202,12 @@ axis_stretch_vertical = 1
 shape = SubResource("SideShape")
 
 [node name="South" type="StaticBody2D" parent="Walls" unique_id=846354638]
-position = Vector2(288, 376)
+position = Vector2(384, 424)
 
 [node name="Visual" type="NinePatchRect" parent="Walls/South" unique_id=857530361]
-offset_left = -288.0
+offset_left = -384.0
 offset_top = -8.0
-offset_right = 288.0
+offset_right = 384.0
 offset_bottom = 8.0
 texture = ExtResource("room_atlas")
 region_rect = Rect2(0, 272, 48, 32)
@@ -194,13 +218,13 @@ shape = SubResource("SouthShape")
 
 [node name="WiringWorkbench" type="Node2D" parent="." unique_id=868627775]
 editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
-position = Vector2(137, 86)
+position = Vector2(120, 184)
 metadata/_edit_group_ = true
 
 [node name="Sprite2D" type="Sprite2D" parent="WiringWorkbench" unique_id=1078190885]
 texture_filter = 1
-position = Vector2(1.9073486e-06, -16.000004)
-scale = Vector2(1.9999999, 2.5000005)
+position = Vector2(-4, -20.000004)
+scale = Vector2(1.75, 2.5000005)
 texture = ExtResource("workbench")
 
 [node name="Base" type="StaticBody2D" parent="WiringWorkbench" unique_id=231227528]
@@ -211,14 +235,13 @@ shape = SubResource("WorkbenchShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="WiringWorkbench" unique_id=1063746883]
 offset_left = -48.0
-offset_right = 44.0
-offset_bottom = 64.0
+offset_right = 48.0
+offset_bottom = 72.0
 mouse_filter = 2
 
 [node name="FuseCabinet" type="Node2D" parent="." unique_id=1530691037]
 editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."
-position = Vector2(451, 88)
-metadata/_edit_group_ = true
+position = Vector2(648, 184)
 
 [node name="Sprite2D" type="Sprite2D" parent="FuseCabinet" unique_id=15789549]
 texture_filter = 1
@@ -230,28 +253,73 @@ texture = ExtResource("cabinet")
 position = Vector2(0, -8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FuseCabinet/Base" unique_id=2042153132]
+position = Vector2(0, -8)
 shape = SubResource("CabinetShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="FuseCabinet" unique_id=969865656]
-offset_left = -32.0
-offset_right = 32.0
-offset_bottom = 64.0
+offset_left = -48.0
+offset_right = 48.0
+offset_bottom = 72.0
+mouse_filter = 2
+
+[node name="FrequencyWorkbench" type="Node2D" parent="." unique_id=200001001]
+editor_description = "New calibration station for the Frequency Box minigame."
+position = Vector2(296, 184)
+
+[node name="Sprite2D" type="Sprite2D" parent="FrequencyWorkbench" unique_id=200001002]
+texture_filter = 1
+position = Vector2(0, -24)
+scale = Vector2(1.333333, 1.5)
+texture = ExtResource("frequency_workbench")
+
+[node name="Base" type="StaticBody2D" parent="FrequencyWorkbench" unique_id=200001003]
+position = Vector2(0, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FrequencyWorkbench/Base" unique_id=200001004]
+shape = SubResource("FrequencyShape")
+
+[node name="FrontZone" type="ReferenceRect" parent="FrequencyWorkbench" unique_id=200001005]
+offset_left = -48.0
+offset_right = 48.0
+offset_bottom = 72.0
+mouse_filter = 2
+
+[node name="HullRepairWorkbench" type="Node2D" parent="." unique_id=200001006]
+editor_description = "New hull patch and weld station for the Hull Repair minigame."
+position = Vector2(472, 184)
+metadata/_edit_group_ = true
+
+[node name="Sprite2D" type="Sprite2D" parent="HullRepairWorkbench" unique_id=200001007]
+texture_filter = 1
+position = Vector2(0, -24)
+texture = ExtResource("hull_repair_workbench")
+
+[node name="Base" type="StaticBody2D" parent="HullRepairWorkbench" unique_id=200001008]
+position = Vector2(0, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HullRepairWorkbench/Base" unique_id=200001009]
+shape = SubResource("HullRepairShape")
+
+[node name="FrontZone" type="ReferenceRect" parent="HullRepairWorkbench" unique_id=200001010]
+offset_left = -48.0
+offset_right = 48.0
+offset_bottom = 72.0
 mouse_filter = 2
 
 [node name="LaunchSimulator" type="Node2D" parent="." unique_id=37280607]
 editor_description = "Required launch simulator practice. Practice does not spend energy."
-position = Vector2(288, 80)
-metadata/_edit_group_ = true
+position = Vector2(384, 104)
 
 [node name="Sprite2D" type="Sprite2D" parent="LaunchSimulator" unique_id=1117670579]
 texture_filter = 1
-position = Vector2(0, -16)
+position = Vector2(0, -24)
 texture = ExtResource("console")
 
 [node name="Base" type="StaticBody2D" parent="LaunchSimulator" unique_id=1658940606]
 position = Vector2(0, -8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LaunchSimulator/Base" unique_id=2091787467]
+position = Vector2(0, -8)
 shape = SubResource("SimulatorShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="LaunchSimulator" unique_id=1621000767]
@@ -262,7 +330,7 @@ mouse_filter = 2
 
 [node name="LaunchPad" type="Node2D" parent="." unique_id=1096195797]
 editor_description = "Manual real launch entry. Requires course, wiring, fuses and simulator practice."
-position = Vector2(557, 208)
+position = Vector2(752, 335.99997)
 rotation = 1.5718156
 metadata/_edit_group_ = true
 
@@ -296,8 +364,38 @@ polygon = PackedVector2Array(-14, -9, 14, -9, 14, 9, -14, 9)
 color = Color(1, 0.647059, 0.294118, 1)
 polygon = PackedVector2Array(-8, 3, 0, -6, 8, 3, 3, 3, 3, 7, -3, 7, -3, 3)
 
+[node name="SupplyLocker" type="Node2D" parent="." unique_id=200000001 node_paths=PackedStringArray("Sprite", "FrontZone")]
+editor_description = "Training supply locker. The starter maintenance kit is free and shared across training rooms."
+position = Vector2(80, 384)
+script = ExtResource("locker_script")
+Sprite = NodePath("Sprite2D")
+ClosedTexture = ExtResource("locker_closed")
+OpenTexture = ExtResource("locker_open")
+StarterKit = ExtResource("maintenance_kit")
+FrontZone = NodePath("FrontZone")
+
+[node name="Sprite2D" type="Sprite2D" parent="SupplyLocker" unique_id=200000002]
+texture_filter = 1
+position = Vector2(-4, -28)
+scale = Vector2(1.75, 1.5)
+texture = ExtResource("locker_closed")
+
+[node name="Base" type="StaticBody2D" parent="SupplyLocker" unique_id=200000003]
+position = Vector2(0, -4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SupplyLocker/Base" unique_id=200000004]
+position = Vector2(0, -19)
+shape = SubResource("LockerShape")
+
+[node name="FrontZone" type="ReferenceRect" parent="SupplyLocker" unique_id=200000005]
+offset_left = -32.0
+offset_top = -72.0
+offset_right = 56.0
+offset_bottom = -32.0
+mouse_filter = 2
+
 [node name="GymDoor" type="Node2D" parent="." unique_id=1367211159]
-position = Vector2(288, 364)
+position = Vector2(384, 416)
 metadata/_edit_group_ = true
 
 [node name="Frame" type="Polygon2D" parent="GymDoor" unique_id=678415675]
@@ -321,12 +419,13 @@ mouse_filter = 2
 metadata/_edit_group_ = true
 
 [node name="lab_from_gym" type="Marker2D" parent="." unique_id=675014144]
-position = Vector2(288, 292)
+position = Vector2(384, 352)
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=301587046]
-position = Vector2(288, 292)
+[node name="Player" type="CharacterBody2D" parent="." unique_id=301587046 node_paths=PackedStringArray("Hotbar")]
+position = Vector2(384, 352)
 script = ExtResource("player")
 Speed = 150.0
+Hotbar = NodePath("HotbarLayer/Hotbar")
 
 [node name="GroundShadow" type="Polygon2D" parent="Player" unique_id=189505872]
 scale = Vector2(0.75, 0.75)
@@ -334,8 +433,8 @@ color = Color(0, 0, 0, 0.25)
 polygon = PackedVector2Array(-14, -4, -9, -8, 9, -8, 14, -4, 9, 0, -9, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1518599814]
-position = Vector2(2.0000038, -13.75)
-scale = Vector2(1.333333, 1.2708333)
+position = Vector2(1.5, -16.5)
+scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("PlayerFrames")
 animation = &"idle_down"
 script = ExtResource("animation")
@@ -344,6 +443,28 @@ script = ExtResource("animation")
 position = Vector2(0, -6)
 shape = SubResource("PlayerShape")
 
+[node name="HotbarLayer" type="CanvasLayer" parent="Player" unique_id=200000006]
+layer = 10
+
+[node name="Hotbar" type="HBoxContainer" parent="Player/HotbarLayer" unique_id=200000007]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(2, 2)
+pivot_offset = Vector2(40, 16)
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 0
+script = ExtResource("hotbar_script")
+SlotScene = ExtResource("hotbar_slot")
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=61017354]
-position = Vector2(288, 192)
+position = Vector2(384, 216)
 zoom = Vector2(1.5, 1.5)

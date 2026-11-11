@@ -52,6 +52,8 @@ public partial class IntroSequenceTest : Node
 
         var briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
         Check(briefing != null && briefing.Lines.Count == 3, "Training briefing has three lines");
+        Check(briefing.Lines[0].Text.Contains("WASD") && briefing.Lines[0].Text.Contains("E") &&
+            briefing.Lines[0].Text.Contains("SPACE"), "Training briefing teaches movement, interaction and jump controls");
         Check(briefing.Lines[2].Text.Contains("Still silent"), "Training briefing keeps the probes");
 
         var completion = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");

@@ -3,6 +3,7 @@ namespace ares.scripts.player;
 using Godot;
 using systems.inventory;
 using systems.items;
+using ares.scripts.mission;
 
 public partial class Player : CharacterBody2D
 {
@@ -25,10 +26,23 @@ public partial class Player : CharacterBody2D
 	public override void _Ready()
 	{
 		int size = Hotbar?.SlotCount ?? Inventory.DefaultSlots;
-		Inventory = new Inventory { Size = size };
+		var mission = MissionState.Instance;
+		bool created;
+		if (mission != null)
+		{
+			Inventory = mission.GetOrCreatePlayerInventory(size, out created);
+		}
+		else
+		{
+			Inventory = new Inventory { Size = size };
+			created = true;
+		}
 
-		foreach (var item in StartingItems)
-			Inventory.AddItem(item);
+		if (created)
+		{
+			foreach (var item in StartingItems)
+				Inventory.AddItem(item);
+		}
 
 		Hotbar?.Bind(Inventory);
 	}

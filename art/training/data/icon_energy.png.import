@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqrhvdom0k2h2"
-path="res://.godot/imported/training_hurdle.svg-a7172313ea16f243458150bf211fefe3.ctex"
+uid="uid://b2own2deh7eob"
+path="res://.godot/imported/icon_energy.png-13b43bdec9b629076113be1c47a84910.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/training_hurdle.svg"
-dest_files=["res://.godot/imported/training_hurdle.svg-a7172313ea16f243458150bf211fefe3.ctex"]
+source_file="res://art/training/data/icon_energy.png"
+dest_files=["res://.godot/imported/icon_energy.png-13b43bdec9b629076113be1c47a84910.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

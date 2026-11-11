@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1ldbv8g1yy5v"
-path="res://.godot/imported/wiring_workbench.svg-d87632951a908d272d99edfc7a275ff7.ctex"
+uid="uid://dwbhu0e00r8h"
+path="res://.godot/imported/icon_ship_integrity.png-54232510db7784aa75fff15ecede5ea1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/wiring_workbench.svg"
-dest_files=["res://.godot/imported/wiring_workbench.svg-d87632951a908d272d99edfc7a275ff7.ctex"]
+source_file="res://art/training/data/icon_ship_integrity.png"
+dest_files=["res://.godot/imported/icon_ship_integrity.png-54232510db7784aa75fff15ecede5ea1.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

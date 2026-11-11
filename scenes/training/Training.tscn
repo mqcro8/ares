@@ -17,11 +17,11 @@
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="15_pixel_font"]
 [ext_resource type="Script" uid="uid://cixyklmvqo4m" path="res://scripts/training/TrainingIntro.cs" id="16_training_intro"]
 [ext_resource type="Script" uid="uid://80fyjbwnoscg" path="res://scripts/training/TrainingCamera.cs" id="17_training_camera"]
-[ext_resource type="PackedScene" uid="uid://c16gdj6jtud" path="res://scenes/training/props/TrainingBlock.tscn" id="block"]
-[ext_resource type="PackedScene" uid="uid://ch84tnr8tvq" path="res://scenes/training/props/ControlCabinet.tscn" id="cabinet"]
+[ext_resource type="PackedScene" uid="uid://c16gdj6jtud" path="res://scenes/training/TrainingBlock.tscn" id="block"]
+[ext_resource type="PackedScene" uid="uid://ch84tnr8tvq" path="res://scenes/training/ControlCabinet.tscn" id="cabinet"]
 [ext_resource type="Script" uid="uid://bpm1p1nse5ycm" path="res://scripts/training/PhysicalTraining.cs" id="physical_training"]
-[ext_resource type="Script" uid="uid://dy2bwuvve1i8o" path="res://scripts/training/TrainingHUD.cs" id="training_hud"]
 [ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="training_movement"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="mission_monitor"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5x7l7"]
 texture = ExtResource("13_whebk")
@@ -1763,11 +1763,14 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="Training" type="Node2D" unique_id=1721182763 node_paths=PackedStringArray("Course", "LabReturnMarker", "LabDoorZone")]
+[node name="Training" type="Node2D" unique_id=1721182763 node_paths=PackedStringArray("Course", "Monitor", "LabReturnMarker", "LabDoorZone")]
 script = ExtResource("16_training_intro")
 Course = NodePath("Tilemaps_layers/PhysicalTraining")
+Monitor = NodePath("MissionMonitor")
 LabReturnMarker = NodePath("gym_from_lab")
 LabDoorZone = NodePath("LabDoor/FrontZone")
+
+[node name="MissionMonitor" parent="." instance=ExtResource("mission_monitor")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1259519819]
 process_physics_priority = 10
@@ -1898,13 +1901,12 @@ scale = Vector2(1, 0.5)
 tile_map_data = PackedByteArray("AAAAADwAEgAAAAAAAAADADwAEgAAAAAAAAAGADwAEgAAAAAAAAAJADwAEgAAAAAAAAAMADwAEgAAAAAAAAAPADwAEgAAAAAAAAASADwAEgAAAAAAAAAVADwAEgAAAAAAAAA=")
 tile_set = SubResource("TrainingWalls")
 
-[node name="PhysicalTraining" type="Node2D" parent="Tilemaps_layers" unique_id=466060575 node_paths=PackedStringArray("Blocks", "Hud")]
+[node name="PhysicalTraining" type="Node2D" parent="Tilemaps_layers" unique_id=466060575 node_paths=PackedStringArray("Blocks")]
 editor_description = "Ordered north-south footprints. Move scene instances, not script coordinates."
 z_index = 1
 y_sort_enabled = true
 script = ExtResource("physical_training")
 Blocks = [NodePath("Block1/Base"), NodePath("Block2/Base"), NodePath("Block3/Base")]
-Hud = NodePath("HUD")
 
 [node name="Block1" parent="Tilemaps_layers/PhysicalTraining" unique_id=261321177 instance=ExtResource("block")]
 position = Vector2(400, 608)
@@ -1914,18 +1916,6 @@ position = Vector2(400, 736)
 
 [node name="Block3" parent="Tilemaps_layers/PhysicalTraining" unique_id=1719391922 instance=ExtResource("block")]
 position = Vector2(400, 864)
-
-[node name="HUD" type="CanvasLayer" parent="Tilemaps_layers/PhysicalTraining" unique_id=439116034 node_paths=PackedStringArray("Stats")]
-layer = 5
-script = ExtResource("training_hud")
-Stats = NodePath("Stamina")
-
-[node name="Stamina" type="Label" parent="Tilemaps_layers/PhysicalTraining/HUD" unique_id=1204109951]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 200.0
-offset_bottom = 36.0
-text = "STAMINA  100 / 100"
 
 [node name="LabDoor" type="Node2D" parent="." unique_id=1106019914]
 position = Vector2(400, 126)

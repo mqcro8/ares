@@ -9,7 +9,6 @@ public partial class PhysicalTraining : Node2D
     [Signal] public delegate void CompletedEventHandler();
     [Export] public float BlockHeight { get; set; } = 18;
     [Export] public Godot.Collections.Array<CollisionShape2D> Blocks { get; set; } = new();
-    [Export] public TrainingHUD Hud { get; set; }
     public int ClearedCount { get; private set; }
     public bool Congratulated { get; private set; }
     public bool IsConfigured { get; private set; }
@@ -150,5 +149,4 @@ public partial class PhysicalTraining : Node2D
         }
     }
 
-    public void Step(float stamina) => Hud?.UpdateState(stamina);
 }

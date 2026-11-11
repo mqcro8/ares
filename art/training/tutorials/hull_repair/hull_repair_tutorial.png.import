@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://876o8nk67cjw"
-path="res://.godot/imported/wiring_workbench.png-b82960b652a2be83ef57f1d6ee5412f8.ctex"
+uid="uid://573g4skxt563"
+path="res://.godot/imported/hull_repair_tutorial.png-722b79786b6015e569f1a3edd2e377e0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/wiring_workbench.png"
-dest_files=["res://.godot/imported/wiring_workbench.png-b82960b652a2be83ef57f1d6ee5412f8.ctex"]
+source_file="res://art/training/tutorials/hull_repair/hull_repair_tutorial.png"
+dest_files=["res://.godot/imported/hull_repair_tutorial.png-722b79786b6015e569f1a3edd2e377e0.ctex"]
 
 [params]
 

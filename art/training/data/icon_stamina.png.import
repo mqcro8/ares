@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://deuurlxftfk12"
-path="res://.godot/imported/fuse_cabinet.png-f5da902f978c112734d1d24904ebd716.ctex"
+uid="uid://wcamf3vt80t6"
+path="res://.godot/imported/icon_stamina.png-e582b7b09bbd747efdcde71dd1bf47ba.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/fuse_cabinet.png"
-dest_files=["res://.godot/imported/fuse_cabinet.png-f5da902f978c112734d1d24904ebd716.ctex"]
+source_file="res://art/training/data/icon_stamina.png"
+dest_files=["res://.godot/imported/icon_stamina.png-e582b7b09bbd747efdcde71dd1bf47ba.ctex"]
 
 [params]
 

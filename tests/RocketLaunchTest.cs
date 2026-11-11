@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ares.scripts.mission;
 using ares.scripts.training;
+using ares.scripts.systems;
+using Ares.Systems.Audio;
 
 public partial class RocketLaunchTest : Node
 {
@@ -76,15 +78,14 @@ public partial class RocketLaunchTest : Node
             await Frames();
             if (launch.Paused)
             {
-                SendKey(Key.Escape, true);
-                SendKey(Key.Escape, false);
+                launch.GetNode<Button>(Ui + "Actions/Pause").EmitSignal(BaseButton.SignalName.Pressed);
             }
             launch._Process(0);
             Control overlay = launch.State == RocketLaunch.Phase.Ready
                 ? launch.GetNode<Control>("IntroUI/Briefing") : launch.GetNode<Control>("IntroUI/Panel");
             Check(GetViewport().GetVisibleRect().Encloses(overlay.GetGlobalRect()), "Overlay fits " + size);
             if (launch.State == RocketLaunch.Phase.Active)
-                Check(overlay.Size.Y < size.Y * .25f, "Active slider HUD stays compact at " + size);
+                Check(overlay.Size.Y < size.Y * .32f, "Active slider HUD with progress and pause stays compact at " + size);
             await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
             Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/launch-{name}-{size.X}x{size.Y}.png") == Error.Ok, "Capture");
         }
@@ -136,6 +137,7 @@ public partial class RocketLaunchTest : Node
     private async Task Run()
     {
         var mission = MissionState.Instance;
+        AudioManager.PlayMusic(SoundIds.MenuMusic, 0, true);
         mission.BeginLaunchSequence(); mission.Energy = 50;
         CompleteAllTraining(mission);
         Check(!mission.RecordLaunch(mission.LaunchSequence, new LaunchResult(.5, 10)),
@@ -154,12 +156,35 @@ public partial class RocketLaunchTest : Node
             "One shared ten-second center band is used");
         Check(launch.Model.Result == null, "No event schedule, precision score or countdown");
         var band = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
+        var centeredProgress = launch.GetNode<ProgressBar>(Ui + "CenteredProgress");
+        Check(centeredProgress.MaxValue == 100 && centeredProgress.Value == 0,
+            "Centered-hold progress starts empty");
         Check(Math.Abs(band.AnchorLeft - .45) < .001 && Math.Abs(band.AnchorRight - .55) < .001,
             "Slider target is centered");
 
         Start();
-        Check(!launch.GetNode<Control>(Ui + "Actions").Visible, "Active play shows slider without extra controls");
+        var pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
+        Check(launch.GetNode<Control>(Ui + "Actions").Visible && pauseButton.Visible && pauseButton.Text == "Pause",
+            "Active launch exposes a working pause button");
         await Capture("active");
+
+        SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        Check(GetTree().Paused && !launch.Paused && AudioManager.IsMusicPaused && AudioManager.IsActiveMusicStreamPaused,
+            "Escape pauses launch and music through the global pause manager");
+        SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused,
+            "Escape resumes launch and music through the global pause manager");
+
+        pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GetTree().Paused && ((PauseManager)GetNode("/root/PauseManager")).IsOpen &&
+            AudioManager.IsMusicPaused && AudioManager.IsActiveMusicStreamPaused,
+            "Pause button opens the real pause menu and silences music");
+        double menuPausedHeat = launch.Model.Heat;
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        Check(launch.Model.Heat == menuPausedHeat, "Pause button freezes launch progress");
+        SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused,
+            "Closing button-opened pause restores music");
 
         SendKey(Key.Space, true); Advance(.2);
         Check(launch.Model.Heat > 50, "Holding SPACE raises the marker");
@@ -187,6 +212,7 @@ public partial class RocketLaunchTest : Node
         Check(launch.Model.Heat > releasedHeat, "Mouse unlocks after pause and can control thrust again");
 
         DriveToComplete();
+        Check(centeredProgress.Value == 100, "Progress bar fills at the ten-second hold goal");
         Check(launch.Model.Result.CenteredSeconds == 10 && mission.LaunchRecord?.CenteredSeconds == 10,
             "Real launch records completion without a score");
         Check(mission.Energy == 50 && mission.TrainingLaunchPracticeComplete,
@@ -213,10 +239,18 @@ public partial class RocketLaunchTest : Node
         Check(!mission.LaunchPadUnlocked, "Practice remains the final pad-unlock requirement");
         Check(launch.Practice && launch.Model.Config == new LaunchHoldConfig(), "Practice uses the exact launch requirement");
         Start(); DriveToComplete();
+        Check(launch.GetNode<ProgressBar>(Ui + "CenteredProgress").Value == 100,
+            "Simulator progress bar also completes at its hold goal");
         Check(mission.TrainingLaunchPracticeComplete && mission.LaunchPadUnlocked,
             "Completing practice fulfills the final training requirement");
         Check(mission.LaunchRecord == null && mission.Energy == 50 && launch.State == RocketLaunch.Phase.Result,
             "Practice clears training without recording or launching the mission");
+        var practiceResult = launch.Model;
+        SendKey(Key.Space, true); SendKey(Key.Space, false);
+        Check(launch.State == RocketLaunch.Phase.Result && ReferenceEquals(launch.Model, practiceResult),
+            "Space cannot restart a completed simulator run");
+        Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Continue") == null,
+            "Repeat practice button is removed");
         await Capture("practice-complete");
 
         mission.BeginLaunchSequence();

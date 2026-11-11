@@ -4,6 +4,8 @@ using Ares.Systems.Audio;
 using Godot;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
+using ares.scripts.ui.mission_monitor;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
 public partial class TrainingIntro : Node2D
@@ -11,6 +13,7 @@ public partial class TrainingIntro : Node2D
 	[Export] public DialogueSequence Briefing { get; set; }
 	[Export] public DialogueSequence CompletionNotice { get; set; }
 	[Export] public PhysicalTraining Course { get; set; }
+	[Export] public MissionMonitorView Monitor { get; set; }
 	[Export] public Marker2D LabReturnMarker { get; set; }
 	[Export] public Control LabDoorZone { get; set; }
 	[Export] public NodePath PlayerPath { get; set; } = "Tilemaps_layers/Player";
@@ -34,6 +37,30 @@ public partial class TrainingIntro : Node2D
 	private TrainingStations _stations;
 	public bool BriefingActive => _active;
 	public bool CompletionShown => _completionShown;
+
+	public override void _Process(double delta)
+	{
+		if (Monitor == null || Course == null || _player is not ares.scripts.player.Player player) return;
+		var mission = MissionState.Instance;
+		var movement = player.TrainingMovement;
+		int progress = mission.TrainingCourseComplete ? 3 : Course.ClearedCount;
+		Monitor.Render(MissionMonitorPresenter.BuildTraining(
+			inLab: false,
+			stamina: movement?.Stamina,
+			circuitProgress: progress,
+			circuitComplete: mission.TrainingCourseComplete || Course.Congratulated,
+			hasRepairKit: player.Inventory?.HasCapability(ItemCapability.Repair) == true,
+			wiresComplete: mission.TrainingWiresComplete,
+			fusesComplete: mission.TrainingFusesComplete,
+			simulatorComplete: mission.TrainingLaunchPracticeComplete,
+			launchUnlocked: mission.LaunchPadUnlocked,
+			launchComplete: mission.LaunchRecord?.Completed == true,
+			prompt: _stations?.MonitorPrompt,
+			feedback: _stations?.MonitorFeedback,
+			visible: !_active,
+			frequencyComplete: mission.TrainingFrequencyComplete,
+			hullRepairComplete: mission.TrainingHullRepairComplete));
+	}
 
 	public override void _Ready()
 	{

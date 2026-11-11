@@ -9,7 +9,7 @@ public static class PracticeSession
 {
     public const string TrainingScene = "res://scenes/training/Training.tscn";
     public const string LabScene = "res://scenes/training/TrainingLab.tscn";
-    public enum Exercise { Wires, Fuses }
+    public enum Exercise { Wires, Fuses, Frequency, HullRepair }
     public enum LaunchMode { Practice, Real }
     public sealed record LaunchRequest(long Session, long MissionSequence, LaunchMode Mode, Vector2 ReturnPosition);
     public sealed record RoomPose(Vector2 Position, string Facing, bool Flip);
@@ -26,8 +26,22 @@ public static class PracticeSession
     public static bool LaunchPracticeComplete => MissionState.Instance?.TrainingLaunchPracticeComplete ?? false;
     public static LaunchRequest PendingLaunch { get; private set; }
     public static string Feedback { get; private set; } = "";
-    public static string SceneFor(Exercise exercise) => exercise == Exercise.Wires
-        ? "res://scenes/minigames/wireminigame.tscn" : "res://scenes/minigames/FuseBoxMinigame.tscn";
+    public static string SceneFor(Exercise exercise) => exercise switch
+    {
+        Exercise.Wires => "res://scenes/minigames/wireminigame.tscn",
+        Exercise.Fuses => "res://scenes/minigames/FuseBoxMinigame.tscn",
+        Exercise.Frequency => "res://scenes/minigames/FrequencyBoxMinigame.tscn",
+        Exercise.HullRepair => "res://scenes/minigames/HullRepairMinigame.tscn",
+        _ => throw new System.ArgumentOutOfRangeException(nameof(exercise), exercise, null)
+    };
+    private static string ReturnSpawn(Exercise exercise) => exercise switch
+    {
+        Exercise.Wires => "lab.wires.return",
+        Exercise.Fuses => "lab.fuses.return",
+        Exercise.Frequency => "lab.frequency.return",
+        Exercise.HullRepair => "lab.hull.return",
+        _ => throw new System.ArgumentOutOfRangeException(nameof(exercise), exercise, null)
+    };
     public static void Clear()
     {
         SessionId++; Pending = null; Saved = null; Rooms.Clear();
@@ -53,7 +67,7 @@ public static class PracticeSession
     public static Travel Begin(Exercise exercise, Vector2 position)
     {
         Selected = exercise;
-        var ticket = Prepare(LabScene, SceneFor(exercise), exercise == Exercise.Wires ? "lab.wires.return" : "lab.fuses.return", position);
+        var ticket = Prepare(LabScene, SceneFor(exercise), ReturnSpawn(exercise), position);
         _exerciseTicket = ticket.Id; return ticket;
     }
     public static long EnterExercise(Node root)
@@ -67,12 +81,17 @@ public static class PracticeSession
         _exerciseTicket = 0;
         if (success)
         {
-            if (Selected == Exercise.Wires) MissionState.Instance.TrainingWiresComplete = true;
-            else MissionState.Instance.TrainingFusesComplete = true;
+            switch (Selected)
+            {
+                case Exercise.Wires: MissionState.Instance.TrainingWiresComplete = true; break;
+                case Exercise.Fuses: MissionState.Instance.TrainingFusesComplete = true; break;
+                case Exercise.Frequency: MissionState.Instance.TrainingFrequencyComplete = true; break;
+                case Exercise.HullRepair: MissionState.Instance.TrainingHullRepairComplete = true; break;
+            }
             MissionState.Instance.EvaluateTrainingCompletion();
         }
         Feedback = success ? "Practice complete. You can repeat it anytime." : "Practice cancelled. Previous progress kept.";
-        Prepare(SceneFor(Selected), LabScene, Selected == Exercise.Wires ? "lab.wires.return" : "lab.fuses.return", Rooms[LabScene].Position);
+        Prepare(SceneFor(Selected), LabScene, ReturnSpawn(Selected), Rooms[LabScene].Position);
         return true;
     }
     public static void ClearFeedback() => Feedback = "";

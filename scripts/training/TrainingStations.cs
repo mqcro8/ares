@@ -1,15 +1,17 @@
 namespace ares.scripts.training;
 using Godot;
 using ares.scripts.player;
-using ares.scripts.mission;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using ares.scripts.systems.items;
 
 /// <summary>Room-local front zones and nearest usable, release-gated interaction.</summary>
 public partial class TrainingStations : Node
 {
     public sealed record Target(string Name, Control Zone, string Scene, string Marker,
-        PracticeSession.Exercise? Exercise = null, PracticeSession.LaunchMode? Launch = null, string Locked = null)
+        PracticeSession.Exercise? Exercise = null, PracticeSession.LaunchMode? Launch = null, string Locked = null,
+        ItemCapability? RequiredCapability = null, Func<string> Interact = null, Func<string> Prompt = null)
     {
         public Vector2 Center => Zone.GetGlobalTransform() * (Zone.Size / 2);
         public bool Contains(Vector2 globalPosition)
@@ -22,43 +24,51 @@ public partial class TrainingStations : Node
     public Player Player;
     public TrainingIntro Intro;
     public bool InteractionLocked { get; set; }
-    private Label _status, _prompt;
     private bool _released, _changing, _travelRequested;
-    private string _error = "";
+    private string _error = "", _errorTarget = "";
     private Target _near;
+    public static string Instructions(PracticeSession.Exercise exercise) => exercise switch
+    {
+        PracticeSession.Exercise.Wires => "Drag each cable to the terminal with the matching color. Keyboard: 1–4, Up/Down, Enter.",
+        PracticeSession.Exercise.Fuses => "Turn all six switches ON within four presses. DOUBLE toggles the linked pair too.",
+        PracticeSession.Exercise.Frequency => "Select amplitude, frequency or phase with 1/2/3. Hold Left/Right to match the target wave; Shift adjusts slowly.",
+        PracticeSession.Exercise.HullRepair => "Place each plate over its matching hole, then weld along each seam without overheating.",
+        _ => "Complete the repair task."
+    };
+    public string MonitorPrompt { get; private set; } = "";
+    public string MonitorFeedback => _error != "" ? _error : PracticeSession.Feedback;
+    public string CurrentTargetName => _near?.Name ?? "";
     private bool Usable => !_changing && !InteractionLocked && !(Intro?.BriefingActive ?? false) &&
         (Player.TrainingMovement == null || (Player.TrainingMovement.Grounded && Player.TrainingMovement.Height == 0));
-    public override void _Ready()
-    {
-        var canvas = new CanvasLayer { Layer = 12 }; AddChild(canvas);
-        var box = new VBoxContainer { Position = new(12, 42), MouseFilter = Control.MouseFilterEnum.Ignore }; canvas.AddChild(box);
-        _status = new Label(); _prompt = new Label(); box.AddChild(_status); box.AddChild(_prompt);
-        foreach (var label in new[] { _status, _prompt }) { label.AddThemeColorOverride("font_outline_color", Colors.Black); label.AddThemeConstantOverride("outline_size", 6); }
-    }
     public override void _Process(double delta)
     {
         if (!Input.IsPhysicalKeyPressed(Key.E)) _released = true;
         _near = Usable ? Targets.Where(t => t.Contains(Player.GlobalPosition)).OrderBy(t => t.Center.DistanceSquaredTo(Player.GlobalPosition)).FirstOrDefault() : null;
-        _status.Visible = _prompt.Visible = !(Intro?.BriefingActive ?? false);
-        string Mark(bool done) => done ? "[done]" : "[ ]";
-        _status.Text = $"{Mark(PracticeSession.Wires)} Wires   {Mark(PracticeSession.Fuses)} Fuses   {Mark(PracticeSession.LaunchPracticeComplete)} Launch practice";
-        int cleared = MissionState.Instance.TrainingCourseComplete ? 3
-            : Intro?.Course.ClearedCount ?? PracticeSession.Saved?.Course.Cleared ?? 0;
-        _status.Text = $"Circuit {cleared}/3   " + _status.Text;
-        if (Intro == null) _status.Text += "\n" + PracticeSession.Feedback;
-        if (MissionState.Instance.LaunchPadUnlocked)
-            _status.Text += "\nTRAINING COMPLETE — walk to the marked LAUNCH PAD.";
-        _prompt.Text = _near != null ? (_near.Locked != null ? _near.Locked : $"E — {_near.Name}") : Intro != null && Player.Position.Y > 480
-            ? "WASD: move  |  Space: jump  |  Cross three obstacles in order. Stand still to rest." : "";
-        if (_error != "") _prompt.Text = _error;
-        if (Intro != null) Intro.Course.Hud.Visible = !Intro.BriefingActive;
+        if (_error != "" && _near?.Name != _errorTarget) { _error = ""; _errorTarget = ""; }
+        string requirement = Requirement(_near);
+        string prompt = "";
+        if (_near != null)
+        {
+            if (_near.Locked != null) prompt = _near.Locked;
+            else if (requirement != "") prompt = requirement;
+            else if (_near.Interact != null) prompt = _near.Prompt?.Invoke() ?? $"E — {_near.Name}";
+            else prompt = $"E — {_near.Name}";
+        }
+        else if (Intro != null)
+            prompt = Player.GlobalPosition.Y > 480
+                ? "WASD: move  |  SPACE: jump over hurdles  |  Cross three in order. Stand still to rest."
+                : "WASD: move  |  E: interact  |  Walk south to start the circuit.";
+        MonitorPrompt = _error == "" ? prompt : "";
     }
     public override void _UnhandledKeyInput(InputEvent ev)
     {
         if (ev is not InputEventKey { Pressed: true, Echo: false } key || (key.PhysicalKeycode != Key.E && key.Keycode != Key.E) || !_released || _near == null || !Usable || !_near.Contains(Player.GlobalPosition)) return;
-        _error = "";
+        _error = ""; _errorTarget = "";
         _released = false; _changing = true; GetViewport().SetInputAsHandled();
-        if (_near.Locked != null) { _changing = false; _error = _near.Locked; return; }
+        if (_near.Locked != null) { _changing = false; _error = _near.Locked; _errorTarget = _near.Name; return; }
+        string requirement = Requirement(_near);
+        if (requirement != "") { _changing = false; _error = requirement; _errorTarget = _near.Name; return; }
+        if (_near.Interact != null) { _error = _near.Interact(); _errorTarget = _near.Name; _changing = false; return; }
         var root = GetTree().CurrentScene;
         PracticeSession.ClearFeedback();
         PracticeSession.Capture(root.SceneFilePath, Player);
@@ -68,7 +78,10 @@ public partial class TrainingStations : Node
             PracticeSession.RequestLaunch(_near.Launch.Value, Player.GlobalPosition);
         else
             PracticeSession.Prepare(root.SceneFilePath, _near.Scene, _near.Marker, Player.GlobalPosition);
-        Player.Velocity = Vector2.Zero; Player.SetPhysicsProcess(false);
+        Player.Velocity = Vector2.Zero;
+        Player.SetPhysicsProcess(false);
+        var playerAnimation = Player.GetNodeOrNull<PlayerAnimation>("AnimatedSprite2D");
+        playerAnimation?.SetProcess(false);
         string target = _near.Scene;
         Callable.From(() =>
         {
@@ -78,9 +91,19 @@ public partial class TrainingStations : Node
             if (error == Error.Ok) return;
             _travelRequested = false;
             PracticeSession.Abort(); _changing = false; Player.SetPhysicsProcess(true);
+            playerAnimation?.SetProcess(true);
             _error = "Could not open the room. Release E and try again.";
+            _errorTarget = _near?.Name ?? "";
             GD.PushError($"Training travel failed: {error}");
         }).CallDeferred();
+    }
+    private string Requirement(Target target)
+    {
+        if (target?.RequiredCapability is not ItemCapability capability) return "";
+        if (Player.SelectedStack?.Item.HasCapability(capability) == true) return "";
+        return Player.Inventory?.HasCapability(capability) == true
+            ? "SELECT MAINTENANCE KIT (1-5)"
+            : "MAINTENANCE KIT REQUIRED — USE THE SUPPLY LOCKER";
     }
     public override void _ExitTree()
     {

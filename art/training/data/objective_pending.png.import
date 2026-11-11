@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhlr4rkrrbkn5"
-path="res://.godot/imported/fuse_cabinet.svg-ac39df7113bc257e0b123576cd0a190d.ctex"
+uid="uid://diujrxt3yuat6"
+path="res://.godot/imported/objective_pending.png-02da3fcf0f181c555ad6f431a761dc3f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/fuse_cabinet.svg"
-dest_files=["res://.godot/imported/fuse_cabinet.svg-ac39df7113bc257e0b123576cd0a190d.ctex"]
+source_file="res://art/training/data/objective_pending.png"
+dest_files=["res://.godot/imported/objective_pending.png-02da3fcf0f181c555ad6f431a761dc3f.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

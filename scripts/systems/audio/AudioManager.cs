@@ -40,10 +40,13 @@ public partial class AudioManager : Node
 	private string _currentMusicId;
 	private Tween _musicTween;
 	private bool _loaded;
+	private bool _musicPaused;
 	private static bool _warnedNotReady;
 
 	/// <summary>Id of the track that is currently active, or null when music is stopped.</summary>
 	public string CurrentMusicId => _currentMusicId;
+	public static bool IsMusicPaused => Instance?._musicPaused ?? false;
+	public static bool IsActiveMusicStreamPaused => Instance?._activeMusic?.StreamPaused ?? false;
 
 	public override void _EnterTree()
 	{
@@ -110,6 +113,11 @@ public partial class AudioManager : Node
 	public static void StopMusic(double fadeSeconds = 0.5)
 	{
 		if (EnsureReady()) Instance.StopMusicInternal(fadeSeconds);
+	}
+
+	public static void SetMusicPaused(bool paused)
+	{
+		if (EnsureReady()) Instance.SetMusicPausedInternal(paused);
 	}
 
 	public static void PlaySfx(string id, float volumeDb = 0f, float pitchScale = 1f)
@@ -423,6 +431,7 @@ public partial class AudioManager : Node
 		incoming.Bus = MusicBusName;
 		incoming.VolumeDb = fadeSeconds > 0 ? MuteDb : def.VolumeDb;
 		incoming.Play();
+		incoming.StreamPaused = _musicPaused;
 
 		_activeMusic = incoming;
 		_currentMusicId = id;
@@ -447,6 +456,13 @@ public partial class AudioManager : Node
 					outgoing.Stop();
 			}));
 		}
+	}
+
+	private void SetMusicPausedInternal(bool paused)
+	{
+		_musicPaused = paused;
+		if (_musicA != null) _musicA.StreamPaused = paused;
+		if (_musicB != null) _musicB.StreamPaused = paused;
 	}
 
 	private void StopMusicInternal(double fadeSeconds)

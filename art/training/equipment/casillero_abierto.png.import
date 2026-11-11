@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bj5gfyla5qmci"
-path="res://.godot/imported/training_hurdle.png-dae308b4ffc998afbb02221267bd94c4.ctex"
+uid="uid://ccb5h6hp2e20p"
+path="res://.godot/imported/casillero_abierto.png-19b30d64e861f2c7a3f94857295f20b6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/training/training_hurdle.png"
-dest_files=["res://.godot/imported/training_hurdle.png-dae308b4ffc998afbb02221267bd94c4.ctex"]
+source_file="res://art/training/equipment/casillero_abierto.png"
+dest_files=["res://.godot/imported/casillero_abierto.png-19b30d64e861f2c7a3f94857295f20b6.ctex"]
 
 [params]
 

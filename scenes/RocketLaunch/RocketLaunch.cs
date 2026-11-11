@@ -2,6 +2,8 @@ using Godot;
 using System;
 using ares.scripts.mission;
 using ares.scripts.training;
+using ares.scripts.systems;
+using Ares.Systems.Audio;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D
@@ -19,13 +21,15 @@ public partial class RocketLaunch : Node2D
 	private AnimatedSprite2D fire;
 	private Label text, stats, briefingText, briefingSpeaker;
 	private TextureRect briefingTutorial;
-	private Button start, briefingStart, briefingBack, pause, back;
+	private Button briefingStart, briefingBack, pause, back;
 	private Control gauge, actions, hud, briefing;
+	private ProgressBar centeredProgress;
 	private TextureRect rail, band, handle;
 	private bool holding, spaceHeld, mouseHeld, inputBlocked;
 	private bool fromTraining;
 	private bool launchAllowed;
 	private bool accessDenied;
+	private bool practiceReturnPending;
 	private Vector2 returnPosition;
 	private float ascentOffset, ascentTravel;
 	private double ascentProgress;
@@ -43,7 +47,6 @@ public partial class RocketLaunch : Node2D
 		fire = rocket.GetNode<AnimatedSprite2D>("Fire");
 		fire.AnimationFinished += OnAnimationFinished;
 		text = GetNode<Label>(Ui + "Text"); stats = GetNode<Label>(Ui + "Stats");
-		start = GetNode<Button>(Ui + "Actions/Continue");
 		pause = GetNode<Button>(Ui + "Actions/Pause"); back = GetNode<Button>(Ui + "Actions/Back");
 		actions = GetNode<Control>(Ui + "Actions");
 		hud = GetNode<Control>("IntroUI/Panel"); briefing = GetNode<Control>("IntroUI/Briefing");
@@ -53,9 +56,10 @@ public partial class RocketLaunch : Node2D
 		briefingStart = GetNode<Button>(BriefingUi + "Actions/Start");
 		briefingBack = GetNode<Button>(BriefingUi + "Actions/Back");
 		gauge = GetNode<Control>(Ui + "Gauge");
+		centeredProgress = GetNode<ProgressBar>(Ui + "CenteredProgress");
 		rail = gauge.GetNode<TextureRect>("Rail"); band = gauge.GetNode<TextureRect>("Band");
 		handle = gauge.GetNode<TextureRect>("Handle");
-		start.Pressed += StartOrRetry; briefingStart.Pressed += StartOrRetry; briefingBack.Pressed += Back;
+		briefingStart.Pressed += StartOrRetry; briefingBack.Pressed += Back;
 		pause.Pressed += TogglePause; back.Pressed += Back;
 		var request = PracticeSession.ConsumeLaunch();
 		if (request != null)
@@ -128,7 +132,7 @@ public partial class RocketLaunch : Node2D
 
 	private void StartOrRetry()
 	{
-		bool retryable = launchAllowed && (State == Phase.Ready || (Practice && State == Phase.Result));
+		bool retryable = launchAllowed && State == Phase.Ready;
 		if (!retryable) return;
 		if (!Practice && (sequence != MissionState.Instance.LaunchSequence ||
 			!MissionState.Instance.LaunchPadUnlocked || MissionState.Instance.LaunchRecord != null))
@@ -137,6 +141,7 @@ public partial class RocketLaunch : Node2D
 		}
 		backError = null; lastTimestamp = Clock();
 		accessDenied = false;
+		practiceReturnPending = false;
 		Model = new(HoldConfig); State = Phase.Active;
 		ascentOffset = 0; ascentProgress = 0;
 		rocket.StopFire();
@@ -145,7 +150,16 @@ public partial class RocketLaunch : Node2D
 		Refresh();
 	}
 
-	private void TogglePause() => SetPaused(!Paused);
+	private void TogglePause()
+	{
+		if (Paused) { SetPaused(false); return; }
+		holding = false;
+		mouseHeld = false;
+		inputBlocked = spaceHeld;
+		var manager = GetNodeOrNull<PauseManager>("/root/PauseManager");
+		if (manager != null) manager.OpenPauseMenu();
+		else SetPaused(true);
+	}
 
 	private void SetPaused(bool value)
 	{
@@ -153,6 +167,7 @@ public partial class RocketLaunch : Node2D
 		Paused = value;
 		if (value) { holding = false; inputBlocked = true; }
 		else inputBlocked = spaceHeld || mouseHeld;
+		AudioManager.SetMusicPaused(value);
 		fire.SpeedScale = value ? 0 : 1;
 		LayoutRocket(); Refresh();
 		if (!value) TryBeginAscent(true);
@@ -179,11 +194,6 @@ public partial class RocketLaunch : Node2D
 		}
 		if (ev is not InputEventKey key) return;
 		var code = key.PhysicalKeycode == Key.None ? key.Keycode : key.PhysicalKeycode;
-		if (code == Key.Escape && key.Pressed && !key.Echo)
-		{
-			if (State == Phase.Active || Paused) TogglePause();
-			GetViewport().SetInputAsHandled(); return;
-		}
 		if (code != Key.Space) return;
 		GetViewport().SetInputAsHandled();
 		if (!key.Pressed)
@@ -196,7 +206,7 @@ public partial class RocketLaunch : Node2D
 		}
 		if (key.Echo) return;
 		Synchronize();
-		bool canStart = State == Phase.Ready || (Practice && State == Phase.Result);
+		bool canStart = State == Phase.Ready;
 		if (canStart && !inputBlocked) StartOrRetry();
 		spaceHeld = true;
 		if (!inputBlocked && State == Phase.Active) holding = true;
@@ -248,6 +258,7 @@ public partial class RocketLaunch : Node2D
 		{
 			MissionState.Instance.TrainingLaunchPracticeComplete = true;
 			MissionState.Instance.EvaluateTrainingCompletion();
+			practiceReturnPending = true;
 		}
 		else if (!MissionState.Instance.RecordLaunch(sequence, Model.Result))
 		{
@@ -258,9 +269,19 @@ public partial class RocketLaunch : Node2D
 			return;
 		}
 		rocket.LaunchSuccess();
+		Refresh();
 	}
 
-	private void OnAnimationFinished() => TryBeginAscent(false);
+	private void OnAnimationFinished()
+	{
+		if (Practice && State == Phase.Result && practiceReturnPending)
+		{
+			practiceReturnPending = false;
+			Callable.From(ReturnToLab).CallDeferred();
+			return;
+		}
+		TryBeginAscent(false);
+	}
 
 	private void TryBeginAscent(bool requireStopped)
 	{
@@ -311,15 +332,15 @@ public partial class RocketLaunch : Node2D
 		briefingBack.Text = fromTraining ? "Return to lab" : "Back to Mission Control";
 		if ((State == Phase.Result || State == Phase.Ascending || State == Phase.Complete) && result != null) stats.Text = ResultStats(result);
 		else stats.Text = ProgressStats();
-		start.Visible = launchAllowed && Practice && State == Phase.Result;
-		start.Text = "Repeat practice";
-		start.Disabled = Paused;
+		centeredProgress.Value = Model.Progress * 100.0;
 		briefingStart.Disabled = !launchAllowed;
-		actions.Visible = Paused || State == Phase.Result || State == Phase.Ascending || State == Phase.Complete;
+		actions.Visible = State == Phase.Active || Paused || (!practiceReturnPending &&
+			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		hud.OffsetBottom = actions.Visible ? 140 : 100;
-		pause.Visible = Paused && State == Phase.Active;
-		back.Visible = Paused || State == Phase.Result || State == Phase.Ascending || State == Phase.Complete;
-		pause.Text = Paused ? "Resume" : "Pause (Esc)";
+		pause.Visible = State == Phase.Active;
+		back.Visible = Paused || (!practiceReturnPending &&
+			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
+		pause.Text = Paused ? "Resume" : "Pause";
 		back.Text = fromTraining ? "Return to lab" : "Back to main menu";
 		LayoutGauge();
 	}

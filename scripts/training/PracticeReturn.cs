@@ -22,6 +22,8 @@ public partial class PracticeReturn : CanvasLayer
         _game.SetProcessInput(false);
         if (_game is WireMinigame wire) wire.Completed += Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed += Success;
+        if (_game is FrequencyBoxMinigame frequency) frequency.Completed += Success;
+        if (_game is HullRepairMinigame hull) hull.Completed += Success;
         _overlay = new Control(); AddChild(_overlay); _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         var shade = new ColorRect { Color = new Color(0.015f, 0.028f, 0.05f, 0.965f) }; _overlay.AddChild(shade);
         shade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -32,27 +34,34 @@ public partial class PracticeReturn : CanvasLayer
         var margin = new MarginContainer(); _instructions.AddChild(margin);
         foreach (string side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 20);
         var box = new VBoxContainer(); box.AddThemeConstantOverride("separation", 12); margin.AddChild(box);
-        box.AddChild(new Label { Text = _game is WireMinigame ? "WIRING PRACTICE" : "FUSE PRACTICE" });
-        string tutorialPath = _game is WireMinigame
-            ? "res://art/training/tutorials/wires/cable_connection_tutorial.png"
-            : "res://art/training/tutorials/fuses/fuse_switch_tutorial.png";
-        _tutorial = new TextureRect
+        PracticeSession.Exercise exercise = ExerciseForGame();
+        box.AddChild(new Label { Text = TitleFor(exercise) });
+        string tutorialPath = exercise switch
         {
-            Texture = GD.Load<Texture2D>(tutorialPath),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore
+            PracticeSession.Exercise.Wires => "res://art/training/tutorials/wires/cable_connection_tutorial.png",
+            PracticeSession.Exercise.Fuses => "res://art/training/tutorials/fuses/fuse_switch_tutorial.png",
+            PracticeSession.Exercise.Frequency => "res://art/training/tutorials/frequency/frequency_tutorial.png",
+            PracticeSession.Exercise.HullRepair => "res://art/training/tutorials/hull_repair/hull_repair_tutorial.png",
+            _ => null
         };
-        box.AddChild(_tutorial);
-        string hint = _game is WireMinigame
-            ? "Drag matching colors. Keyboard: 1–4, Up/Down, Enter."
-            : "Turn all six ON in four presses. DOUBLE toggles both linked switches.";
-        box.AddChild(new Label { Text = hint, HorizontalAlignment = HorizontalAlignment.Center, AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        if (tutorialPath != null)
+        {
+            _tutorial = new TextureRect
+            {
+                Name = "Tutorial",
+                Texture = GD.Load<Texture2D>(tutorialPath),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                MouseFilter = Control.MouseFilterEnum.Ignore
+            };
+            box.AddChild(_tutorial);
+        }
+        box.AddChild(new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Text = TrainingStations.Instructions(exercise) });
         _start = new Button { Text = "Start" }; box.AddChild(_start);
         _start.Pressed += () => { _starting = true; _start.ReleaseFocus(); };
         _start.GrabFocus();
-        _back = new Button { Text = _ticket != 0 ? "Cancel and return to lab (Esc)" : "Cancel / restart (Esc)", Position = new(12, 8) };
+        _back = new Button { Text = _ticket != 0 ? "Cancel and return to lab" : "Cancel / restart", Position = new(12, 8) };
         AddChild(_back); _back.Hide(); _back.Pressed += Cancel;
         var cancel = new Button { Text = _back.Text }; box.AddChild(cancel); cancel.Pressed += Cancel;
         GetViewport().SizeChanged += FitLayout;
@@ -64,19 +73,25 @@ public partial class PracticeReturn : CanvasLayer
         float halfWidth = Mathf.Min(340, (size.X - 32) / 2);
         _instructions.OffsetLeft = -halfWidth;
         _instructions.OffsetRight = halfWidth;
-        float tutorialWidth = Mathf.Max(160, Mathf.Min(480, size.X - 80));
-        _tutorial.CustomMinimumSize = new Vector2(tutorialWidth, tutorialWidth * .4f);
-        float panelHeight = Mathf.Min(size.Y - 24, tutorialWidth * .4f + 224);
+        float tutorialWidth = _tutorial == null ? 0 : Mathf.Max(160, Mathf.Min(480, size.X - 80));
+        if (_tutorial != null)
+            _tutorial.CustomMinimumSize = new Vector2(tutorialWidth, tutorialWidth * 0.4f);
+        float panelHeight = Mathf.Min(size.Y - 24, 180 + tutorialWidth * 0.4f);
         _instructions.OffsetTop = -panelHeight / 2;
         _instructions.OffsetBottom = panelHeight / 2;
         if (_game is WireMinigame)
         {
             var left = _game.GetNode<Control>("LeftTerminals");
             var right = _game.GetNode<Control>("RightTerminals");
-            left.OffsetLeft = size.X * 0.15f;
-            left.OffsetRight = left.OffsetLeft + 125;
-            right.OffsetRight = size.X * 0.85f;
-            right.OffsetLeft = right.OffsetRight - 125;
+            float half = Mathf.Max(80f, Mathf.Min(300f, size.X * 0.5f - 24f));
+            left.OffsetLeft = -half + 20;
+            left.OffsetRight = -half + 80;
+            right.OffsetLeft = half - 80;
+            right.OffsetRight = half - 20;
+            var leftPlate = _game.GetNodeOrNull<Control>("LeftPlate");
+            if (leftPlate != null) { leftPlate.OffsetLeft = -half; leftPlate.OffsetRight = -half + 100; }
+            var rightPlate = _game.GetNodeOrNull<Control>("RightPlate");
+            if (rightPlate != null) { rightPlate.OffsetLeft = half - 100; rightPlate.OffsetRight = half; }
             Callable.From(() =>
             {
                 if (IsInsideTree()) ((WireMinigame)_game).RefreshWireLayout();
@@ -89,7 +104,41 @@ public partial class PracticeReturn : CanvasLayer
             board.Scale = Vector2.One * scale;
             board.Position = new Vector2((size.X - 360 * scale) / 2, 120 + (size.Y - 140 - 500 * scale) / 2);
         }
+        else if (_game is FrequencyBoxMinigame)
+        {
+            FitCentered(_game.GetNode<Control>("Box"), new Vector2(320, 520), size, 32);
+        }
+        else if (_game is HullRepairMinigame)
+        {
+            FitCentered(_game.GetNode<Control>("Frame"), new Vector2(720, 460), size, 32);
+        }
     }
+
+    private static void FitCentered(Control control, Vector2 nativeSize, Vector2 viewport, float padding)
+    {
+        float scale = Mathf.Min(1f,
+            Mathf.Min((viewport.X - padding) / nativeSize.X, (viewport.Y - padding) / nativeSize.Y));
+        control.PivotOffset = nativeSize / 2;
+        control.Scale = Vector2.One * Mathf.Max(0.35f, scale);
+    }
+
+    private PracticeSession.Exercise ExerciseForGame() => _game switch
+    {
+        WireMinigame => PracticeSession.Exercise.Wires,
+        FuseBoxMinigame => PracticeSession.Exercise.Fuses,
+        FrequencyBoxMinigame => PracticeSession.Exercise.Frequency,
+        HullRepairMinigame => PracticeSession.Exercise.HullRepair,
+        _ => PracticeSession.Selected
+    };
+
+    private static string TitleFor(PracticeSession.Exercise exercise) => exercise switch
+    {
+        PracticeSession.Exercise.Wires => "WIRING PRACTICE",
+        PracticeSession.Exercise.Fuses => "FUSE PRACTICE",
+        PracticeSession.Exercise.Frequency => "FREQUENCY CALIBRATION",
+        PracticeSession.Exercise.HullRepair => "HULL REPAIR",
+        _ => "TRAINING PRACTICE"
+    };
     public override void _Process(double delta)
     {
         if (!_starting || Input.IsPhysicalKeyPressed(Key.E) || Input.IsKeyPressed(Key.Enter) || Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left)) return;
@@ -98,12 +147,16 @@ public partial class PracticeReturn : CanvasLayer
     }
     public override void _Input(InputEvent ev)
     {
-        if (ev is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) { GetViewport().SetInputAsHandled(); Cancel(); }
+        if (ev is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && !_active)
+        {
+            GetViewport().SetInputAsHandled();
+            Cancel();
+        }
     }
     private void Success()
     {
         if (!_active || _finished) return;
-        if (_ticket == 0) { _game.SetProcessInput(false); _back.Text = "Complete — restart (Esc)"; return; }
+        if (_ticket == 0) { _game.SetProcessInput(false); _back.Text = "Complete — restart"; return; }
         Finish(true);
     }
     private void Cancel()
@@ -128,7 +181,7 @@ public partial class PracticeReturn : CanvasLayer
         _returnRequested = false;
         _returnFailed = true;
         _overlay.Hide();
-        _back.Show(); _back.Text = "Return failed — retry return to lab (Esc)";
+        _back.Show(); _back.Text = "Return failed — retry return to lab";
         _back.GrabFocus();
         GD.PushError($"Practice return failed: {error}");
     }
@@ -137,6 +190,8 @@ public partial class PracticeReturn : CanvasLayer
         GetViewport().SizeChanged -= FitLayout;
         if (_game is WireMinigame wire) wire.Completed -= Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed -= Success;
+        if (_game is FrequencyBoxMinigame frequency) frequency.Completed -= Success;
+        if (_game is HullRepairMinigame hull) hull.Completed -= Success;
         if (_ticket != 0 && !_returnRequested) PracticeSession.Clear();
     }
 }

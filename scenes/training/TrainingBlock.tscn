@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c16gdj6jtud"]
 
-[ext_resource type="Texture2D" path="res://art/training/training_hurdle.png" id="hurdle"]
+[ext_resource type="Texture2D" path="res://art/training/environment/training_hurdle.png" id="hurdle"]
 [sub_resource type="RectangleShape2D" id="base"]
 size = Vector2(64, 16)
 

@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://b5n6gst6x8y3t"]
 
-[ext_resource type="Script" uid="uid://dvlsfvnw8lu8a" path="res://scripts/rocket_launch/RocketLaunch.cs" id="1_umb18"]
+[ext_resource type="Script" uid="uid://dvlsfvnw8lu8a" path="res://scenes/RocketLaunch/RocketLaunch.cs" id="1_umb18"]
 [ext_resource type="Texture2D" path="res://art/training/launch/background/launch_site_background.png" id="2_psju1"]
 [ext_resource type="Texture2D" uid="uid://62b3pgut7y3j" path="res://art/gateway/Backgrond/Background.jpeg" id="21_practice_bg"]
-[ext_resource type="Script" uid="uid://cg7u4gnbp7q34" path="res://scripts/rocket_launch/Background.cs" id="3_ndnbf"]
-[ext_resource type="Script" uid="uid://ck3oagcwk1b7" path="res://scripts/rocket_launch/Rocket.cs" id="4_umb18"]
+[ext_resource type="Script" uid="uid://cg7u4gnbp7q34" path="res://scenes/RocketLaunch/Background.cs" id="3_ndnbf"]
+[ext_resource type="Script" uid="uid://ck3oagcwk1b7" path="res://scenes/RocketLaunch/Rocket.cs" id="4_umb18"]
 [ext_resource type="Texture2D" uid="uid://cnktcyxptocd1" path="res://art/rocket/fire/frame1.png" id="5_cl4yc"]
 [ext_resource type="Texture2D" uid="uid://b7yoy1nw15bte" path="res://art/rocket/fire/fire.png" id="5_umb18"]
 [ext_resource type="Texture2D" uid="uid://k1b8une8tjst" path="res://art/rocket/fire/frame2.png" id="6_1hwdt"]
@@ -69,6 +69,17 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_background"]
+bg_color = Color(0.025, 0.04, 0.06, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.48, 0.55, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(0.46, 0.89, 0.96, 1)
 
 [node name="RocketLaunch" type="Node2D" unique_id=1721182763]
 script = ExtResource("1_umb18")
@@ -135,6 +146,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "CENTERED 0.0 / 10s"
 
+[node name="CenteredProgress" type="ProgressBar" parent="IntroUI/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+min_value = 0.0
+max_value = 100.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+
 [node name="Gauge" type="Control" parent="IntroUI/Panel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
@@ -180,13 +200,6 @@ mouse_filter = 2
 [node name="Actions" type="HBoxContainer" parent="IntroUI/Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
-
-[node name="Continue" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions" unique_id=1098294857]
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Run again"
 
 [node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
 layout_mode = 2
