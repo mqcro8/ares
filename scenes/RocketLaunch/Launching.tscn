@@ -52,6 +52,17 @@ animations = [{
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vhiws"]
 load_path = "res://.godot/imported/rocket_sprite.png-0b513722e2300f95c3f0eec6643a8593.ctex"
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_umb18"]
+bg_color = Color(0, 0, 0, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1hwdt"]
+bg_color = Color(0.972549, 0.7647059, 0.007843138, 1)
+shadow_color = Color(0.87058824, 0.85882354, 0.38431373, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
 bg_color = Color(0.025, 0.04, 0.06, 0.97)
 border_width_left = 2
@@ -68,7 +79,7 @@ corner_radius_bottom_left = 4
 script = ExtResource("1_umb18")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
-position = Vector2(587.00006, -338)
+position = Vector2(577, -351.00003)
 scale = Vector2(1.4934896, 1.4302325)
 texture = ExtResource("2_psju1")
 script = ExtResource("3_ndnbf")
@@ -89,19 +100,38 @@ position = Vector2(593.99994, 303)
 scale = Vector2(0.19275205, 0.21775326)
 texture = SubResource("CompressedTexture2D_vhiws")
 
+[node name="HUD" type="CanvasLayer" parent="." unique_id=216018764]
+
+[node name="ProgressBar" type="ProgressBar" parent="HUD" unique_id=1252538954]
+light_mask = 12
+anchors_preset = -1
+anchor_left = 0.053000003
+anchor_top = 0.020000001
+anchor_right = 0.22500001
+anchor_bottom = 0.14
+offset_left = -0.05600357
+offset_top = 11.039999
+offset_right = -11.200012
+offset_bottom = -12.720001
+theme_override_colors/font_color = Color(0.00951285, 0.33877546, 0.54885066, 1)
+theme_override_fonts/font = ExtResource("16_wg3qb")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/background = SubResource("StyleBoxFlat_umb18")
+theme_override_styles/fill = SubResource("StyleBoxFlat_1hwdt")
+
 [node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
 layer = 10
 
 [node name="Panel" type="PanelContainer" parent="IntroUI" unique_id=1312481023]
 anchors_preset = -1
-anchor_left = 0.08
+anchor_left = 0.003
 anchor_top = 1.0
-anchor_right = 0.92
+anchor_right = 0.365
 anchor_bottom = 1.0
-offset_left = -15.159996
-offset_top = 21.0
-offset_right = -15.160034
-offset_bottom = 261.0
+offset_left = -1.4560001
+offset_top = -216.0
+offset_right = -1.480011
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_intro")

@@ -3,7 +3,7 @@ using Godot;
 
 public partial class RocketLaunch : Node2D
 {
-	private const int TargetClicks = 10;
+	private const int TargetClicks = 50;
 	private const float TimeLimit = 10f;
 
 	private int clicks = 0;
@@ -13,11 +13,20 @@ public partial class RocketLaunch : Node2D
 
 	private Rocket rocket;
 	private Background background;
+	private ProgressBar propulsionBar;
 
 	public override void _Ready()
 	{
 		rocket = GetNode<Rocket>("Rocket");
 		background = GetNode<Background>("Background");
+
+		propulsionBar = GetNode<ProgressBar>(
+            "HUD/ProgressBar"
+		);
+
+		propulsionBar.MinValue = 0;
+		propulsionBar.MaxValue = TargetClicks;
+		propulsionBar.Value = 0;
 
 		rocket.StartIgnition();
 	}
@@ -55,6 +64,9 @@ public partial class RocketLaunch : Node2D
 		{
 			clicks++;
 
+			// Actualizar barra de propulsión
+			propulsionBar.Value = clicks;
+
 			GD.Print($"Thrust: {clicks}/{TargetClicks}");
 
 			if (clicks >= TargetClicks)
@@ -71,7 +83,6 @@ public partial class RocketLaunch : Node2D
 
 		rocket.LaunchSuccess();
 
-		// Esperar a que termine la animación de éxito
 		rocket.GetNode<AnimatedSprite2D>("Fire")
 			.AnimationFinished += OnSuccessAnimationFinished;
 	}
