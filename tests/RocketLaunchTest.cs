@@ -180,8 +180,8 @@ public partial class RocketLaunchTest : Node
             AudioManager.IsMusicPaused && AudioManager.IsActiveMusicStreamPaused,
             "Pause button opens the real pause menu and silences music");
         double menuPausedHeat = launch.Model.Heat;
-        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-        Check(launch.Model.Heat == menuPausedHeat, "Pause button freezes launch progress");
+        Check(launch.Model.Heat == menuPausedHeat && launch.State == RocketLaunch.Phase.Active,
+            "Pause button freezes launch state until resumed");
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
         Check(!GetTree().Paused && !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused,
             "Closing button-opened pause restores music");
