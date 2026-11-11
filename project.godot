@@ -20,7 +20,6 @@ config/icon="res://icon.svg"
 AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
-MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]
 

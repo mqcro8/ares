@@ -85,7 +85,7 @@ bg_color = Color(0.46, 0.89, 0.96, 1)
 script = ExtResource("1_umb18")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
-position = Vector2(587.00006, -338)
+position = Vector2(577, -351.00003)
 scale = Vector2(1.4934896, 1.4302325)
 texture = ExtResource("2_psju1")
 script = ExtResource("3_ndnbf")
