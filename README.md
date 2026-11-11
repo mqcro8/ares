@@ -14,7 +14,7 @@ Built with **Godot 4.7 (.NET)** and **C# (`net8.0`)**.
 4. Press **F5**.
 
 Main scene: `scenes/main_menu/main_menu_take3.tscn`.
-Autoloads: `MusicPlayer` (`scripts/systems/audio/MusicPlayer.cs`) and `MissionState` (`scripts/mission/MissionState.cs`).
+Autoloads: `AudioManager` (`scripts/systems/audio/AudioManager.cs`) and `MissionState` (`scripts/mission/MissionState.cs`). Audio usage is documented in [`docs/audio.md`](docs/audio.md).
 
 ## Current state
 
@@ -25,7 +25,7 @@ Autoloads: `MusicPlayer` (`scripts/systems/audio/MusicPlayer.cs`) and `MissionSt
 - **Player + hotbar** — `scripts/player_scene.tscn` is the player prefab: `Player` + a 5-slot hotbar (preloaded with the test item). `Inventory` handles stacking and emits `InventoryChanged`; slots are selected with `1`–`5`.
 - **Rover** — `scenes/rover/rover.tscn` is a top-down rover prototype with Mars ground, track and rover sprites. Movement/impact logic is still a work in progress (current scripts are placeholders).
 - **Mission state** — `MissionState` autoload holds the current `MissionStage`, mission time, and the resource axes (budget, mass, energy, communications, spare parts, rover impacts/collisions).
-- **Audio** — `Master` / `Music` / `SFX` buses in `default_bus_layout.tres`. Menu music is wired up, the intro uses `rover_scene_ambient_wind.mp3` as its ambience, and the remaining SFX files are not used by any scene or script yet.
+- **Audio** — `AudioManager` autoload with a shared catalog (`data/audio/sound_bank.tres`), crossfaded music, pooled one-shot SFX, and positional/looping emitters. Menu music, rover ambience, collision, explosion, and victory sounds are wired; the intro plays its wind ambience. See [`docs/audio.md`](docs/audio.md).
 
 ## Controls
 
@@ -42,6 +42,7 @@ Autoloads: `MusicPlayer` (`scripts/systems/audio/MusicPlayer.cs`) and `MissionSt
 ```
 ares/
 ├── project.godot, ares.csproj, ares.sln, README.md, credits.md
+├── docs/audio.md                  audio usage guide for the team
 ├── default_bus_layout.tres        Master / Music / SFX buses
 │
 ├── scenes/                        stage scenes and reusable scene prefabs
@@ -67,7 +68,8 @@ ares/
 │   ├── resource_manager/         loadout rules + consequences, holds no state  (planned, empty)
 │   ├── stages/                   IntroSequence.cs; one controller script per stage scene
 │   ├── systems/
-│   │   ├── audio/                MusicPlayer.cs (autoload, menu music only)
+│   │   ├── audio/                AudioManager.cs (autoload), SoundDef/SoundBank,
+│   │   │                         SoundIds, SfxEmitter2D/3D
 │   │   ├── inventory/            Inventory.cs ([GlobalClass] Resource), Hotbar.cs, HotbarSlot.cs
 │   │   ├── items/                Item.cs, ItemData.cs ([GlobalClass] Resource),
 │   │   │                         ItemStack.cs, EquipableItem.cs

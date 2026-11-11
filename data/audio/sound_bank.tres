@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="SoundBank" format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/audio/SoundBank.cs" id="1_bank"]
+[ext_resource type="Script" path="res://scripts/systems/audio/SoundDef.cs" id="2_def"]
+[ext_resource type="AudioStreamMP3" path="res://audio/music/menu_test_music.mp3" id="3_menu"]
+[ext_resource type="AudioStreamMP3" path="res://audio/music/rover_scene_ambient_wind.mp3" id="4_wind"]
+[ext_resource type="AudioStreamMP3" path="res://audio/sfx/rover_moving.mp3" id="5_moving"]
+[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_collision.wav" id="6_collision"]
+[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_explode.wav" id="7_explode"]
+[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_victory.wav" id="8_victory"]
+
+[sub_resource type="Resource" id="SoundDef_menu"]
+script = ExtResource("2_def")
+Id = "menu_music"
+Stream = ExtResource("3_menu")
+VolumeDb = 0.0
+PitchVariation = 0.0
+Loop = true
+
+[sub_resource type="Resource" id="SoundDef_wind"]
+script = ExtResource("2_def")
+Id = "rover_ambient_wind"
+Stream = ExtResource("4_wind")
+VolumeDb = -4.0
+PitchVariation = 0.0
+Loop = true
+
+[sub_resource type="Resource" id="SoundDef_moving"]
+script = ExtResource("2_def")
+Id = "rover_moving"
+Stream = ExtResource("5_moving")
+VolumeDb = -6.0
+PitchVariation = 0.0
+Loop = true
+
+[sub_resource type="Resource" id="SoundDef_collision"]
+script = ExtResource("2_def")
+Id = "rover_collision"
+Stream = ExtResource("6_collision")
+VolumeDb = -2.0
+PitchVariation = 0.05
+Loop = false
+
+[sub_resource type="Resource" id="SoundDef_explode"]
+script = ExtResource("2_def")
+Id = "rover_explode"
+Stream = ExtResource("7_explode")
+VolumeDb = 0.0
+PitchVariation = 0.0
+Loop = false
+
+[sub_resource type="Resource" id="SoundDef_victory"]
+script = ExtResource("2_def")
+Id = "rover_victory"
+Stream = ExtResource("8_victory")
+VolumeDb = -2.0
+PitchVariation = 0.0
+Loop = false
+
+[resource]
+script = ExtResource("1_bank")
+Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind")])
+Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory")])

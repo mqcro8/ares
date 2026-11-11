@@ -1,3 +1,4 @@
+using Ares.Systems.Audio;
 using Godot;
 
 namespace Ares.Ui.MainMenu;
@@ -6,12 +7,15 @@ public partial class MainMenu : Control
 {
 	public override void _Ready()
 	{
+		AudioManager.PlayMusic(SoundIds.MenuMusic);
 		GetNodeOrNull<Button>("MenuLayout/MenuStack/VBoxContainer2/Start")?.GrabFocus();
 		var telemetry = GetNodeOrNull<Label>("Telemetry");
-		if (telemetry == null) return;
-		var tween = CreateTween().SetLoops();
-		tween.TweenProperty(telemetry, "modulate:a", 0.35f, 1.4).SetTrans(Tween.TransitionType.Sine);
-		tween.TweenProperty(telemetry, "modulate:a", 1.0f, 1.4).SetTrans(Tween.TransitionType.Sine);
+		if (telemetry != null)
+		{
+			var tween = CreateTween().SetLoops();
+			tween.TweenProperty(telemetry, "modulate:a", 0.35f, 1.4).SetTrans(Tween.TransitionType.Sine);
+			tween.TweenProperty(telemetry, "modulate:a", 1.0f, 1.4).SetTrans(Tween.TransitionType.Sine);
+		}
 	}
 
 	public void OnStartPressed()

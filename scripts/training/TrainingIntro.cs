@@ -1,5 +1,6 @@
 namespace ares.scripts.training;
 
+using Ares.Systems.Audio;
 using Godot;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
@@ -36,6 +37,7 @@ public partial class TrainingIntro : Node2D
 
 	public override void _Ready()
 	{
+		AudioManager.StopMusic(1.0);
 		_player = GetNodeOrNull<CharacterBody2D>(PlayerPath);
 		_panel = GetNodeOrNull<PanelContainer>(PanelPath);
 		_speaker = GetNodeOrNull<Label>(SpeakerPath);

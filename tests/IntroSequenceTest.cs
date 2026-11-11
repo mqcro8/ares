@@ -123,12 +123,7 @@ public partial class IntroSequenceTest : Node
             GetTree().CurrentScene = null;
             intro.QueueFree();
         }
-        var music = GetNodeOrNull<AudioStreamPlayer>("/root/MusicPlayer");
-        if (music != null)
-        {
-            music.Stop();
-            music.Stream = null;
-        }
+        Ares.Systems.Audio.AudioManager.StopMusic(0.0);
         await Frames(2);
     }
 

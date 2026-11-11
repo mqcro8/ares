@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 namespace ares.scripts.rover;
 
+using Ares.Systems.Audio;
 using Godot;
+using System;
 
 // Top-down rover with delayed controls: every command takes LagSeconds to reach the wheels.
 // Movement and impact detection only. Counting impacts and changing LagSeconds is the stage's job.
@@ -9,12 +11,15 @@ using Godot;
 public partial class Rover : CharacterBody2D
 {
 	private const int MaxCollisions = 5;
-	private const float LagPerCollision = 0.15f;
+	private const float LagPerCollision = 0.2f;
 	private int _collisionCount = 0;
 	private float InputLag => _collisionCount * LagPerCollision;
+	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
+	public bool IsGameOver => _gameOver;
 	private RoverAnimation _roverAnimation;
 	public bool CanMove { get; set; } = false;
+	public bool TutorialEnded { get; set; } = false;
 	public override void _Ready()
 	{
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("AnimatedSprite2D");
@@ -27,16 +32,14 @@ public partial class Rover : CharacterBody2D
 		GD.Print("Node is ready!");
 	}
 
-	private enum Lane
-	{
-		Left = 0,
-		Middle = 1,
-		Right = 2
-	}
+	private enum Lane {Left = 0, Middle = 1, Right = 2}
 
 	private static readonly float[] LanePositions = {-170.0f, 0.0f, 170.0f};
 
 	private Lane _currentLane = Lane.Middle;
+
+	public int CurrentLaneIndex => (int)_currentLane;
+	public bool IsChangingLane => !Mathf.IsEqualApprox(Position.X, LanePositions[(int)_currentLane]);
 
 	[Export] public float LaneChangeSpeed { get; set; } = 600.0f;
 	public override void _PhysicsProcess(double delta)
@@ -80,9 +83,28 @@ public partial class Rover : CharacterBody2D
 		}
 	}
 
+	private bool _isColliding = false;
+	public void RegisterObstacleCollision()
+	{
+		if (!_gameOver)
+			RegisterCollision();
+	}
+
 	private async void RegisterCollision()
 	{
-		_collisionCount++;
+
+		if (_isColliding || _gameOver)
+			return;
+
+		AudioManager.PlaySfx2D(SoundIds.RoverCollision, GlobalPosition);
+
+		
+		if (TutorialEnded)
+		{
+			_collisionCount++;
+		}
+		CollisionRegistered?.Invoke(_collisionCount);
+		
 
 		if (_collisionCount >= MaxCollisions)
 		{
@@ -90,8 +112,14 @@ public partial class Rover : CharacterBody2D
 			return;
 		}
 
-		// Animation sequence isn't really working as intended
+		_isColliding = true;
+
+		_roverAnimation.Play("collision");
+
 		await ToSignal(_roverAnimation, AnimationPlayer.SignalName.AnimationFinished);
+
+		_isColliding = false;
+		
 		_roverAnimation.Play("walk");
 
 		GD.Print($"Collisions: {_collisionCount}");
@@ -101,7 +129,8 @@ public partial class Rover : CharacterBody2D
 	private void LoseRover()
 	{
 		_gameOver = true;
-
+		CanMove = false;
+		_roverAnimation.Play("rover_lost");
 		GD.Print("COMMUNICATION LOST. ROVER DESTROYED.");
 
 		// Trigger game over sequence here.

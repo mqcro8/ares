@@ -2,6 +2,7 @@ namespace ares.scripts.stages;
 
 using System;
 using System.Collections.Generic;
+using Ares.Systems.Audio;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
 using Godot;
@@ -41,6 +42,7 @@ public partial class IntroSequence : Control
 	public override void _Ready()
 	{
 		MouseFilter = MouseFilterEnum.Ignore;
+		AudioManager.StopMusic(1.0);
 		MissionState.Instance.Stage = MissionStage.Intro;
 		if (Transmission == null)
 			Transmission = GD.Load<DialogueSequence>("res://data/dialogue/intro_transmission.tres");
