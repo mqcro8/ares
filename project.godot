@@ -29,10 +29,6 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="ares"
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
-
 [input]
 
 training_jump={
