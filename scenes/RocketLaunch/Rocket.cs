@@ -13,10 +13,28 @@ public partial class Rocket : Node2D
 		fire.Stop();
 	}
 
+	public void StartIgnition()
+	{
+		fire.Visible = true;
+		fire.SpeedScale = 1;
+		fire.Modulate = Colors.White;
+		fire.Play("ignition");
+	}
+
+	public void LaunchFailed()
+	{
+		fire.Visible = true;
+		fire.SpeedScale = 1;
+		fire.Modulate = Colors.White;
+		fire.Play("failed");
+	}
+
 	// Despegue exitoso
 	public void LaunchSuccess()
 	{
 		fire.Visible = true;
+		fire.SpeedScale = 1;
+		fire.Modulate = Colors.White;
 		fire.Play("success");
 	}
 	// Fuego continuo mientras se sostiene el empuje

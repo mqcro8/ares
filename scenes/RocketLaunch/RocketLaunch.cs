@@ -8,12 +8,14 @@ using Ares.Systems.Audio;
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D
 {
-	public enum Phase { Ready, Active, Result, Ascending, Complete }
+	public enum Phase { Ready, Ignition, Active, Result, Ascending, Complete }
 	public Phase State { get; private set; }
 	public bool Paused { get; private set; }
 	public bool Practice { get; private set; }
 	public LaunchHoldModel Model { get; private set; } = new();
+	public LaunchIgnitionModel Ignition { get; private set; } = new();
 
+	private static readonly LaunchIgnitionConfig IgnitionConfig = new(TargetClicks: 25, TimeLimitSeconds: 5);
 	private static readonly LaunchHoldConfig HoldConfig = new(
 		Initial: 50, Rise: 15, Fall: 15, Low: 45, High: 55, GoalSeconds: 10);
 	private Rocket rocket;
@@ -21,14 +23,15 @@ public partial class RocketLaunch : Node2D
 	private AnimatedSprite2D fire;
 	private Label text, stats, briefingText, briefingSpeaker;
 	private TextureRect briefingTutorial;
-	private Button briefingStart, briefingBack, pause, back;
+	private Button briefingStart, briefingBack, retry, pause, back;
 	private Control gauge, actions, hud, briefing;
-	private ProgressBar centeredProgress;
+	private ProgressBar ignitionProgress, centeredProgress;
 	private TextureRect rail, band, handle;
 	private bool holding, spaceHeld, mouseHeld, inputBlocked;
 	private bool fromTraining;
 	private bool launchAllowed;
 	private bool accessDenied;
+	private bool ignitionFailed;
 	private bool practiceReturnPending;
 	private Vector2 returnPosition;
 	private float ascentOffset, ascentTravel;
@@ -55,12 +58,14 @@ public partial class RocketLaunch : Node2D
 		briefingTutorial = GetNode<TextureRect>(BriefingUi + "Tutorial");
 		briefingStart = GetNode<Button>(BriefingUi + "Actions/Start");
 		briefingBack = GetNode<Button>(BriefingUi + "Actions/Back");
+		retry = GetNode<Button>(Ui + "Actions/Retry");
 		gauge = GetNode<Control>(Ui + "Gauge");
+		ignitionProgress = GetNode<ProgressBar>("HUD/ProgressBar");
 		centeredProgress = GetNode<ProgressBar>(Ui + "CenteredProgress");
 		rail = gauge.GetNode<TextureRect>("Rail"); band = gauge.GetNode<TextureRect>("Band");
 		handle = gauge.GetNode<TextureRect>("Handle");
 		briefingStart.Pressed += StartOrRetry; briefingBack.Pressed += Back;
-		pause.Pressed += TogglePause; back.Pressed += Back;
+		retry.Pressed += RetryIgnition; pause.Pressed += TogglePause; back.Pressed += Back;
 		var request = PracticeSession.ConsumeLaunch();
 		if (request != null)
 		{
@@ -107,7 +112,7 @@ public partial class RocketLaunch : Node2D
 	{
 		fire.AnimationFinished -= OnAnimationFinished;
 		briefingStart.Pressed -= StartOrRetry; briefingBack.Pressed -= Back;
-		pause.Pressed -= TogglePause; back.Pressed -= Back;
+		retry.Pressed -= RetryIgnition; pause.Pressed -= TogglePause; back.Pressed -= Back;
 	}
 
 	private void Back()
@@ -139,14 +144,62 @@ public partial class RocketLaunch : Node2D
 		{
 			accessDenied = true; State = Phase.Result; Refresh(); return;
 		}
-		backError = null; lastTimestamp = Clock();
+		BeginIgnition();
+	}
+
+	private void BeginIgnition()
+	{
+		backError = null;
 		accessDenied = false;
+		ignitionFailed = false;
 		practiceReturnPending = false;
-		Model = new(HoldConfig); State = Phase.Active;
-		ascentOffset = 0; ascentProgress = 0;
-		rocket.StopFire();
-		rocket.BeginThrust();
+		Ignition = new(IgnitionConfig);
+		Model = new(HoldConfig);
+		State = Phase.Ignition;
+		spaceHeld = false;
+		mouseHeld = false;
+		inputBlocked = false;
+		lastTimestamp = Clock();
+		ascentOffset = 0;
+		ascentProgress = 0;
+		holding = false;
+		rocket.StartIgnition();
+		Refresh();
+	}
+
+	private void RetryIgnition()
+	{
+		if (!launchAllowed || State != Phase.Result || !ignitionFailed) return;
+		BeginIgnition();
+	}
+
+	private void BeginHoldPhase()
+	{
+		if (State != Phase.Ignition || !Ignition.Complete) return;
+		State = Phase.Active;
+		Model = new(HoldConfig);
+		lastTimestamp = Clock();
 		holding = (spaceHeld || mouseHeld) && !inputBlocked;
+		rocket.BeginThrust();
+		Refresh();
+	}
+
+	private void RegisterIgnitionClick()
+	{
+		if (Paused || State != Phase.Ignition) return;
+		Ignition.RegisterClick();
+		ignitionProgress.Value = Ignition.Clicks;
+		if (Ignition.Complete) BeginHoldPhase();
+		Refresh();
+	}
+
+	private void FailIgnition()
+	{
+		if (State != Phase.Ignition || !Ignition.Failed) return;
+		ignitionFailed = true;
+		holding = false;
+		State = Phase.Result;
+		rocket.LaunchFailed();
 		Refresh();
 	}
 
@@ -177,11 +230,12 @@ public partial class RocketLaunch : Node2D
 	{
 		if (ev is InputEventMouseButton { ButtonIndex: MouseButton.Left } mouse)
 		{
-			if (mouse.Pressed && !Paused && !inputBlocked && State == Phase.Active)
+			if (mouse.Pressed && !Paused && !inputBlocked)
 			{
 				Synchronize();
 				mouseHeld = true;
-				holding = true;
+				if (State == Phase.Active)
+					holding = true;
 			}
 			else if (!mouse.Pressed)
 			{
@@ -209,12 +263,26 @@ public partial class RocketLaunch : Node2D
 		bool canStart = State == Phase.Ready;
 		if (canStart && !inputBlocked) StartOrRetry();
 		spaceHeld = true;
-		if (!inputBlocked && State == Phase.Active) holding = true;
+		if (inputBlocked) return;
+		if (State == Phase.Ignition)
+			RegisterIgnitionClick();
+		else if (State == Phase.Active)
+			holding = true;
+	}
+
+	public override void _UnhandledInput(InputEvent ev)
+	{
+		if (State != Phase.Ignition || Paused || inputBlocked ||
+			ev is not InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true }) return;
+		Synchronize();
+		RegisterIgnitionClick();
+		GetViewport().SetInputAsHandled();
 	}
 
 	public override void _Notification(int what)
 	{
-		if (what == NotificationApplicationFocusOut && IsNodeReady() && State == Phase.Active) SetPaused(true);
+		if (what == NotificationApplicationFocusOut && IsNodeReady() &&
+			(State == Phase.Ignition || State == Phase.Active)) SetPaused(true);
 	}
 
 	public override void _Process(double delta)
@@ -239,7 +307,14 @@ public partial class RocketLaunch : Node2D
 			throw new InvalidOperationException("Launch clock must be finite and monotonic.");
 		double delta = timestamp - lastTimestamp;
 		lastTimestamp = timestamp;
-		if (Paused || State != Phase.Active) return;
+		if (Paused) return;
+		if (State == Phase.Ignition)
+		{
+			Ignition.Advance(delta);
+			if (Ignition.Failed) FailIgnition();
+			return;
+		}
+		if (State != Phase.Active) return;
 		Model.Advance(delta, holding);
 		if (Model.Complete) FinishRun();
 	}
@@ -301,12 +376,13 @@ public partial class RocketLaunch : Node2D
 		hud.Visible = State != Phase.Ready;
 		if (backError != null) text.Text = backError;
 		else if (accessDenied) text.Text = "LAUNCH PAD LOCKED — complete all training requirements and enter through the marked pad.";
-		else if (Paused) text.Text = "PAUSED — progress frozen. Resume, then release SPACE or mouse to hold steady.";
+		else if (Paused) text.Text = "PAUSED — launch progress frozen. Resume to continue.";
 		else text.Text = State switch
 		{
 			Phase.Ready => Practice
-				? "LAUNCH SIMULATOR — hold the marker in the green center area for 10 seconds."
-				: "LAUNCH SEQUENCE — hold the marker in the green center area for 10 seconds.",
+				? "LAUNCH SIMULATOR — tap 25 times to ignite, then hold the marker in the green area for 10 seconds."
+				: "LAUNCH SEQUENCE — tap 25 times to ignite, then hold the marker in the green area for 10 seconds.",
+			Phase.Ignition => $"IGNITION — tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds.",
 			Phase.Active => ActiveMessage(),
 			Phase.Ascending => "LAUNCH COMPLETE — ascending. Waiting for the next scene.",
 			Phase.Complete => "ASCENT COMPLETE — waiting for the next scene.",
@@ -314,8 +390,8 @@ public partial class RocketLaunch : Node2D
 		};
 		briefingSpeaker.Text = Practice ? "LAUNCH SIMULATOR" : "LAUNCH PAD AUTHORIZED";
 		briefingText.Text = Practice
-			? "Hold SPACE or mouse to raise. Release to lower. Stay in the green band for 10 seconds."
-			: "Training complete. Launch sequence ready.";
+			? "Tap SPACE or click 25 times within 5 seconds to ignite. Then hold SPACE or mouse to raise and stay in the green band for 10 seconds."
+			: "Tap SPACE or click 25 times within 5 seconds to ignite. Then hold in the green band for 10 seconds.";
 		briefingTutorial.Visible = Practice;
 		if (Practice)
 		{
@@ -328,16 +404,21 @@ public partial class RocketLaunch : Node2D
 			briefingTutorial.CustomMinimumSize = Vector2.Zero;
 			briefing.OffsetTop = -96; briefing.OffsetBottom = 96;
 		}
-		briefingStart.Text = Practice ? "Begin practice" : "Begin launch";
+		briefingStart.Text = Practice ? "Begin simulator" : "Begin ignition";
 		briefingBack.Text = fromTraining ? "Return to lab" : "Back to Mission Control";
-		if ((State == Phase.Result || State == Phase.Ascending || State == Phase.Complete) && result != null) stats.Text = ResultStats(result);
+		if (ignitionFailed) stats.Text = IgnitionStats();
+		else if ((State == Phase.Result || State == Phase.Ascending || State == Phase.Complete) && result != null) stats.Text = ResultStats(result);
 		else stats.Text = ProgressStats();
+		ignitionProgress.Value = Ignition.Clicks;
+		ignitionProgress.Visible = !accessDenied &&
+			(State == Phase.Ignition || State == Phase.Active || ignitionFailed || Ignition.Clicks > 0);
 		centeredProgress.Value = Model.Progress * 100.0;
 		briefingStart.Disabled = !launchAllowed;
-		actions.Visible = State == Phase.Active || Paused || (!practiceReturnPending &&
+		actions.Visible = State == Phase.Ignition || State == Phase.Active || Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		hud.OffsetBottom = actions.Visible ? 140 : 100;
-		pause.Visible = State == Phase.Active;
+		retry.Visible = State == Phase.Result && ignitionFailed;
+		pause.Visible = State == Phase.Ignition || State == Phase.Active;
 		back.Visible = Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		pause.Text = Paused ? "Resume" : "Pause";
@@ -349,13 +430,21 @@ public partial class RocketLaunch : Node2D
 		? "IN CENTER — KEEP IT THERE."
 		: "MOVE THE MARKER INTO THE GREEN AREA.";
 
-	private string ProgressStats() => $"CENTERED {Model.CenteredTime:F1}/{Model.Config.GoalSeconds:F0}s | MARKER {Model.Heat:F0}";
+	private string ProgressStats() => State == Phase.Ignition
+		? IgnitionStats()
+		: $"CENTERED {Model.CenteredTime:F1}/{Model.Config.GoalSeconds:F0}s | MARKER {Model.Heat:F0}";
+
+	private string IgnitionStats() => $"IGNITION {Ignition.Clicks}/{Ignition.Config.TargetClicks} | {Ignition.Remaining:F1}s";
 
 	private string ResultStats(LaunchResult result) => $"CENTERED {result.CenteredSeconds:F0}/{Model.Config.GoalSeconds:F0}s | COMPLETE";
 
-	private string ResultMessage() => Practice
-		? "SIMULATOR COMPLETE — launch practice requirement cleared. Return to the lab and walk to LAUNCH PAD."
-		: "LAUNCH COMPLETE — waiting for the next scene.";
+	private string ResultMessage()
+	{
+		if (ignitionFailed) return "IGNITION FAILED — retry ignition or return to the previous scene.";
+		return Practice
+			? "SIMULATOR COMPLETE — launch practice requirement cleared. Return to the lab and walk to LAUNCH PAD."
+			: "LAUNCH COMPLETE — waiting for the next scene.";
+	}
 
 	private void LayoutGauge()
 	{

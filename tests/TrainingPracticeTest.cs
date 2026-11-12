@@ -71,6 +71,9 @@ public partial class TrainingPracticeTest : Node
         double now = Time.GetTicksUsec() / 1_000_000.0;
         launch.Clock = () => now;
         launch.GetNode<Button>("IntroUI/Briefing/Margin/VBox/Actions/Start").EmitSignal(BaseButton.SignalName.Pressed);
+        for (int i = 0; i < launch.Ignition.Config.TargetClicks; i++) KeyPress(Key.Space);
+        Check(launch.State == RocketLaunch.Phase.Active && launch.Ignition.Complete,
+            "Simulator ignition taps unlock the hold phase");
         bool held = false;
         for (int i = 0; i < 4000 && !launch.Model.Complete; i++)
         {
@@ -352,11 +355,13 @@ public partial class TrainingPracticeTest : Node
         KeyState(Key.Right, true); await Frames(10); KeyState(Key.Right, false); await Frames();
         Check(frequency.SelectedValue > phaseValue, "Arrow keys adjust selected calibration control without Enter");
         KeyPress(Key.Escape);
-        Check(GetTree().Paused && Scene is FrequencyBoxMinigame && AudioManager.IsMusicPaused,
-            "Escape pauses the game and music during frequency calibration");
+        Check(GetTree().Paused && Scene is FrequencyBoxMinigame && !AudioManager.IsMusicPaused &&
+            !AudioManager.IsActiveMusicStreamPaused,
+            "Escape pauses the game but keeps music playing during frequency calibration");
         KeyPress(Key.Escape);
-        Check(!GetTree().Paused && Scene is FrequencyBoxMinigame && !AudioManager.IsMusicPaused,
-            "Escape resumes game and music without cancelling its ticket");
+        Check(!GetTree().Paused && Scene is FrequencyBoxMinigame && !AudioManager.IsMusicPaused &&
+            AudioManager.Instance?.CurrentMusicId == null,
+            "Escape removes music when pause closes without cancelling its ticket");
         await CancelActivePractice(); await Back(false);
         Check(!mission.TrainingFrequencyComplete, "Cancelling frequency calibration keeps it incomplete");
 

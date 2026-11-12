@@ -25,6 +25,7 @@ public partial class RocketLaunchTest : Node
     {
         try
         {
+            LaunchIgnitionModelTest.Run(Check);
             LaunchHoldModelTest.Run(Check);
             await Run();
             GD.Print($"LAUNCH PASS ({assertions} assertions)");
@@ -54,7 +55,12 @@ public partial class RocketLaunchTest : Node
 
     private void SendMouse(bool down)
     {
-        Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = down });
+        var position = new Vector2(400, 300);
+        Input.ParseInputEvent(new InputEventMouseButton
+        {
+            Position = position, GlobalPosition = position,
+            ButtonIndex = MouseButton.Left, Pressed = down
+        });
         Input.FlushBufferedEvents();
     }
 
@@ -94,7 +100,18 @@ public partial class RocketLaunchTest : Node
     private void Start()
     {
         ClickPath(BriefingUi + "Actions/Start");
-        Check(launch.State == RocketLaunch.Phase.Active, "Start enters the hold task without countdown");
+        Check(launch.State == RocketLaunch.Phase.Ignition, "Start begins the ignition phase");
+    }
+
+    private void CompleteIgnition()
+    {
+        for (int i = 0; i < launch.Ignition.Config.TargetClicks; i++)
+        {
+            SendKey(Key.Space, true);
+            SendKey(Key.Space, false);
+        }
+        Check(launch.State == RocketLaunch.Phase.Active && launch.Ignition.Complete,
+            "Twenty-five ignition taps begin the hold phase");
     }
 
     private void Hold(bool down)
@@ -156,7 +173,11 @@ public partial class RocketLaunchTest : Node
             "One shared ten-second center band is used");
         Check(launch.Model.Result == null, "No event schedule, precision score or countdown");
         var band = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
+        var ignitionProgress = launch.GetNode<ProgressBar>("HUD/ProgressBar");
         var centeredProgress = launch.GetNode<ProgressBar>(Ui + "CenteredProgress");
+        Check(launch.Ignition.Config.TargetClicks == 25 && launch.Ignition.Config.TimeLimitSeconds == 5 &&
+            ignitionProgress.MaxValue == 25 && ignitionProgress.Value == 0,
+            "Black-and-yellow ignition bar starts at zero with twenty-five taps and five seconds");
         Check(centeredProgress.MaxValue == 100 && centeredProgress.Value == 0,
             "Centered-hold progress starts empty");
         Check(Math.Abs(band.AnchorLeft - .45) < .001 && Math.Abs(band.AnchorRight - .55) < .001,
@@ -165,26 +186,74 @@ public partial class RocketLaunchTest : Node
         Start();
         var pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
         Check(launch.GetNode<Control>(Ui + "Actions").Visible && pauseButton.Visible && pauseButton.Text == "Pause",
-            "Active launch exposes a working pause button");
+            "Ignition exposes a working pause button");
+        await Capture("ignition");
+
+        if (Visual)
+        {
+            for (int i = 0; i < 40 && launch.Ignition.Clicks < 24; i++)
+            {
+                SendKey(Key.Space, true);
+                SendKey(Key.Space, false);
+            }
+        }
+        else
+        {
+            SendMouse(true); SendMouse(false);
+            for (int i = 0; i < 23; i++)
+            {
+                SendKey(Key.Space, true);
+                SendKey(Key.Space, false);
+            }
+        }
+        Check(launch.State == RocketLaunch.Phase.Ignition && launch.Ignition.Clicks == 24 &&
+            ignitionProgress.Value == 24,
+            $"Ignition bar tracks each tap and waits for the final tap ({launch.State}, {launch.Ignition.Clicks}, {ignitionProgress.Value})");
+        await Capture("ignition-filled");
+
+        launch.Notification((int)Node.NotificationApplicationFocusOut);
+        double ignitionElapsed = launch.Ignition.Elapsed;
+        Advance(2);
+        Check(launch.Paused && launch.Ignition.Elapsed == ignitionElapsed,
+            "Focus pause freezes the ignition timer");
+        pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(!launch.Paused, "Ignition can resume after focus pause");
+        Advance(5);
+        var retryButton = launch.GetNode<Button>(Ui + "Actions/Retry");
+        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Failed && retryButton.Visible &&
+            launch.GetNode<AnimatedSprite2D>("Rocket/Fire").Animation == "failed",
+            "Ignition timeout shows failure animation and retry action");
+        retryButton.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(launch.State == RocketLaunch.Phase.Ignition && launch.Ignition.Clicks == 0 &&
+            ignitionProgress.Value == 0,
+            "Retry resets ignition progress and timer");
+        CompleteIgnition();
+        Check(ignitionProgress.Value == 25 && centeredProgress.Value == 0,
+            "Ignition completes before centered hold progress begins");
+        Check(pauseButton.Visible && pauseButton.Text == "Pause",
+            "Active hold phase keeps the pause button available");
         await Capture("active");
 
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
-        Check(GetTree().Paused && !launch.Paused && AudioManager.IsMusicPaused && AudioManager.IsActiveMusicStreamPaused,
-            "Escape pauses launch and music through the global pause manager");
+        Check(GetTree().Paused && !launch.Paused && !AudioManager.IsMusicPaused &&
+            !AudioManager.IsActiveMusicStreamPaused && AudioManager.Instance?.CurrentMusicId == SoundIds.MenuMusic,
+            "Escape pauses launch but keeps music playing through the global pause manager");
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
-        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused,
-            "Escape resumes launch and music through the global pause manager");
+        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && AudioManager.Instance?.CurrentMusicId == null,
+            "Closing pause removes music through the global pause manager");
 
+        AudioManager.PlayMusic(SoundIds.MenuMusic, 0, true);
         pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
         Check(GetTree().Paused && ((PauseManager)GetNode("/root/PauseManager")).IsOpen &&
-            AudioManager.IsMusicPaused && AudioManager.IsActiveMusicStreamPaused,
-            "Pause button opens the real pause menu and silences music");
+            !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused &&
+            AudioManager.Instance?.CurrentMusicId == SoundIds.MenuMusic,
+            "Pause button opens the real pause menu and keeps music playing");
         double menuPausedHeat = launch.Model.Heat;
         Check(launch.Model.Heat == menuPausedHeat && launch.State == RocketLaunch.Phase.Active,
             "Pause button freezes launch state until resumed");
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
-        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused,
-            "Closing button-opened pause restores music");
+        Check(!GetTree().Paused && !AudioManager.IsMusicPaused && AudioManager.Instance?.CurrentMusicId == null,
+            "Closing button-opened pause removes music");
 
         SendKey(Key.Space, true); Advance(.2);
         Check(launch.Model.Heat > 50, "Holding SPACE raises the marker");
@@ -238,7 +307,7 @@ public partial class RocketLaunchTest : Node
             "Simulator keeps visual launch instructions");
         Check(!mission.LaunchPadUnlocked, "Practice remains the final pad-unlock requirement");
         Check(launch.Practice && launch.Model.Config == new LaunchHoldConfig(), "Practice uses the exact launch requirement");
-        Start(); DriveToComplete();
+        Start(); CompleteIgnition(); DriveToComplete();
         Check(launch.GetNode<ProgressBar>(Ui + "CenteredProgress").Value == 100,
             "Simulator progress bar also completes at its hold goal");
         Check(mission.TrainingLaunchPracticeComplete && mission.LaunchPadUnlocked,

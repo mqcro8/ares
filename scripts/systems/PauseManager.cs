@@ -45,6 +45,7 @@ public partial class PauseManager : Node
 		{
 			var tree = GetTree();
 			if (tree != null) tree.Paused = false;
+			AudioManager.StopMusic(0.0);
 			AudioManager.SetMusicPaused(false);
 			Input.MouseMode = _savedMouseMode;
 			_isOpen = false;
@@ -82,7 +83,7 @@ public partial class PauseManager : Node
 
 		_isOpen = true;
 		GetTree().Paused = true;
-		AudioManager.SetMusicPaused(true);
+		AudioManager.SetMusicPaused(false);
 
 		_optionsScreen = screen;
 		_layer.AddChild(screen);
@@ -102,6 +103,7 @@ public partial class PauseManager : Node
 		_optionsScreen = null;
 
 		GetTree().Paused = false;
+		AudioManager.StopMusic(0.0);
 		AudioManager.SetMusicPaused(false);
 		Input.MouseMode = _savedMouseMode;
 	}

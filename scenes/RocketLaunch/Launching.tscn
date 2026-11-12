@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://b7yoy1nw15bte" path="res://art/rocket/fire/fire.png" id="5_umb18"]
 [ext_resource type="Texture2D" uid="uid://k1b8une8tjst" path="res://art/rocket/fire/frame2.png" id="6_1hwdt"]
 [ext_resource type="Texture2D" uid="uid://0qqd2bp0q4s7" path="res://art/rocket/fire/succes.png" id="7_8e4j1"]
+[ext_resource type="Texture2D" uid="uid://dcu2huyiae0sk" path="res://art/rocket/fire/failed.png" id="8_2faei"]
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="16_wg3qb"]
 [ext_resource type="Texture2D" path="res://art/rocket/rocket/rocket_sprite.png" id="17_rocket"]
 [ext_resource type="Texture2D" path="res://art/training/launch/ui/throttle_rail.png" id="18_rail"]
@@ -24,6 +25,25 @@ animations = [{
 }],
 "loop": 1,
 "name": &"ascending",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_2faei")
+}],
+"loop": 0,
+"name": &"failed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.2,
+"texture": ExtResource("5_cl4yc")
+}, {
+"duration": 1.2,
+"texture": ExtResource("6_1hwdt")
+}],
+"loop": 1,
+"name": &"ignition",
 "speed": 5.0
 }, {
 "frames": [{
@@ -81,6 +101,17 @@ border_color = Color(0.25, 0.48, 0.55, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
 bg_color = Color(0.46, 0.89, 0.96, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_background"]
+bg_color = Color(0, 0, 0, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_fill"]
+bg_color = Color(0.972549, 0.7647059, 0.007843138, 1)
+shadow_color = Color(0.87058824, 0.85882354, 0.38431373, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
+
 [node name="RocketLaunch" type="Node2D" unique_id=1721182763]
 script = ExtResource("1_umb18")
 
@@ -106,6 +137,28 @@ frame_progress = 1.0
 position = Vector2(593.99994, 303)
 scale = Vector2(0.19275205, 0.21775326)
 texture = ExtResource("17_rocket")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=216018764]
+
+[node name="ProgressBar" type="ProgressBar" parent="HUD" unique_id=1252538954]
+light_mask = 12
+anchors_preset = -1
+anchor_left = 0.053000003
+anchor_top = 0.23
+anchor_right = 0.22500001
+anchor_bottom = 0.35
+offset_left = -0.05600357
+offset_top = 11.0
+offset_right = -11.200012
+offset_bottom = -13.0
+min_value = 0.0
+max_value = 25.0
+value = 0.0
+theme_override_colors/font_color = Color(0.00951285, 0.33877546, 0.54885066, 1)
+theme_override_fonts/font = ExtResource("16_wg3qb")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/background = SubResource("StyleBoxFlat_ignition_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_ignition_fill")
 
 [node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
 layer = 10
@@ -200,6 +253,13 @@ mouse_filter = 2
 [node name="Actions" type="HBoxContainer" parent="IntroUI/Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="Retry" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 26)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Retry ignition"
 
 [node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
 layout_mode = 2
