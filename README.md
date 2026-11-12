@@ -16,20 +16,6 @@ Built with **Godot 4.7 (.NET)** and **C# (`net8.0`)**.
 Main scene: `scenes/main_menu/main_menu_take3.tscn`.
 Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is documented in [`docs/audio.md`](docs/audio.md).
 
-## Current state
-
-- **Main menu** — `Begin Mission` opens `scenes/intro/Intro.tscn`; Options opens Volume and Controls submenus; Credits warns until the credits scene exists; Quit exits. Menu music plays while the current scene lives under `scenes/main_menu/`.
-- **Intro** — `scenes/intro/Intro.tscn` is a short skippable mission briefing (`Esc` / `E` / `Space` / `Enter`) with four pixel-art backdrops that crossfade alongside the dialogue. Gateway is a surface base on Mars. Dialogue and objectives come from `data/dialogue/`; the intro then advances to training.
-- **Training** — `scenes/training/Training.tscn` contains the physical course; its opening briefing teaches movement, interaction, and jump controls. `TrainingLab.tscn` is a 768×432 workshop matching the gym spawn room, with consistently sized benches, supply locker, launch simulator, and manually unlocked Launch Pad. `Q` toggles the translucent mission monitor. Simulator practice returns to the lab after its success animation.
-- **Mission monitor** — reusable pixel-art monitor shows live stamina, training objectives and station prompts. It starts expanded at the screen's upper right; press `Q` to collapse or expand it. Ship health/integrity/energy rows wait for real gameplay models.
-- **Equipment/loadout** — the training supply locker gives a free, single-slot **Maintenance Kit** (`data/equipment/items/maintenance_kit.tres`). The kit exposes the `Repair` capability, costs cargo rather than extra hotbar slots, and must be selected before wiring/fuse practice starts. Locker contents, the player inventory, and cargo survive training scene changes through `MissionState`; failed transfers are atomic.
-- **Launch** — `scenes/RocketLaunch/Launching.tscn` is the shared practice/real-launch scene. Tap `SPACE` or click 25 times within 5 seconds to ignite, then hold the marker in the green band for 10 seconds. The black/yellow HUD bar tracks ignition; the centered bar tracks hold progress. Successful simulator practice returns to training automatically; real launch still uses the industrial launch-site background.
-- **Minigames** — wiring has cable glow/hover effects; all four training drills show matching tutorial art. Frequency Box uses `1`–`3` to select a control, arrows to adjust, and `Shift` for fine tuning. `PauseManager` freezes gameplay from `Esc` or the launch pause button while music keeps playing; closing the pause removes the music. Active minigames use the on-screen cancel button.
-- **Player + hotbar** — `scripts/player_scene.tscn` is the player prefab: `Player` + a 5-slot hotbar (preloaded with the test item). `TrainingLab` now uses the same hotbar and shared mission inventory. `Inventory` handles stacking and emits `InventoryChanged`; slots are selected with `1`–`5`.
-- **Rover** — `scenes/rover/rover.tscn` is a top-down rover prototype with Mars ground, track and rover sprites. Movement/impact logic is still a work in progress (current scripts are placeholders).
-- **Mission state** — `MissionState` autoload holds the current `MissionStage`, mission time, shared player/locker inventories, cargo capacity, and the resource axes (budget, mass, energy, communications, spare parts, rover impacts/collisions).
-- **Audio** — `AudioManager` autoload with a shared catalog (`data/audio/sound_bank.tres`), crossfaded music, pooled one-shot SFX, and positional/looping emitters. Menu music, rover ambience, collision, explosion, and victory sounds are wired; the intro plays its wind ambience. See [`docs/audio.md`](docs/audio.md).
-
 ## Controls
 
 | Action | Keys |
