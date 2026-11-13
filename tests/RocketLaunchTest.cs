@@ -218,16 +218,33 @@ public partial class RocketLaunchTest : Node
             "Focus pause freezes the ignition timer");
         pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
         Check(!launch.Paused, "Ignition can resume after focus pause");
+        SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        double beforeGlobalPause = launch.Ignition.Elapsed;
+        now += 8;
+        SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        Advance(.1);
+        Check(!launch.Ignition.Failed && Math.Abs(launch.Ignition.Elapsed - beforeGlobalPause - .1) < .0001,
+            "Long global pause does not consume the five-second ignition window");
         Advance(5);
-        var retryButton = launch.GetNode<Button>(Ui + "Actions/Retry");
-        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Failed && retryButton.Visible &&
+        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Failed &&
             launch.GetNode<AnimatedSprite2D>("Rocket/Fire").Animation == "failed",
-            "Ignition timeout shows failure animation and retry action");
-        retryButton.EmitSignal(BaseButton.SignalName.Pressed);
-        Check(launch.State == RocketLaunch.Phase.Ignition && launch.Ignition.Clicks == 0 &&
-            ignitionProgress.Value == 0,
-            "Retry resets ignition progress and timer");
+            "Ignition timeout shows its failure animation");
+        Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Retry") == null &&
+            launch.GetNode<Button>(Ui + "Actions/Back").Visible,
+            "Failed ignition offers a way out but no direct retry");
+        SendKey(Key.Space, true); SendKey(Key.Space, false);
+        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Clicks == 24,
+            "Space cannot restart a failed ignition");
+        launch.QueueFree(); launch = null; await Frames();
+        await Load();
+        Check(launch.State == RocketLaunch.Phase.Ready,
+            "A new simulator entry remains available after leaving a failed attempt");
+        ignitionProgress = launch.GetNode<ProgressBar>("HUD/ProgressBar");
+        centeredProgress = launch.GetNode<ProgressBar>(Ui + "CenteredProgress");
+        pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
+        Start();
         CompleteIgnition();
+        AudioManager.PlayMusic(SoundIds.MenuMusic, 0, true);
         Check(ignitionProgress.Value == 25 && centeredProgress.Value == 0,
             "Ignition completes before centered hold progress begins");
         Check(pauseButton.Visible && pauseButton.Text == "Pause",
@@ -235,10 +252,15 @@ public partial class RocketLaunchTest : Node
         await Capture("active");
 
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
-        Check(GetTree().Paused && !launch.Paused && !AudioManager.IsMusicPaused &&
+        Check(GetTree().Paused && launch.Paused && !AudioManager.IsMusicPaused &&
             !AudioManager.IsActiveMusicStreamPaused && AudioManager.Instance?.CurrentMusicId == SoundIds.MenuMusic,
             "Escape pauses launch but keeps music playing through the global pause manager");
+        double pausedProgressTime = launch.Model.CenteredTime;
+        double pausedMarker = launch.Model.Heat;
+        now += 12;
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
+        Check(!launch.Paused && launch.Model.CenteredTime == pausedProgressTime && launch.Model.Heat == pausedMarker,
+            "Resume rebases the hold clock without applying time spent in the menu");
         Check(!GetTree().Paused && !AudioManager.IsMusicPaused && AudioManager.Instance?.CurrentMusicId == null,
             "Closing pause removes music through the global pause manager");
 
@@ -318,8 +340,32 @@ public partial class RocketLaunchTest : Node
         SendKey(Key.Space, true); SendKey(Key.Space, false);
         Check(launch.State == RocketLaunch.Phase.Result && ReferenceEquals(launch.Model, practiceResult),
             "Space cannot restart a completed simulator run");
+        Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Retry") == null,
+            "Completed practice has no retry button");
+        await WaitFor(RocketLaunch.Phase.Ascending);
+        float practiceAscentStartY = launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y;
+        launch.Notification((int)Node.NotificationApplicationFocusOut);
+        Check(GetTree().Paused && launch.Paused && GetNode<PauseManager>("/root/PauseManager").IsOpen,
+            "Focus loss during practice ascent opens an accessible pause menu");
+        GetNode<PauseManager>("/root/PauseManager").Close();
+        Check(!launch.Paused && !GetTree().Paused, "Visible resume clears the ascent pause");
+        launch.SceneLoader = _ => Error.CantOpen;
+        launch.SetProcess(true);
+        await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
+        Check(launch.IsInsideTree() && launch.State == RocketLaunch.Phase.Complete &&
+            launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y < practiceAscentStartY,
+            "Practice visibly completes ascent before returning to the gym");
         Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Continue") == null,
             "Repeat practice button is removed");
+        Check(launch.GetNode<Button>(Ui + "Actions/Back").IsVisibleInTree() &&
+            launch.GetNode<Label>(Ui + "Text").Text.Contains("Unable to return"),
+            "Failed automatic return exposes a visible manual recovery action");
+        int returns = 0;
+        launch.SceneLoader = _ => { returns++; return Error.Ok; };
+        launch.GetNode<Button>(Ui + "Actions/Back").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(returns == 1 && mission.LaunchRecord == null,
+            "Manual return retries travel without replaying or recording the simulator");
+        PracticeSession.Abort();
         await Capture("practice-complete");
 
         mission.BeginLaunchSequence();

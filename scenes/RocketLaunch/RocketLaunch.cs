@@ -3,7 +3,6 @@ using System;
 using ares.scripts.mission;
 using ares.scripts.training;
 using ares.scripts.systems;
-using Ares.Systems.Audio;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D
@@ -23,7 +22,7 @@ public partial class RocketLaunch : Node2D
 	private AnimatedSprite2D fire;
 	private Label text, stats, briefingText, briefingSpeaker;
 	private TextureRect briefingTutorial;
-	private Button briefingStart, briefingBack, retry, pause, back;
+	private Button briefingStart, briefingBack, pause, back;
 	private Control gauge, actions, hud, briefing;
 	private ProgressBar ignitionProgress, centeredProgress;
 	private TextureRect rail, band, handle;
@@ -33,6 +32,8 @@ public partial class RocketLaunch : Node2D
 	private bool accessDenied;
 	private bool ignitionFailed;
 	private bool practiceReturnPending;
+	private PauseManager pauseManager;
+	internal Func<string, Error> SceneLoader { get; set; }
 	private Vector2 returnPosition;
 	private float ascentOffset, ascentTravel;
 	private double ascentProgress;
@@ -46,6 +47,8 @@ public partial class RocketLaunch : Node2D
 	public override void _Ready()
 	{
 		lastTimestamp = Clock();
+		pauseManager = GetNodeOrNull<PauseManager>("/root/PauseManager");
+		if (pauseManager != null) pauseManager.PauseChanged += OnPauseChanged;
 		rocket = GetNode<Rocket>("Rocket"); background = GetNode<Background>("Background");
 		fire = rocket.GetNode<AnimatedSprite2D>("Fire");
 		fire.AnimationFinished += OnAnimationFinished;
@@ -58,14 +61,13 @@ public partial class RocketLaunch : Node2D
 		briefingTutorial = GetNode<TextureRect>(BriefingUi + "Tutorial");
 		briefingStart = GetNode<Button>(BriefingUi + "Actions/Start");
 		briefingBack = GetNode<Button>(BriefingUi + "Actions/Back");
-		retry = GetNode<Button>(Ui + "Actions/Retry");
 		gauge = GetNode<Control>(Ui + "Gauge");
 		ignitionProgress = GetNode<ProgressBar>("HUD/ProgressBar");
 		centeredProgress = GetNode<ProgressBar>(Ui + "CenteredProgress");
 		rail = gauge.GetNode<TextureRect>("Rail"); band = gauge.GetNode<TextureRect>("Band");
 		handle = gauge.GetNode<TextureRect>("Handle");
-		briefingStart.Pressed += StartOrRetry; briefingBack.Pressed += Back;
-		retry.Pressed += RetryIgnition; pause.Pressed += TogglePause; back.Pressed += Back;
+		briefingStart.Pressed += BeginIgnitionFromReady; briefingBack.Pressed += Back;
+		pause.Pressed += TogglePause; back.Pressed += Back;
 		var request = PracticeSession.ConsumeLaunch();
 		if (request != null)
 		{
@@ -110,9 +112,10 @@ public partial class RocketLaunch : Node2D
 
 	public override void _ExitTree()
 	{
+		if (GodotObject.IsInstanceValid(pauseManager)) pauseManager.PauseChanged -= OnPauseChanged;
 		fire.AnimationFinished -= OnAnimationFinished;
-		briefingStart.Pressed -= StartOrRetry; briefingBack.Pressed -= Back;
-		retry.Pressed -= RetryIgnition; pause.Pressed -= TogglePause; back.Pressed -= Back;
+		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
+		pause.Pressed -= TogglePause; back.Pressed -= Back;
 	}
 
 	private void Back()
@@ -128,17 +131,17 @@ public partial class RocketLaunch : Node2D
 	private void ReturnToLab()
 	{
 		PracticeSession.Prepare(SceneFilePath, PracticeSession.LabScene, "lab.launch.return", returnPosition);
-		var error = GetTree().ChangeSceneToFile(PracticeSession.LabScene);
+		var error = SceneLoader != null ? SceneLoader(PracticeSession.LabScene) : GetTree().ChangeSceneToFile(PracticeSession.LabScene);
 		if (error == Error.Ok) return;
 		PracticeSession.Abort();
+		practiceReturnPending = false;
 		backError = "Unable to return to the lab. Please try again.";
 		Refresh();
 	}
 
-	private void StartOrRetry()
+	private void BeginIgnitionFromReady()
 	{
-		bool retryable = launchAllowed && State == Phase.Ready;
-		if (!retryable) return;
+		if (!launchAllowed || State != Phase.Ready) return;
 		if (!Practice && (sequence != MissionState.Instance.LaunchSequence ||
 			!MissionState.Instance.LaunchPadUnlocked || MissionState.Instance.LaunchRecord != null))
 		{
@@ -165,12 +168,6 @@ public partial class RocketLaunch : Node2D
 		holding = false;
 		rocket.StartIgnition();
 		Refresh();
-	}
-
-	private void RetryIgnition()
-	{
-		if (!launchAllowed || State != Phase.Result || !ignitionFailed) return;
-		BeginIgnition();
 	}
 
 	private void BeginHoldPhase()
@@ -205,22 +202,27 @@ public partial class RocketLaunch : Node2D
 
 	private void TogglePause()
 	{
-		if (Paused) { SetPaused(false); return; }
-		holding = false;
-		mouseHeld = false;
-		inputBlocked = spaceHeld;
-		var manager = GetNodeOrNull<PauseManager>("/root/PauseManager");
-		if (manager != null) manager.OpenPauseMenu();
-		else SetPaused(true);
+		if (pauseManager != null)
+		{
+			if (pauseManager.IsOpen) pauseManager.Close();
+			else pauseManager.OpenPauseMenu();
+			return;
+		}
+		SetPaused(!Paused);
 	}
+
+	private void OnPauseChanged(bool value) => SetPaused(value);
 
 	private void SetPaused(bool value)
 	{
-		Synchronize();
+		if (Paused == value) return;
+		if (value) Synchronize();
 		Paused = value;
-		if (value) { holding = false; inputBlocked = true; }
-		else inputBlocked = spaceHeld || mouseHeld;
-		AudioManager.SetMusicPaused(value);
+		lastTimestamp = Clock();
+		holding = false;
+		spaceHeld = Input.IsPhysicalKeyPressed(Key.Space);
+		mouseHeld = Input.IsMouseButtonPressed(MouseButton.Left);
+		inputBlocked = spaceHeld || mouseHeld;
 		fire.SpeedScale = value ? 0 : 1;
 		LayoutRocket(); Refresh();
 		if (!value) TryBeginAscent(true);
@@ -261,7 +263,7 @@ public partial class RocketLaunch : Node2D
 		if (key.Echo) return;
 		Synchronize();
 		bool canStart = State == Phase.Ready;
-		if (canStart && !inputBlocked) StartOrRetry();
+		if (canStart && !inputBlocked) BeginIgnitionFromReady();
 		spaceHeld = true;
 		if (inputBlocked) return;
 		if (State == Phase.Ignition)
@@ -282,7 +284,7 @@ public partial class RocketLaunch : Node2D
 	public override void _Notification(int what)
 	{
 		if (what == NotificationApplicationFocusOut && IsNodeReady() &&
-			(State == Phase.Ignition || State == Phase.Active)) SetPaused(true);
+			(State == Phase.Ignition || State == Phase.Active || State == Phase.Ascending) && !Paused) TogglePause();
 	}
 
 	public override void _Process(double delta)
@@ -290,10 +292,19 @@ public partial class RocketLaunch : Node2D
 		Synchronize();
 		if (State == Phase.Ascending)
 		{
-			ascentProgress = Math.Min(1, ascentProgress + Math.Max(0, delta) / 2.8);
+			if (!Paused)
+				ascentProgress = Math.Min(1, ascentProgress + Math.Max(0, delta) / 2.8);
 			float eased = 1 - Mathf.Pow(1 - (float)ascentProgress, 3);
 			ascentOffset = -ascentTravel * eased;
-			if (ascentProgress >= 1) State = Phase.Complete;
+			if (ascentProgress >= 1 && State == Phase.Ascending)
+			{
+				State = Phase.Complete;
+				if (Practice && practiceReturnPending && (GetTree().CurrentScene == this || SceneLoader != null))
+				{
+					practiceReturnPending = false;
+					Callable.From(ReturnToLab).CallDeferred();
+				}
+			}
 		}
 		LayoutRocket();
 		if (State == Phase.Active && !Paused) rocket.SetThrust(Model.Heat);
@@ -349,18 +360,12 @@ public partial class RocketLaunch : Node2D
 
 	private void OnAnimationFinished()
 	{
-		if (Practice && State == Phase.Result && practiceReturnPending)
-		{
-			practiceReturnPending = false;
-			Callable.From(ReturnToLab).CallDeferred();
-			return;
-		}
 		TryBeginAscent(false);
 	}
 
 	private void TryBeginAscent(bool requireStopped)
 	{
-		if (!IsInsideTree() || Paused || Practice || State != Phase.Result || fire.Animation != "success" ||
+		if (!IsInsideTree() || Paused || State != Phase.Result || fire.Animation != "success" ||
 			(requireStopped && fire.IsPlaying()) || !Model.Complete || sequence != MissionState.Instance.LaunchSequence) return;
 		State = Phase.Ascending;
 		ascentProgress = 0; ascentOffset = 0;
@@ -372,8 +377,9 @@ public partial class RocketLaunch : Node2D
 	{
 		if (text == null) return;
 		var result = Model.Result ?? (!Practice ? MissionState.Instance.LaunchRecord : null);
+		bool hidePracticeAscentHud = Practice && !Paused && backError == null && (State == Phase.Ascending || State == Phase.Complete);
 		briefing.Visible = State == Phase.Ready;
-		hud.Visible = State != Phase.Ready;
+		hud.Visible = State != Phase.Ready && !hidePracticeAscentHud;
 		if (backError != null) text.Text = backError;
 		else if (accessDenied) text.Text = "LAUNCH PAD LOCKED — complete all training requirements and enter through the marked pad.";
 		else if (Paused) text.Text = "PAUSED — launch progress frozen. Resume to continue.";
@@ -384,8 +390,8 @@ public partial class RocketLaunch : Node2D
 				: "LAUNCH SEQUENCE — tap 25 times to ignite, then hold the marker in the green area for 10 seconds.",
 			Phase.Ignition => $"IGNITION — tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds.",
 			Phase.Active => ActiveMessage(),
-			Phase.Ascending => "LAUNCH COMPLETE — ascending. Waiting for the next scene.",
-			Phase.Complete => "ASCENT COMPLETE — waiting for the next scene.",
+			Phase.Ascending => Practice ? "SIMULATOR COMPLETE — watch the rocket ascend." : "LAUNCH COMPLETE — ascending.",
+			Phase.Complete => Practice ? "SIMULATOR COMPLETE — returning to the lab." : "ASCENT COMPLETE — waiting for the next scene.",
 			_ => ResultMessage()
 		};
 		briefingSpeaker.Text = Practice ? "LAUNCH SIMULATOR" : "LAUNCH PAD AUTHORIZED";
@@ -410,15 +416,14 @@ public partial class RocketLaunch : Node2D
 		else if ((State == Phase.Result || State == Phase.Ascending || State == Phase.Complete) && result != null) stats.Text = ResultStats(result);
 		else stats.Text = ProgressStats();
 		ignitionProgress.Value = Ignition.Clicks;
-		ignitionProgress.Visible = !accessDenied &&
+		ignitionProgress.Visible = !accessDenied && !hidePracticeAscentHud &&
 			(State == Phase.Ignition || State == Phase.Active || ignitionFailed || Ignition.Clicks > 0);
 		centeredProgress.Value = Model.Progress * 100.0;
 		briefingStart.Disabled = !launchAllowed;
 		actions.Visible = State == Phase.Ignition || State == Phase.Active || Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		hud.OffsetBottom = actions.Visible ? 140 : 100;
-		retry.Visible = State == Phase.Result && ignitionFailed;
-		pause.Visible = State == Phase.Ignition || State == Phase.Active;
+		pause.Visible = State == Phase.Ignition || State == Phase.Active || (Paused && State == Phase.Ascending);
 		back.Visible = Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		pause.Text = Paused ? "Resume" : "Pause";
@@ -440,7 +445,9 @@ public partial class RocketLaunch : Node2D
 
 	private string ResultMessage()
 	{
-		if (ignitionFailed) return "IGNITION FAILED — retry ignition or return to the previous scene.";
+		if (ignitionFailed)
+			return fromTraining ? "IGNITION FAILED — return to the lab when you are ready to try again."
+				: "IGNITION FAILED — return to Mission Control.";
 		return Practice
 			? "SIMULATOR COMPLETE — launch practice requirement cleared. Return to the lab and walk to LAUNCH PAD."
 			: "LAUNCH COMPLETE — waiting for the next scene.";

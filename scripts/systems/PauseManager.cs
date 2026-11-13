@@ -6,6 +6,7 @@ namespace ares.scripts.systems;
 // Autoload global: pausa el arbol con Esc usando la escena de opciones existente.
 public partial class PauseManager : Node
 {
+	[Signal] public delegate void PauseChangedEventHandler(bool paused);
 	private const string OptionsScenePath = "res://scenes/main_menu/Options.tscn";
 	private const string VolumeScenePath = "res://scenes/main_menu/Volume_menu.tscn";
 	private const string ControlsScenePath = "res://scenes/main_menu/Control_menu.tscn";
@@ -82,6 +83,7 @@ public partial class PauseManager : Node
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 
 		_isOpen = true;
+		EmitSignal(SignalName.PauseChanged, true);
 		GetTree().Paused = true;
 		AudioManager.SetMusicPaused(false);
 
@@ -106,6 +108,7 @@ public partial class PauseManager : Node
 		AudioManager.StopMusic(0.0);
 		AudioManager.SetMusicPaused(false);
 		Input.MouseMode = _savedMouseMode;
+		EmitSignal(SignalName.PauseChanged, false);
 	}
 
 	public void OpenPauseMenu() => Open();
@@ -144,18 +147,20 @@ public partial class PauseManager : Node
 
 		screen.Visible = true;
 		screen.ProcessMode = ProcessModeEnum.Always;
+		screen.GetNodeOrNull<Button>("Panel/Panel2/Back")?.GrabFocus();
 	}
 
 	private void ConfigureOptions(Control screen)
 	{
 		if (screen.GetNodeOrNull<Label>("Panel/Panel2/Label") is { } label)
-			label.Text = "PAUSA";
+			label.Text = "PAUSED";
 
 		if (screen.GetNodeOrNull<Button>("Panel/Panel2/Back") is { } back)
 		{
 			ClearPressed(back);
-			back.Text = "Reanudar";
+			back.Text = "Resume";
 			back.Pressed += Close;
+			back.GrabFocus();
 		}
 
 		if (screen.GetNodeOrNull<Button>("Panel/Panel2/Volume") is { } volume)

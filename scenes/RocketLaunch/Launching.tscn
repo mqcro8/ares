@@ -254,13 +254,6 @@ mouse_filter = 2
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Retry" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 26)
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Retry ignition"
-
 [node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 26)

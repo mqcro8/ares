@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "Six hours. WASD moves, E interacts, SPACE jumps on the course. Complete repairs and simulator."
+Text = "Six hours. The gym, repair stations, and simulator are yours."
 
 [sub_resource type="Resource" id="Line1"]
 script = ExtResource("2_line")

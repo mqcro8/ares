@@ -112,7 +112,7 @@ public partial class FuseBoxMinigame : Control
 
 	public override void _Input(InputEvent @event)
 	{
-		if (_busy) return;
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this) || _busy) return;
 		if (@event is InputEventKey { Pressed: true, Echo: false } key)
 		{
 			int index = (int)key.Keycode - (int)Key.Key1;
@@ -171,11 +171,12 @@ public partial class FuseBoxMinigame : Control
 
 	private void ResolvePending()
 	{
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
 		if (_state.All(s => s)) EmitSignal(SignalName.Completed);
 		else ResetBox();
 	}
 
-	public void StopPending() { _busy = true; _pending.Stop(); }
+	public void StopPending() { _pending.Stop(); }
 	public override void _ExitTree()
 	{
 		_pending.Stop();
@@ -203,27 +204,6 @@ public partial class FuseBoxMinigame : Control
 
 	private void Sparks(Control t, Color color)
 	{
-		var p = new CpuParticles2D
-		{
-			Position = _effects.ToLocal(t.GetGlobalRect().GetCenter()),
-			OneShot = true,
-			Emitting = true,
-			Amount = 14,
-			Lifetime = 0.4f,
-			Explosiveness = 1f,
-			Direction = Vector2.Zero,
-			Spread = 180f,
-			InitialVelocityMin = 80f,
-			InitialVelocityMax = 180f,
-			Gravity = Vector2.Zero,
-			ScaleAmountMin = 2f,
-			ScaleAmountMax = 4f,
-			Color = color.Lightened(0.5f)
-		};
-		_effects.AddChild(p);
-		var cleanup = new Timer { OneShot = true, WaitTime = 1.0 };
-		p.AddChild(cleanup);
-		cleanup.Timeout += p.QueueFree;
-		cleanup.Start();
+		MinigameEffects.Sparks(_effects, _effects.ToLocal(t.GetGlobalRect().GetCenter()), color, 14, .4f, 180);
 	}
 }

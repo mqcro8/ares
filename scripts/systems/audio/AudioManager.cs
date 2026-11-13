@@ -264,8 +264,8 @@ public partial class AudioManager : Node
 			_sfx3DVoices[i] = player;
 		}
 
-		_musicA = new AudioStreamPlayer { Bus = MusicBusName, VolumeDb = MuteDb };
-		_musicB = new AudioStreamPlayer { Bus = MusicBusName, VolumeDb = MuteDb };
+		_musicA = new AudioStreamPlayer { Bus = MusicBusName, VolumeDb = MuteDb, ProcessMode = ProcessModeEnum.Always };
+		_musicB = new AudioStreamPlayer { Bus = MusicBusName, VolumeDb = MuteDb, ProcessMode = ProcessModeEnum.Always };
 		AddChild(_musicA);
 		AddChild(_musicB);
 	}
@@ -444,6 +444,7 @@ public partial class AudioManager : Node
 		}
 
 		_musicTween = CreateTween();
+		_musicTween.SetPauseMode(Tween.TweenPauseMode.Process);
 		_musicTween.SetParallel(true);
 		_musicTween.TweenProperty(incoming, "volume_db", def.VolumeDb, fadeSeconds);
 
@@ -491,6 +492,7 @@ public partial class AudioManager : Node
 		}
 
 		_musicTween = CreateTween();
+		_musicTween.SetPauseMode(Tween.TweenPauseMode.Process);
 		_musicTween.TweenProperty(active, "volume_db", MuteDb, fadeSeconds);
 		_musicTween.TweenCallback(Callable.From(() =>
 		{

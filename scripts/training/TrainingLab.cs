@@ -22,6 +22,7 @@ public partial class TrainingLab : Node2D
 	[Export] public Control LaunchPadZone { get; set; }
 	[Export] public EquipmentLocker Locker { get; set; }
 	[Export] public MissionMonitorView Monitor { get; set; }
+	public TrainingControlsGuide ControlsGuide { get; private set; }
 	private TrainingStations _stations;
 	private Label _cargoStatus;
 	private bool _completionNoticeOpen;
@@ -47,8 +48,6 @@ public partial class TrainingLab : Node2D
 				string markerPath = spawn switch
 				{
 					"lab.from_gym" => "lab_from_gym",
-					"lab.wires.return" => "WiringWorkbench/lab_wires_return",
-					"lab.fuses.return" => "FuseCabinet/lab_fuses_return",
 					_ => null
 				};
 				if (markerPath != null && GetNodeOrNull<Marker2D>(markerPath) is Marker2D marker)
@@ -67,6 +66,13 @@ public partial class TrainingLab : Node2D
 				Interact: () => Locker.Toggle(Player), Prompt: () => Locker.InteractionPrompt(Player)));
 		_stations.Targets.Add(new("Return to gym", GymZone, PracticeSession.TrainingScene, "gym.from_lab"));
 		AddLaunchTargets();
+		ControlsGuide = new TrainingControlsGuide
+		{
+			Name = "ContextControlsGuide",
+			Player = Player,
+			Stations = _stations
+		};
+		AddChild(ControlsGuide);
 		CreateCargoStatus();
 		if (TrainingCompletionDialog.Open(this, Player, () =>
 		{
@@ -85,22 +91,15 @@ public partial class TrainingLab : Node2D
 		{
 			var mission = MissionState.Instance;
 			var saved = PracticeSession.Saved;
-			Monitor.Render(MissionMonitorPresenter.BuildTraining(
+			Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission,
 				inLab: true,
 				stamina: saved?.Movement?.Stamina,
 				circuitProgress: mission.TrainingCourseComplete ? 3 : saved?.Course?.Cleared ?? 0,
 				circuitComplete: mission.TrainingCourseComplete || saved?.Course?.Finished == true,
 				hasRepairKit: Player.Inventory?.HasCapability(ItemCapability.Repair) == true,
-				wiresComplete: mission.TrainingWiresComplete,
-				fusesComplete: mission.TrainingFusesComplete,
-				simulatorComplete: mission.TrainingLaunchPracticeComplete,
-				launchUnlocked: mission.LaunchPadUnlocked,
-				launchComplete: mission.LaunchRecord?.Completed == true,
 				prompt: _stations?.MonitorPrompt,
 				feedback: _stations?.MonitorFeedback,
-				visible: !_completionNoticeOpen,
-				frequencyComplete: mission.TrainingFrequencyComplete,
-				hullRepairComplete: mission.TrainingHullRepairComplete));
+				visible: !_completionNoticeOpen));
 		}
 		if (_cargoStatus != null)
 			_cargoStatus.Text = $"CARGO {MissionState.Instance.CargoUsed}/{MissionState.Instance.CargoCapacity}";

@@ -80,6 +80,27 @@ public partial class LoadoutTest : Node
         Check(!InventoryTransferService.TryTransfer(locker, player, null, 1, mission.CargoCapacity, out _),
             "Null item rejected");
 
+        var resize = new Inventory { Size = 2 };
+        resize.AddItem(kit, 2);
+        int notifications = 0;
+        resize.InventoryChanged += () => notifications++;
+        Check(!resize.TryResize(1) && resize.CountOf(kit) == 2 && resize.SlotCount == 2 && notifications == 0,
+            "Shrinking occupied slots is atomic and emits no change");
+        var hotbar = new Hotbar { SlotScene = GD.Load<PackedScene>("res://scripts/hotbar_scene.tscn") };
+        AddChild(hotbar);
+        hotbar.Bind(resize);
+        Check(resize.TryResize(4) && hotbar.GetChildCount() == 4 && notifications == 1,
+            "Growing inventory updates the bound hotbar once");
+        hotbar.Select(3);
+        int selectionChanges = 0;
+        hotbar.SelectionChanged += _ => selectionChanges++;
+        Check(resize.TryResize(2) && hotbar.GetChildCount() == 2 && hotbar.SelectedIndex == 1 && selectionChanges == 1,
+            "Shrinking empty slots reconciles hotbar selection");
+        int previousNotifications = notifications;
+        Check(resize.TryResize(2) && notifications == previousNotifications,
+            "Unchanged size does not emit another notification");
+        hotbar.QueueFree();
+
         mission.ResetEquipment();
         Check(mission.PlayerInventory == null && mission.LockerInventory == null && mission.CargoUsed == 0,
             "New mission reset clears equipment references");

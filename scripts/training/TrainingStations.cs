@@ -36,6 +36,9 @@ public partial class TrainingStations : Node
         _ => "Complete the repair task."
     };
     public string MonitorPrompt { get; private set; } = "";
+    public string ContextPrompt { get; private set; } = "";
+    public Vector2 ContextPosition { get; private set; }
+    public bool HasContextTarget => _near != null && Usable;
     public string MonitorFeedback => _error != "" ? _error : PracticeSession.Feedback;
     public string CurrentTargetName => _near?.Name ?? "";
     private bool Usable => !_changing && !InteractionLocked && !(Intro?.BriefingActive ?? false) &&
@@ -54,10 +57,8 @@ public partial class TrainingStations : Node
             else if (_near.Interact != null) prompt = _near.Prompt?.Invoke() ?? $"E — {_near.Name}";
             else prompt = $"E — {_near.Name}";
         }
-        else if (Intro != null)
-            prompt = Player.GlobalPosition.Y > 480
-                ? "WASD: move  |  SPACE: jump over hurdles  |  Cross three in order. Stand still to rest."
-                : "WASD: move  |  E: interact  |  Walk south to start the circuit.";
+        ContextPosition = _near?.Center ?? Vector2.Zero;
+        ContextPrompt = _error != "" ? _error : prompt;
         MonitorPrompt = _error == "" ? prompt : "";
     }
     public override void _UnhandledKeyInput(InputEvent ev)

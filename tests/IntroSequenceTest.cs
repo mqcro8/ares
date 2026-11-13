@@ -52,8 +52,9 @@ public partial class IntroSequenceTest : Node
 
         var briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
         Check(briefing != null && briefing.Lines.Count == 3, "Training briefing has three lines");
-        Check(briefing.Lines[0].Text.Contains("WASD") && briefing.Lines[0].Text.Contains("E") &&
-            briefing.Lines[0].Text.Contains("SPACE"), "Training briefing teaches movement, interaction and jump controls");
+        Check(briefing.Lines[0].Text.Contains("gym") && briefing.Lines[0].Text.Contains("repair stations") &&
+            !briefing.Lines[0].Text.Contains("WASD") && !briefing.Lines[0].Text.Contains("SPACE"),
+            "Training briefing introduces the spaces without dumping control instructions");
         Check(briefing.Lines[2].Text.Contains("Still silent"), "Training briefing keeps the probes");
 
         var completion = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
@@ -86,6 +87,18 @@ public partial class IntroSequenceTest : Node
         Check(skipped.LoadedScene == "res://scenes/training/Training.tscn", "Skip loads training");
         Check(MissionState.Instance.Stage == MissionStage.Training, "Skip advances the stage");
         skipped.QueueFree();
+        await Frames();
+
+        var failed = await OpenIntro();
+        failed.SceneLoader = _ => Error.CantOpen;
+        failed.Skip();
+        Check(!failed.Finished && MissionState.Instance.Stage == MissionStage.Intro,
+            "Failed intro transition preserves its state for recovery");
+        failed.SceneLoader = _ => Error.Ok;
+        failed.Skip();
+        Check(failed.Finished && MissionState.Instance.Stage == MissionStage.Training,
+            "Failed intro transition can be retried successfully");
+        failed.QueueFree();
         await Frames();
 
         await MenuRouting();

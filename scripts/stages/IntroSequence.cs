@@ -38,6 +38,9 @@ public partial class IntroSequence : Control
 	private ColorRect _fade;
 	private AudioStreamPlayer _wind;
 	private Tween _fadeTween;
+	private PanelContainer _loadFailure;
+	private bool _transitionFailed;
+	private ares.scripts.systems.PauseManager _pauseManager;
 
 	public override void _Ready()
 	{
@@ -50,6 +53,8 @@ public partial class IntroSequence : Control
 		BuildUi();
 		BuildTimeline();
 		PlayWind();
+		_pauseManager = GetNodeOrNull<ares.scripts.systems.PauseManager>("/root/PauseManager");
+		if (_pauseManager != null) _pauseManager.PauseChanged += OnPauseChanged;
 		_started = true;
 	}
 
@@ -61,7 +66,7 @@ public partial class IntroSequence : Control
 
 	public void Advance(double delta)
 	{
-		if (Finished || delta <= 0) return;
+		if (Finished || _transitionFailed || delta <= 0) return;
 		Time += delta;
 		while (_nextEvent < _events.Count && Time >= _events[_nextEvent].At)
 		{
@@ -95,23 +100,39 @@ public partial class IntroSequence : Control
 	private void Finish(bool skipped)
 	{
 		if (Finished) return;
-		Finished = true;
-		Skipped = skipped;
-		_wind?.Stop();
-		if (SceneLoader != null)
+		var error = SceneLoader != null ? SceneLoader(NextScene) : GetTree().ChangeSceneToFile(NextScene);
+		if (error == Error.Ok)
 		{
-			if (SceneLoader(NextScene) == Error.Ok)
-			{
-				LoadedScene = NextScene;
-				MissionState.Instance.CompleteIntro();
-			}
-			return;
-		}
-		if (GetTree().ChangeSceneToFile(NextScene) == Error.Ok)
-		{
+			Finished = true;
+			Skipped = skipped;
+			_wind?.Stop();
 			LoadedScene = NextScene;
 			MissionState.Instance.CompleteIntro();
+			return;
 		}
+		_transitionFailed = true;
+		if (_loadFailure != null) return;
+		_loadFailure = new PanelContainer { ZIndex = 100 };
+		AddChild(_loadFailure);
+		_loadFailure.SetAnchorsAndOffsetsPreset(LayoutPreset.Center);
+		_loadFailure.Position -= new Vector2(170, 50);
+		var column = new VBoxContainer();
+		_loadFailure.AddChild(column);
+		column.AddChild(new Label { Text = "Unable to open training. Please try again." });
+		var retry = new Button { Text = "Retry connection" };
+		column.AddChild(retry);
+		retry.Pressed += () => Finish(skipped);
+		retry.GrabFocus();
+	}
+
+	private void OnPauseChanged(bool paused)
+	{
+		if (!paused) _wind?.Stop();
+	}
+
+	public override void _ExitTree()
+	{
+		if (GodotObject.IsInstanceValid(_pauseManager)) _pauseManager.PauseChanged -= OnPauseChanged;
 	}
 
 	private void BuildUi()
@@ -560,6 +581,8 @@ void fragment() {
 		{
 			Name = "Wind",
 			Stream = stream,
+			Bus = AudioManager.MusicBusName,
+			ProcessMode = ProcessModeEnum.Always,
 			VolumeDb = -24f,
 		};
 		AddChild(_wind);
