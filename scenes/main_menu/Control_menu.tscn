@@ -9,12 +9,108 @@ script = ExtResource("2_script")
 [node name="Label" parent="Panel/Panel2" index="2"]
 text = "Controls"
 
-[node name="Spacer" type="Control" parent="Panel/Panel2" index="3"]
+[node name="Controller" type="VBoxContainer" parent="Panel/Panel2" index="3"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PhoneRow" type="HBoxContainer" parent="Panel/Panel2/Controller"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PhoneToggle" type="CheckButton" parent="Panel/Panel2/Controller/PhoneRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Phone controller"
+
+[node name="Status" type="Label" parent="Panel/Panel2/Controller/PhoneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Off"
+horizontal_alignment = 2
+
+[node name="Body" type="HBoxContainer" parent="Panel/Panel2/Controller"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Qr" type="TextureRect" parent="Panel/Panel2/Controller/Body"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+size_flags_vertical = 0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Panel/Panel2/Controller/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Room" type="Label" parent="Panel/Panel2/Controller/Body/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "ROOM  -----"
+
+[node name="Join" type="Label" parent="Panel/Panel2/Controller/Body/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Enable the phone controller to pair."
+autowrap_mode = 3
+
+[node name="RelayLabel" type="Label" parent="Panel/Panel2/Controller/Body/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.66, 0.82, 1)
+theme_override_font_sizes/font_size = 10
+text = "RELAY ADDRESS"
+
+[node name="RelayRow" type="HBoxContainer" parent="Panel/Panel2/Controller/Body/Info"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="RelayInput" type="LineEdit" parent="Panel/Panel2/Controller/Body/Info/RelayRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+placeholder_text = "wss://your-name.ngrok.app"
+
+[node name="Apply" type="Button" parent="Panel/Panel2/Controller/Body/Info/RelayRow"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_type_variation = &"SecondaryButton"
+text = "Apply"
+
+[node name="NewCode" type="Button" parent="Panel/Panel2/Controller/Body/Info"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_type_variation = &"SecondaryButton"
+text = "New room code"
+
+[node name="Hint" type="Label" parent="Panel/Panel2/Controller/Body/Info"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.78, 0.76, 0.86, 1)
+theme_override_font_sizes/font_size = 11
+text = "Turn on the phone controller, then scan the QR code with your phone."
+autowrap_mode = 3
+
+[node name="Keys" type="Label" parent="Panel/Panel2/Controller"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.66, 0.82, 1)
+theme_override_font_sizes/font_size = 11
+text = "WASD move  |  E interact  |  Space jump  |  1-5 hotbar  |  Esc pause"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Spacer" type="Control" parent="Panel/Panel2" index="4"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Back" type="Button" parent="Panel/Panel2" index="4"]
+[node name="Back" type="Button" parent="Panel/Panel2" index="5"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"

@@ -429,7 +429,7 @@ scale = Vector2(3, 3)
 script = ExtResource("2_d6r02")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D" unique_id=1460285779]
-position = Vector2(0, -0.665)
+position = Vector2(0.33333334, -0.665)
 sprite_frames = SubResource("SpriteFrames_ansna")
 animation = &"wakeup"
 script = ExtResource("4_g0ker")

@@ -10,6 +10,11 @@ using System;
 [GlobalClass]
 public partial class Rover : CharacterBody2D
 {
+	private const float BlinkInterval = 0.1f;
+	private const float BlinkOpacity = 0.35f;
+	private float _blinkTimer;
+	private bool _isDimmed;
+	private Color _normalModulate;
 	private const int MaxCollisions = 5;
 	private const float LagPerCollision = 0.2f;
 	private int _collisionCount = 0;
@@ -23,6 +28,7 @@ public partial class Rover : CharacterBody2D
 	public override void _Ready()
 	{
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("AnimatedSprite2D");
+		_normalModulate = _roverAnimation.Modulate;
 		if (_roverAnimation == null)
 		{
 			GD.PushError("RoverScene: missing elements");
@@ -55,6 +61,30 @@ public partial class Rover : CharacterBody2D
 		position.X = Mathf.MoveToward(position.X, targetX, LaneChangeSpeed * (float)delta);
 
 		Position = position;
+	}
+
+	public override void _Process(double delta)
+	{
+		if (!_isColliding)
+		{
+			_blinkTimer = 0f;
+			_isDimmed = false;
+			_roverAnimation.Modulate = _normalModulate;
+			return;
+		}
+
+		_blinkTimer += (float)delta;
+
+		if (_blinkTimer >= BlinkInterval)
+		{
+			_blinkTimer = 0f;
+			_isDimmed = !_isDimmed;
+
+			Color modulation = _normalModulate;
+			modulation.A *= _isDimmed ? BlinkOpacity : 1f;
+
+			_roverAnimation.Modulate = modulation;
+		}
 	}
 	private void HandleInput()
 	{

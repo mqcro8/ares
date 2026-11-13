@@ -15,11 +15,18 @@ run/main_scene="uid://cbip11fpgj65k"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[ares_controller]
+
+relay_url=""
+enabled=false
+room_code=""
+
 [autoload]
 
 AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
+ControllerRelay="*res://scripts/systems/input/ControllerRelay.cs"
 
 [display]
 

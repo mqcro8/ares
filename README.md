@@ -14,7 +14,7 @@ Built with **Godot 4.7 (.NET)** and **C# (`net8.0`)**.
 4. Press **F5**.
 
 Main scene: `scenes/main_menu/main_menu_take3.tscn`.
-Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is documented in [`docs/audio.md`](docs/audio.md).
+Autoloads: `AudioManager`, `MissionState`, `PauseManager`, and `ControllerRelay`. Audio usage is documented in [`docs/audio.md`](docs/audio.md); the optional phone controller is documented in [`controlers/README.md`](controlers/README.md).
 
 ## Controls
 
@@ -28,6 +28,8 @@ Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is do
 | Skip intro | `Esc` `E` `Space` `Enter` |
 
 `Hotbar.cs` also checks `hotbar_next` / `hotbar_prev`, but those actions are not in the input map yet.
+
+The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction; see [`controlers/README.md`](controlers/README.md) for the relay setup.
 
 ## Architecture
 
@@ -68,7 +70,8 @@ ares/
 │   │   │                         CargoCapacity.cs, InventoryTransferService.cs
 │   │   ├── items/                Item.cs, ItemData.cs ([GlobalClass] Resource),
 │   │   │                         ItemCapability.cs, ItemStack.cs, EquipableItem.cs
-│   │   ├── input/                keyboard now, Arduino later, same interface  (planned, empty)
+│   │   ├── input/                ControllerRelay.cs (autoload), ControllerInputBridge.cs,
+│   │   │                         ControllerMessage.cs, ControllerQr.cs
 │   │   └── minigames/            WireMinigame, FuseBoxMinigame, FrequencyBoxMinigame,
 │   │                             HullRepairMinigame
 │   ├── ui/
@@ -108,6 +111,7 @@ ares/
 │   ├── music/                    menu_test_music.mp3, rover_scene_ambient_wind.mp3
 │   └── sfx/                      rover_collision.wav, rover_explode.wav,
 │                                 rover_moving.mp3, rover_victory.wav
+├── controlers/                   phone controller page + Node relay (`npm start`)
 └── hardware/                     optional Arduino firmware, .gdignore + README.md
 ```
 
@@ -124,4 +128,4 @@ ares/
 
 ## Credits
 
-Third-party assets and licenses are tracked in [`credits.md`](credits.md). The optional Arduino controller notes live in [`hardware/README.md`](hardware/README.md).
+Third-party assets and licenses are tracked in [`credits.md`](credits.md). The optional phone-controller setup lives in [`controlers/README.md`](controlers/README.md).
