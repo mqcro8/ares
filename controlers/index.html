@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090a1b">
+<title>Mission: Ares – Controller</title>
+<style>
+/* Fonts and art come from the game repo: copy its art/ folder next to this file. */
+@font-face{font-family:Aerospace;src:url(../art/fonts/Aerospace.ttf)}
+@font-face{font-family:Pixel;src:url(../art/fonts/PressStart2P-Regular.ttf)}
+:root{--bg:#090a1b;--panel:rgba(9,10,27,.92);--line:#8c7aba;--cyan:#7af2ff;--amber:#cca666;--cream:#faf0db;--text:#ede8fa;--red:#ff6152;--mars:#e07a3f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;touch-action:none}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font:14px/1.4 Pixel,monospace;image-rendering:pixelated}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background:linear-gradient(rgba(9,10,27,.55),rgba(9,10,27,.85)),url(../art/menu_placeholder/1123556.png) center/cover}
+body[data-view=wheel]{background:linear-gradient(rgba(30,10,5,.7),rgba(9,10,27,.9)),url(../art/rover/mars_ground.png) 0 0/160px;animation:ground 2s linear infinite}
+@keyframes ground{to{background-position:0 160px}}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+section{display:none;height:100%;padding:14px 18px}
+body[data-view=menu] #menu,body[data-view=pad] #pad,body[data-view=wheel] #wheel{display:grid}
+a{color:inherit;text-decoration:none}
+
+/* status + nav */
+#bar{position:fixed;top:max(8px,env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;font-size:9px;z-index:5;pointer-events:none}
+#bar a{pointer-events:auto;color:var(--amber);padding:6px 0}
+body[data-view=menu] #back{visibility:hidden}
+#link{color:var(--red);animation:blink 1s steps(2) infinite}
+#link.ok{color:var(--cyan);animation:none}
+@keyframes blink{50%{opacity:.3}}
+
+/* menu */
+#menu{place-content:center;justify-items:center;text-align:center;gap:10px}
+h1{font:88px/1 Aerospace,Pixel;margin:0;color:var(--cream);text-shadow:2px 3px #09061b;-webkit-text-stroke:2px #0b091a;paint-order:stroke fill;letter-spacing:4px}
+.sub{font-size:10px;letter-spacing:5px;color:#c7d1f0}
+.tag{font-size:9px;color:#9fbddb;margin-bottom:12px}
+.modes{display:flex;gap:14px}
+.mode{width:min(40vw,250px);padding:14px 16px;text-align:left;background:rgba(14,16,38,.9);border:1px solid var(--line);border-radius:3px}
+.mode.main{border-left:3px solid var(--amber);color:#ffe0a6}
+.mode:active{background:#47216e;border-color:var(--cyan)}
+.mode b{display:block;font-size:12px;margin-bottom:8px}
+.mode span{font-size:8px;line-height:1.6;color:#b9c3e0}
+
+/* pad */
+#pad{grid-template-rows:auto 1fr;grid-template-columns:1fr 1fr;padding-top:34px}
+#slots{grid-column:1/3;display:flex;gap:6px;justify-content:center}
+.slot{width:56px;height:56px;display:grid;place-items:center;font-size:14px;color:var(--cream);background:url(../art/player/inventory/hotbar-single-segment.png) 0/100% 100%}
+.slot.on{background-image:url(../art/player/inventory/selected-hotbar-single-segment.png);color:var(--cyan)}
+#stick{align-self:center;justify-self:center;position:relative;width:min(44vh,190px);aspect-ratio:1;border-radius:50%;background:var(--panel);border:2px solid var(--line)}
+#stick::before{content:"";position:absolute;inset:28%;border-radius:50%;border:1px dashed rgba(140,122,186,.5)}
+#knob{position:absolute;left:50%;top:50%;width:38%;aspect-ratio:1;margin:-19% 0 0 -19%;border-radius:50%;background:var(--amber);border:3px solid var(--cream)}
+#acts{align-self:center;justify-self:center;display:flex;gap:16px;align-items:center}
+.btn{display:grid;place-items:center;text-align:center;background:var(--panel);border:2px solid var(--line);border-radius:50%;color:var(--cream)}
+.btn.on{background:#47216e;border-color:var(--cyan);color:var(--cyan)}
+#jump{width:min(34vh,150px);aspect-ratio:1;border-color:var(--amber);font-size:13px}
+#interact{width:min(22vh,92px);aspect-ratio:1;font-size:18px}
+
+/* wheel */
+#wheel{grid-template:1fr auto 1fr/1fr auto 1fr;place-items:center;gap:6px}
+.dir{width:64px;height:48px;display:grid;place-items:center;font-size:18px;background:var(--panel);border:2px solid var(--line);border-radius:3px;color:#9a93b8}
+.dir.on{border-color:var(--cyan);color:var(--cyan);background:#12243a}
+#dW{grid-area:1/2}#dA{grid-area:2/1;justify-self:end}#dD{grid-area:2/3;justify-self:start}#dS{grid-area:3/2}
+#hub{grid-area:2/2;position:relative;width:min(48vh,230px);aspect-ratio:1}
+#ring{position:absolute;inset:0;border-radius:50%;border:14px solid var(--amber);background:rgba(9,10,27,.6)}
+#ring::before{content:"";position:absolute;left:50%;top:-14px;width:12px;height:26px;margin-left:-6px;background:var(--cyan)}
+#ring::after{content:"";position:absolute;left:0;right:0;top:50%;height:8px;margin-top:-4px;background:var(--line)}
+#rover{position:absolute;left:50%;top:50%;width:48px;height:56px;margin:-28px 0 0 -24px;background:url(../art/rover/rover_moving.png) 0 0/auto 100%;animation:roll .8s steps(4) infinite;transform:scale(2)}
+@keyframes roll{to{background-position-x:-192px}}
+#read{position:absolute;left:0;right:0;bottom:-28px;text-align:center;font-size:9px;color:#c7d1f0}
+#wtools{position:fixed;right:14px;bottom:max(10px,env(safe-area-inset-bottom));font-size:9px}
+#engage{position:absolute;inset:0;margin:auto;width:min(60vw,300px);height:64px;font:11px Pixel;color:#ffe0a6;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:3px;z-index:3}
+#engage:active{background:#47216e}
+
+/* overlays */
+#rotate,#err{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:30px;font-size:11px;line-height:1.8}
+#err.show{display:flex;color:var(--red)}
+@media (orientation:portrait){body[data-view=pad] #rotate,body[data-view=wheel] #rotate{display:flex}h1{font-size:56px}.modes{flex-direction:column}.mode{width:80vw}}
+</style>
+</head>
+<body data-view="menu">
+<div id="bar"><a id="back" href="#">&lt; MENU</a><span id="link">SIGNAL LOST</span></div>
+
+<section id="menu">
+  <h1>ARES</h1>
+  <div class="sub">M I S S I O N &nbsp; C O N T R O L</div>
+  <div class="tag">// GATEWAY RELAY // CONTROLLER LINK</div>
+  <div class="modes">
+    <a class="mode main" href="#pad"><b>Field pad</b><span>Joystick, jump, interact and inventory slots 1–5.</span></a>
+    <a class="mode" href="#wheel"><b>Rover wheel</b><span>Turn the phone to change lanes, tilt it to speed up or brake.</span></a>
+  </div>
+</section>
+
+<section id="pad">
+  <div id="slots">
+    <div class="slot btn-hold" data-act="hotbar_1">1</div><div class="slot btn-hold" data-act="hotbar_2">2</div>
+    <div class="slot btn-hold" data-act="hotbar_3">3</div><div class="slot btn-hold" data-act="hotbar_4">4</div>
+    <div class="slot btn-hold" data-act="hotbar_5">5</div>
+  </div>
+  <div id="stick"><div id="knob"></div></div>
+  <div id="acts">
+    <div id="interact" class="btn btn-hold" data-act="interact">E</div>
+    <div id="jump" class="btn btn-hold" data-act="training_jump">JUMP</div>
+  </div>
+</section>
+
+<section id="wheel">
+  <div id="dW" class="dir" data-act="move_up">W</div>
+  <div id="dA" class="dir" data-act="move_left">A</div>
+  <div id="hub"><div id="ring"></div><div id="rover"></div><div id="read">STEER 0° &nbsp; TILT 0°</div>
+    <button id="engage">Start steering</button></div>
+  <div id="dD" class="dir" data-act="move_right">D</div>
+  <div id="dS" class="dir" data-act="move_down">S</div>
+  <a id="wtools" href="#wheel" hidden>ZERO</a>
+</section>
+
+<div id="rotate">Turn your phone sideways.<br>Hold it like a steering wheel.</div>
+<div id="err"></div>
+
+<script>
+// ---- Config ---------------------------------------------------------------
+const WHEEL = { left: -35, right: 35, up: -10, down: -50, release: 15 }; // degrees
+const DEADZONE = 0.15;                             // joystick
+
+// ---- Helpers --------------------------------------------------------------
+const $ = s => document.querySelector(s);
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+const params = new URLSearchParams(location.search);
+function fail(msg) { $("#err").textContent = msg; $("#err").classList.add("show"); throw new Error(msg); }
+
+// The relay also serves this page, so its WebSocket lives on the page's own
+// origin. ?relay=wss://host keeps the old split-hosting setup working.
+function relayUrl() {
+  const override = params.get("relay");
+  if (override) return override
+    .replace(/^https:/i, "wss:")
+    .replace(/^http:/i, "ws:")
+    .replace(/\/+$/, "");
+  if (!location.host) fail("NO RELAY. Open this page from the relay or add ?relay=wss://host.");
+  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}`;
+}
+const RELAY = relayUrl();
+
+// ---- Link: one socket, messages are {action, strength} using Godot input-map names
+const room = params.get("room");
+if (!room) fail("NO MISSION LINK. Scan the QR code shown in the game.");
+
+function setLink(text, ok) { $("#link").textContent = text; $("#link").className = ok ? "ok" : ""; }
+
+let ws;
+(function connect() {
+  ws = new WebSocket(`${RELAY}/?room=${encodeURIComponent(room)}&role=controller`);
+  ws.onopen = () => setLink("WAITING FOR GAME", false);
+  ws.onmessage = e => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+    if (msg.type === "game_connected") setLink("LINK " + room, true);
+    else if (msg.type === "game_disconnected") { releaseAll(); setLink("GAME OFFLINE", false); }
+  };
+  ws.onclose = () => { setLink("SIGNAL LOST", false); releaseAll(); setTimeout(connect, 1000); };
+})();
+
+const state = {};
+function set(action, v) {
+  v = Math.round(v * 100) / 100;
+  if ((state[action] || 0) === v) return;
+  state[action] = v;
+  if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action, strength: v }));
+  document.querySelectorAll(`[data-act="${action}"]`).forEach(el => el.classList.toggle("on", v > 0));
+}
+function releaseAll() { for (const a in state) set(a, 0); }
+document.addEventListener("visibilitychange", () => document.hidden && releaseAll());
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// ---- Routing: #pad, #wheel, anything else = menu ---------------------------
+function route() {
+  const v = location.hash.slice(1);
+  document.body.dataset.view = v === "pad" || v === "wheel" ? v : "menu";
+  releaseAll();
+}
+addEventListener("hashchange", route); route();
+
+// ---- Field pad: hold buttons + joystick ---------------------------------------
+document.querySelectorAll(".btn-hold").forEach(b => {
+  b.onpointerdown = e => { b.setPointerCapture(e.pointerId); navigator.vibrate?.(8); set(b.dataset.act, 1); };
+  b.onpointerup = b.onpointercancel = () => set(b.dataset.act, 0);
+});
+
+const stick = $("#stick"), knob = $("#knob");
+let stickId = null;
+const strength = v => Math.max(0, (Math.abs(v) - DEADZONE) / (1 - DEADZONE));
+function aim(e) {
+  const b = stick.getBoundingClientRect(), r = b.width / 2 - knob.offsetWidth / 2;
+  let x = e.clientX - (b.left + b.width / 2), y = e.clientY - (b.top + b.height / 2);
+  const m = Math.hypot(x, y);
+  if (m > r) { x *= r / m; y *= r / m; }
+  knob.style.transform = `translate(${x}px,${y}px)`;
+  x /= r; y /= r;
+  set("move_left", x < 0 ? strength(x) : 0); set("move_right", x > 0 ? strength(x) : 0);
+  set("move_up", y < 0 ? strength(y) : 0);   set("move_down", y > 0 ? strength(y) : 0);
+}
+stick.onpointerdown = e => { stickId = e.pointerId; stick.setPointerCapture(stickId); aim(e); };
+stick.onpointermove = e => e.pointerId === stickId && aim(e);
+stick.onpointerup = stick.onpointercancel = () => {
+  stickId = null; knob.style.transform = "";
+  ["move_left", "move_right", "move_up", "move_down"].forEach(a => set(a, 0));
+};
+
+// ---- Rover wheel: gravity vector -> steer / tilt -> A D W S ----------------------
+let engaged = false, raw = { steer: 0, tilt: 0 }, zero = { steer: 0, tilt: 0 };
+const wrap = d => ((d + 540) % 360) - 180;
+
+addEventListener("deviceorientation", e => {
+  if (e.beta == null) return;
+  const b = rad(e.beta), g = rad(e.gamma);
+  // "up" direction in device axes, independent of compass heading and euler gimbal flips
+  const x = -Math.sin(g) * Math.cos(b), y = Math.sin(b), z = Math.cos(g) * Math.cos(b);
+  const a = rad(screen.orientation.angle);              // rotate into the landscape screen frame
+  const sx = x * Math.cos(a) - y * Math.sin(a), sy = x * Math.sin(a) + y * Math.cos(a);
+  raw.steer = deg(Math.atan2(-sx, sy));                 // + = wheel turned clockwise = D
+  raw.tilt = deg(Math.atan2(z, Math.hypot(sx, sy)));    // + = top of phone leaned away = W
+  if (!engaged || document.body.dataset.view !== "wheel") return;
+
+  const steer = wrap(raw.steer - zero.steer), tilt = raw.tilt - zero.tilt;
+  $("#ring").style.transform = `rotate(${Math.max(-90, Math.min(90, steer))}deg)`;
+  $("#read").textContent = `STEER ${steer.toFixed(0)}°   TILT ${tilt.toFixed(0)}°`;
+  axis("move_left", "move_right", steer, WHEEL.left, WHEEL.right);
+  axis("move_down", "move_up", tilt, WHEEL.down, WHEEL.up);
+});
+
+// press at the threshold, release once back inside it by WHEEL.release degrees
+function axis(neg, pos, v, lo, hi) {
+  set(neg, state[neg] ? (v < lo + WHEEL.release ? 1 : 0) : (v <= lo ? 1 : 0));
+  set(pos, state[pos] ? (v > hi - WHEEL.release ? 1 : 0) : (v >= hi ? 1 : 0));
+}
+const zeroNow = () => zero = { ...raw };
+
+$("#engage").onclick = async () => {
+  if (typeof DeviceOrientationEvent?.requestPermission === "function" &&
+      await DeviceOrientationEvent.requestPermission() !== "granted") fail("Motion access denied. Allow it in the browser settings and reload.");
+  const got = await Promise.race([
+    new Promise(r => addEventListener("deviceorientation", r, { once: true })),
+    new Promise(r => setTimeout(r, 1500, null))]);
+  if (!got || got.beta == null) fail("No motion sensors found. Open this page on a phone over HTTPS.");
+  navigator.wakeLock?.request("screen");
+  zeroNow(); engaged = true;
+  $("#engage").hidden = true; $("#wtools").hidden = false;
+};
+$("#wtools").onclick = e => { e.preventDefault(); zeroNow(); };
+</script>
+</body>
+</html>
