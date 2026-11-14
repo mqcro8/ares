@@ -24,6 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://bdiulk5qebbqg" path="res://art/mars/mars_base_assets/6_decor_indoor/in_table.png" id="25_4hqs7"]
 [ext_resource type="Texture2D" uid="uid://byqh52y7157su" path="res://art/mars/mars_base_assets/4_signals/sig_radio.png" id="26_6xexp"]
 [ext_resource type="PackedScene" path="res://scenes/mars/SignalTable.tscn" id="27_signaltable"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="28_objective"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -205,3 +206,5 @@ texture = ExtResource("25_4hqs7")
 [node name="SigRadio2" type="Sprite2D" parent="." unique_id=687127558]
 position = Vector2(1, -36)
 texture = ExtResource("26_6xexp")
+
+[node name="ObjectiveDialogue" parent="." instance=ExtResource("28_objective")]

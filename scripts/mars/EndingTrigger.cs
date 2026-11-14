@@ -88,6 +88,7 @@ public partial class EndingTrigger : Area2D
 		if (_dialogue == null)
 			return;
 
+		GetParent()?.GetNodeOrNull<ObjectiveDialogue>("ObjectiveDialogue")?.Dismiss();
 		bool communicationsDown = MissionState.Instance?.SignalTableRepaired != true;
 		DialogueSequence sequence = communicationsDown ? CommunicationsLocked : RepairsPending;
 		DialogueLine line = sequence != null && sequence.Lines.Count > 0
@@ -120,6 +121,7 @@ public partial class EndingTrigger : Area2D
 	private void BeginEnding()
 	{
 		_changing = true;
+		GetParent()?.GetNodeOrNull<ObjectiveDialogue>("ObjectiveDialogue")?.Dismiss();
 		_player?.SetPhysicsProcess(false);
 		if (MissionState.Instance != null)
 			MissionState.Instance.Stage = MissionStage.Ending;

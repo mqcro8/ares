@@ -28,6 +28,7 @@
 [ext_resource type="Texture2D" uid="uid://ivbkr2tiergs" path="res://art/mars/mars_base_assets/2_greenhouse/gh_grow_light.png" id="26_s60nr"]
 [ext_resource type="Script" uid="uid://c2rflhicgja8l" path="res://scripts/mars/EndingTrigger.cs" id="27_endtrigger"]
 [ext_resource type="Script" uid="uid://bm77rhwep6h65" path="res://scripts/dialogue/DialogueView.cs" id="28_dialogue"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="29_objective"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_7lra3"]
 animations = [{
@@ -104,11 +105,11 @@ size = Vector2(188, 31)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_p1fap"]
 size = Vector2(62.465637, 14)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_uvuqn"]
-size = Vector2(161.5, 26)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oco33"]
 size = Vector2(40.465637, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uvuqn"]
+size = Vector2(161.5, 26)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_oco33"]
 animations = [{
@@ -210,7 +211,8 @@ texture = ExtResource("17_s60nr")
 position = Vector2(298, -143)
 script = ExtResource("19_mi6nt")
 TargetScene = "uid://dw4a04acmbe3m"
-ReturnOffset = Vector2(-66, 142)
+ReturnOffset = Vector2(-66, 165)
+RequirePower = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Building 2/Area2D" unique_id=1079843397]
 position = Vector2(-69.23282, 111)
@@ -227,19 +229,20 @@ offset_right = 59.0
 offset_bottom = -185.0
 texture = ExtResource("18_w3nv0")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Building 3/TextureRect2" unique_id=889195260]
-position = Vector2(82.75, 139)
-shape = SubResource("RectangleShape2D_uvuqn")
-
 [node name="Area2D" type="Area2D" parent="Building 3" unique_id=1904561237]
 position = Vector2(101, -385)
 script = ExtResource("19_mi6nt")
 TargetScene = "uid://ctu4t2jsso1bx"
 ReturnOffset = Vector2(-103, 250)
+RequireAccessPanels = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Building 3/Area2D" unique_id=166806675]
 position = Vector2(-104.23282, 198)
 shape = SubResource("RectangleShape2D_oco33")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Building 3" unique_id=889195260]
+position = Vector2(-24.25, -201)
+shape = SubResource("RectangleShape2D_uvuqn")
 
 [node name="Terrains" type="Node" parent="." unique_id=224083562]
 
@@ -398,3 +401,5 @@ offset_bottom = -36.0
 grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("28_dialogue")
+
+[node name="ObjectiveDialogue" parent="." unique_id=497977403 instance=ExtResource("29_objective")]

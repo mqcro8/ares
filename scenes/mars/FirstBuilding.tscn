@@ -23,6 +23,7 @@
 [ext_resource type="Texture2D" uid="uid://d1mwsqxdjyv3k" path="res://art/mars/mars_base_assets/6_decor_indoor/in_crate_big.png" id="21_tsjde"]
 [ext_resource type="Texture2D" uid="uid://l6qk4tvqm8xi" path="res://art/mars/mars_base_assets/6_decor_indoor/in_bunk_bed.png" id="22_j4fts"]
 [ext_resource type="Texture2D" uid="uid://bsxwmutul5gjw" path="res://art/mars/mars_base_assets/6_decor_indoor/in_oxygen_tank_16x32.png" id="23_ok057"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="24_objective"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -149,7 +150,7 @@ shape = SubResource("RectangleShape2D_oco33")
 position = Vector2(1238, 646)
 
 [node name="ElectricalBox" parent="." unique_id=721646611 instance=ExtResource("18_electricalbox")]
-position = Vector2(658, 591)
+position = Vector2(1104, 588)
 scale = Vector2(0.5, 0.5)
 
 [node name="Node" type="Node" parent="." unique_id=2110823835]
@@ -220,3 +221,5 @@ texture = ExtResource("23_ok057")
 [node name="InOxygenTank16x34" type="Sprite2D" parent="Node" unique_id=1976545049]
 position = Vector2(688, 588)
 texture = ExtResource("23_ok057")
+
+[node name="ObjectiveDialogue" parent="." unique_id=1486057466 instance=ExtResource("24_objective")]

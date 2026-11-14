@@ -30,6 +30,22 @@ public partial class MissionState : Node
 	public bool WireBoxRepaired { get; private set; }
 	public bool SignalTableRepaired { get; private set; }
 	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && SignalTableRepaired && AllDoorAccessOn;
+	public bool SecondBuildingBriefingShown { get; private set; }
+	public MissionObjective? LastAnnouncedObjective { get; private set; }
+
+	public MissionObjective CurrentObjective
+	{
+		get
+		{
+			if (!GeneratorRepaired || !WireBoxRepaired)
+				return MissionObjective.RestorePower;
+			if (!AllDoorAccessOn)
+				return MissionObjective.OpenGreenhouseDoors;
+			if (!SignalTableRepaired)
+				return MissionObjective.RestoreCommunications;
+			return MissionObjective.ReturnToStart;
+		}
+	}
 
 	private readonly bool[] _doorAccess = new bool[DoorAccessCount];
 	public int DoorAccessOnCount
@@ -91,11 +107,23 @@ public partial class MissionState : Node
 		EmitSignal(SignalName.SignalTableRepairedChanged, true);
 	}
 
+	public void MarkSecondBuildingBriefingShown()
+	{
+		SecondBuildingBriefingShown = true;
+	}
+
+	public void MarkObjectiveAnnounced(MissionObjective objective)
+	{
+		LastAnnouncedObjective = objective;
+	}
+
 	public void ResetPuzzleProgress()
 	{
 		GeneratorRepaired = false;
 		WireBoxRepaired = false;
 		SignalTableRepaired = false;
+		SecondBuildingBriefingShown = false;
+		LastAnnouncedObjective = null;
 		for (int i = 0; i < _doorAccess.Length; i++)
 			_doorAccess[i] = false;
 	}
