@@ -27,6 +27,11 @@
 [ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/stations/wiring_workbench.png" id="workbench"]
 [ext_resource type="Texture2D" uid="uid://dhxqfbuyf3i7v" path="res://art/training/equipment/tanque_oxigeno.png" id="tank_icon"]
 [ext_resource type="Texture2D" uid="uid://iyjqmso4oy1f" path="res://art/training/equipment/kit_mantenimiento.png" id="kit_icon"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_wall_screen_32x16.png" id="prop_screen"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_potted_plant_16x32.png" id="prop_plant"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_locker.png" id="prop_locker"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_crate_big.png" id="prop_crate"]
+[ext_resource type="Texture2D" path="res://art/training/props/sig_radio.png" id="prop_radio"]
 
 [sub_resource type="RectangleShape2D" id="NorthShape"]
 size = Vector2(768, 32)
@@ -54,6 +59,12 @@ size = Vector2(40, 30)
 
 [sub_resource type="RectangleShape2D" id="LockerShape"]
 size = Vector2(40, 50)
+
+[sub_resource type="RectangleShape2D" id="PropLockerShape"]
+size = Vector2(24, 12)
+
+[sub_resource type="RectangleShape2D" id="PropCrateShape"]
+size = Vector2(24, 14)
 
 [sub_resource type="SpriteFrames" id="PlayerFrames"]
 animations = [{
@@ -217,6 +228,50 @@ axis_stretch_horizontal = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/South" unique_id=1214175806]
 shape = SubResource("SouthShape")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="WallScreenWest" type="Sprite2D" parent="Props"]
+position = Vector2(208, 56)
+texture = ExtResource("prop_screen")
+
+[node name="WallScreenEast" type="Sprite2D" parent="Props"]
+position = Vector2(560, 56)
+texture = ExtResource("prop_screen")
+
+[node name="PlantWest" type="Sprite2D" parent="Props"]
+position = Vector2(48, 108)
+texture = ExtResource("prop_plant")
+
+[node name="PlantEast" type="Sprite2D" parent="Props"]
+position = Vector2(720, 108)
+texture = ExtResource("prop_plant")
+
+[node name="DecorativeLocker" type="StaticBody2D" parent="Props"]
+position = Vector2(208, 104)
+
+[node name="Sprite2D" type="Sprite2D" parent="Props/DecorativeLocker"]
+position = Vector2(0, -16)
+texture = ExtResource("prop_locker")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Props/DecorativeLocker"]
+position = Vector2(0, -4)
+shape = SubResource("PropLockerShape")
+
+[node name="StorageCrate" type="StaticBody2D" parent="Props"]
+position = Vector2(208, 368)
+
+[node name="Sprite2D" type="Sprite2D" parent="Props/StorageCrate"]
+position = Vector2(0, -16)
+texture = ExtResource("prop_crate")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Props/StorageCrate"]
+position = Vector2(0, -5)
+shape = SubResource("PropCrateShape")
+
+[node name="Radio" type="Sprite2D" parent="Props"]
+position = Vector2(560, 96)
+texture = ExtResource("prop_radio")
 
 [node name="WiringWorkbench" type="Node2D" parent="." unique_id=868627775]
 editor_description = "Move this parent to move art, collision, sign, front interaction zone and return marker together."

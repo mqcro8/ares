@@ -22,6 +22,10 @@
 [ext_resource type="Script" uid="uid://bpm1p1nse5ycm" path="res://scripts/training/PhysicalTraining.cs" id="physical_training"]
 [ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="training_movement"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="mission_monitor"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_wall_panel.png" id="prop_wall_panel"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_oxygen_tank_16x32.png" id="prop_oxygen_tank"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_potted_plant_16x32.png" id="prop_plant"]
+[ext_resource type="Texture2D" path="res://art/training/props/in_crate_big.png" id="prop_crate"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5x7l7"]
 texture = ExtResource("13_whebk")
@@ -1763,6 +1767,9 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="RectangleShape2D" id="PropCrateShape"]
+size = Vector2(48, 18)
+
 [node name="Training" type="Node2D" unique_id=1721182763 node_paths=PackedStringArray("Course", "Monitor", "LabReturnMarker", "LabDoorZone")]
 script = ExtResource("16_training_intro")
 Course = NodePath("Tilemaps_layers/PhysicalTraining")
@@ -1877,6 +1884,55 @@ position = Vector2(720, 190)
 
 [node name="ArchiveA5" parent="Tilemaps_layers/Furniture" unique_id=1988958950 instance=ExtResource("cabinet")]
 position = Vector2(688, 190)
+
+[node name="Props" type="Node2D" parent="Tilemaps_layers"]
+z_index = 1
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="WallPanelWest" type="Sprite2D" parent="Tilemaps_layers/Props"]
+position = Vector2(300, 164)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_wall_panel")
+
+[node name="WallPanelEast" type="Sprite2D" parent="Tilemaps_layers/Props"]
+position = Vector2(500, 164)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_wall_panel")
+
+[node name="OxygenTank" type="Sprite2D" parent="Tilemaps_layers/Props"]
+position = Vector2(64, 288)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_oxygen_tank")
+
+[node name="Plant" type="Sprite2D" parent="Tilemaps_layers/Props"]
+position = Vector2(736, 288)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_plant")
+
+[node name="StorageCrateWest" type="StaticBody2D" parent="Tilemaps_layers/Props"]
+position = Vector2(208, 344)
+
+[node name="Sprite2D" type="Sprite2D" parent="Tilemaps_layers/Props/StorageCrateWest"]
+position = Vector2(0, -24)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_crate")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Tilemaps_layers/Props/StorageCrateWest"]
+position = Vector2(0, -8)
+shape = SubResource("PropCrateShape")
+
+[node name="StorageCrateEast" type="StaticBody2D" parent="Tilemaps_layers/Props"]
+position = Vector2(592, 344)
+
+[node name="Sprite2D" type="Sprite2D" parent="Tilemaps_layers/Props/StorageCrateEast"]
+position = Vector2(0, -24)
+scale = Vector2(2, 2)
+texture = ExtResource("prop_crate")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Tilemaps_layers/Props/StorageCrateEast"]
+position = Vector2(0, -8)
+shape = SubResource("PropCrateShape")
 
 [node name="SouthRoomFloor" type="TileMapLayer" parent="Tilemaps_layers" unique_id=2134261520]
 editor_description = "Gym floor: shared original atlas (12,12) at 2x, matching Background pixel density. World extent x32..768, y512..992; blocks live in PhysicalTraining."

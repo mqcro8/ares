@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ml4tbn15xa36"]
 
 [ext_resource type="Script" uid="uid://opjemdjoj5xj" path="res://scripts/systems/minigames/HullRepairMinigame.cs" id="1_hull"]
+[ext_resource type="Texture2D" path="res://art/training/props/gh_pipe_v.png" id="prop_pipe"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
 bg_color = Color(0.102, 0.11, 0.118, 1)
@@ -56,6 +57,17 @@ offset_right = 710.0
 offset_bottom = 410.0
 mouse_filter = 2
 color = Color(0.2, 0.22, 0.25, 1)
+
+[node name="Props" type="Node2D" parent="Frame"]
+texture_filter = 1
+
+[node name="PipeWest" type="Sprite2D" parent="Frame/Props"]
+position = Vector2(32, 230)
+texture = ExtResource("prop_pipe")
+
+[node name="PipeEast" type="Sprite2D" parent="Frame/Props"]
+position = Vector2(688, 230)
+texture = ExtResource("prop_pipe")
 
 [node name="PhaseLabel" type="Label" parent="Frame" unique_id=1565014997]
 layout_mode = 0
