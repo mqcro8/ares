@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://b5n6gst6x8y3t"]
 
 [ext_resource type="Script" uid="uid://dvlsfvnw8lu8a" path="res://scenes/RocketLaunch/RocketLaunch.cs" id="1_umb18"]
-[ext_resource type="Texture2D" path="res://art/training/launch/background/launch_site_background.png" id="2_psju1"]
-[ext_resource type="Texture2D" uid="uid://62b3pgut7y3j" path="res://art/gateway/Backgrond/Background.jpeg" id="21_practice_bg"]
+[ext_resource type="Texture2D" uid="uid://tjatqcgvkmux" path="res://art/training/launch/background/launching_background.jpeg" id="2_vhiws"]
 [ext_resource type="Script" uid="uid://cg7u4gnbp7q34" path="res://scenes/RocketLaunch/Background.cs" id="3_ndnbf"]
 [ext_resource type="Script" uid="uid://ck3oagcwk1b7" path="res://scenes/RocketLaunch/Rocket.cs" id="4_umb18"]
 [ext_resource type="Texture2D" uid="uid://cnktcyxptocd1" path="res://art/rocket/fire/frame1.png" id="5_cl4yc"]
@@ -10,14 +9,12 @@
 [ext_resource type="Texture2D" uid="uid://k1b8une8tjst" path="res://art/rocket/fire/frame2.png" id="6_1hwdt"]
 [ext_resource type="Texture2D" uid="uid://0qqd2bp0q4s7" path="res://art/rocket/fire/succes.png" id="7_8e4j1"]
 [ext_resource type="Texture2D" uid="uid://dcu2huyiae0sk" path="res://art/rocket/fire/failed.png" id="8_2faei"]
-[ext_resource type="Texture2D" uid="uid://gqrdc5erqu3t" path="res://art/rocket/result/sucessful_launch.jpeg" id="11_1hwdt"]
-[ext_resource type="Texture2D" uid="uid://dkmlmrewvid2y" path="res://art/rocket/result/unsuccesful_launch.jpeg" id="12_8e4j1"]
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="16_wg3qb"]
-[ext_resource type="Texture2D" path="res://art/rocket/rocket/rocket_sprite.png" id="17_rocket"]
-[ext_resource type="Texture2D" path="res://art/training/launch/ui/throttle_rail.png" id="18_rail"]
-[ext_resource type="Texture2D" path="res://art/training/launch/ui/target_zone_strip.png" id="19_band"]
-[ext_resource type="Texture2D" path="res://art/training/launch/ui/throttle_handle.png" id="20_handle"]
-[ext_resource type="Texture2D" path="res://art/training/tutorials/launch/hold_release_meter_tutorial.png" id="22_tutorial"]
+[ext_resource type="Texture2D" uid="uid://dhogiva7y4iii" path="res://art/rocket/rocket/rocket_sprite.png" id="17_rocket"]
+[ext_resource type="Texture2D" uid="uid://dku0kxk4rl0j2" path="res://art/training/launch/ui/throttle_rail.png" id="18_rail"]
+[ext_resource type="Texture2D" uid="uid://bq6q3u4ektyvd" path="res://art/training/launch/ui/target_zone_strip.png" id="19_band"]
+[ext_resource type="Texture2D" uid="uid://btym00qulyxh6" path="res://art/training/launch/ui/throttle_handle.png" id="20_handle"]
+[ext_resource type="Texture2D" uid="uid://c1jv55qai0ae3" path="res://art/training/tutorials/launch/hold_release_meter_tutorial.png" id="22_tutorial"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_y8fwy"]
 animations = [{
@@ -68,17 +65,16 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
-bg_color = Color(0.025, 0.04, 0.06, 0.97)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.25, 0.48, 0.55, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_background"]
+bg_color = Color(0, 0, 0, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_fill"]
+bg_color = Color(0.972549, 0.7647059, 0.007843138, 1)
+shadow_color = Color(0.87058824, 0.85882354, 0.38431373, 1)
+shadow_size = 15
+shadow_offset = Vector2(-5, 5)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.025, 0.04, 0.06, 0.78)
@@ -103,26 +99,26 @@ border_color = Color(0.25, 0.48, 0.55, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
 bg_color = Color(0.46, 0.89, 0.96, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_background"]
-bg_color = Color(0, 0, 0, 1)
-shadow_size = 15
-shadow_offset = Vector2(-5, 5)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ignition_fill"]
-bg_color = Color(0.972549, 0.7647059, 0.007843138, 1)
-shadow_color = Color(0.87058824, 0.85882354, 0.38431373, 1)
-shadow_size = 15
-shadow_offset = Vector2(-5, 5)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
+bg_color = Color(0.025, 0.04, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.48, 0.55, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="RocketLaunch" type="Node2D" unique_id=1721182763]
 script = ExtResource("1_umb18")
 
-[node name="Background" type="Sprite2D" parent="." unique_id=1903732821]
-position = Vector2(577, -351.00003)
-scale = Vector2(1.4934896, 1.4302325)
-texture = ExtResource("2_psju1")
+[node name="Background" type="Sprite2D" parent="." unique_id=844633509]
+position = Vector2(575.00006, -537)
+scale = Vector2(2.0482144, 1.9608052)
+texture = ExtResource("2_vhiws")
 script = ExtResource("3_ndnbf")
-PracticeTexture = ExtResource("21_practice_bg")
 
 [node name="Rocket" type="Node2D" parent="." unique_id=303650542]
 script = ExtResource("4_umb18")
@@ -153,36 +149,12 @@ offset_left = -0.05600357
 offset_top = 11.0
 offset_right = -11.200012
 offset_bottom = -13.0
-min_value = 0.0
-max_value = 25.0
-value = 0.0
 theme_override_colors/font_color = Color(0.00951285, 0.33877546, 0.54885066, 1)
 theme_override_fonts/font = ExtResource("16_wg3qb")
 theme_override_font_sizes/font_size = 28
 theme_override_styles/background = SubResource("StyleBoxFlat_ignition_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_ignition_fill")
-
-[node name="ResultScreen" type="Control" parent="HUD" unique_id=1364159948]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="SuccessImage" type="TextureRect" parent="HUD/ResultScreen" unique_id=1026078956]
-layout_mode = 0
-offset_left = 1214.0
-offset_top = -1162.0
-offset_right = 2589.0
-offset_bottom = -394.0
-texture = ExtResource("11_1hwdt")
-
-[node name="FailedImage" type="TextureRect" parent="HUD/ResultScreen" unique_id=173844934]
-layout_mode = 0
-offset_left = 65.0
-offset_top = -2197.0
-offset_right = 1440.0
-offset_bottom = -1429.0
-texture = ExtResource("12_8e4j1")
+max_value = 25.0
 
 [node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
 layer = 10
@@ -193,7 +165,6 @@ anchor_left = 0.02
 anchor_top = 0.02
 anchor_right = 0.98
 anchor_bottom = 0.02
-offset_top = 0.0
 offset_bottom = 100.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
@@ -218,81 +189,77 @@ theme_override_font_sizes/font_size = 14
 text = "Keep marker in center band."
 autowrap_mode = 3
 
-[node name="Stats" type="Label" parent="IntroUI/Panel/Margin/VBox"]
+[node name="Stats" type="Label" parent="IntroUI/Panel/Margin/VBox" unique_id=1516048685]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "CENTERED 0.0 / 10s"
 
-[node name="CenteredProgress" type="ProgressBar" parent="IntroUI/Panel/Margin/VBox"]
+[node name="CenteredProgress" type="ProgressBar" parent="IntroUI/Panel/Margin/VBox" unique_id=849892]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
-min_value = 0.0
-max_value = 100.0
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_progress_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+show_percentage = false
 
-[node name="Gauge" type="Control" parent="IntroUI/Panel/Margin/VBox"]
+[node name="Gauge" type="Control" parent="IntroUI/Panel/Margin/VBox" unique_id=1251626358]
 custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Rail" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge"]
+[node name="Rail" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge" unique_id=62881965]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_top = 5.0
 offset_bottom = 21.0
 grow_horizontal = 2
+mouse_filter = 2
 texture = ExtResource("18_rail")
 expand_mode = 1
 stretch_mode = 1
-texture_filter = 1
-mouse_filter = 2
 
-[node name="Band" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge"]
+[node name="Band" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge" unique_id=338116759]
+texture_filter = 1
 layout_mode = 0
 anchor_left = 0.42
 anchor_right = 0.62
 offset_top = 2.0
 offset_bottom = 24.0
+mouse_filter = 2
 texture = ExtResource("19_band")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="Handle" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge"]
+[node name="Handle" type="TextureRect" parent="IntroUI/Panel/Margin/VBox/Gauge" unique_id=883125746]
+texture_filter = 1
 layout_mode = 0
 offset_left = -14.0
 offset_top = -2.0
 offset_right = 14.0
 offset_bottom = 28.0
+mouse_filter = 2
 texture = ExtResource("20_handle")
 expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-mouse_filter = 2
 
-[node name="Actions" type="HBoxContainer" parent="IntroUI/Panel/Margin/VBox"]
+[node name="Actions" type="HBoxContainer" parent="IntroUI/Panel/Margin/VBox" unique_id=2122803649]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
-layout_mode = 2
+[node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions" unique_id=2119322928]
 custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Pause"
 
-[node name="Back" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions"]
-layout_mode = 2
+[node name="Back" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions" unique_id=1931077119]
 custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Back"
 
-[node name="Briefing" type="PanelContainer" parent="IntroUI"]
+[node name="Briefing" type="PanelContainer" parent="IntroUI" unique_id=327846163]
 anchors_preset = -1
 anchor_left = 0.14
 anchor_top = 0.5
@@ -304,25 +271,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
 
-[node name="Margin" type="MarginContainer" parent="IntroUI/Briefing"]
+[node name="Margin" type="MarginContainer" parent="IntroUI/Briefing" unique_id=1969556621]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="IntroUI/Briefing/Margin"]
+[node name="VBox" type="VBoxContainer" parent="IntroUI/Briefing/Margin" unique_id=505799012]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Speaker" type="Label" parent="IntroUI/Briefing/Margin/VBox"]
+[node name="Speaker" type="Label" parent="IntroUI/Briefing/Margin/VBox" unique_id=575484707]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("16_wg3qb")
 theme_override_font_sizes/font_size = 12
 text = "LAUNCH CONTROL"
 
-[node name="Text" type="Label" parent="IntroUI/Briefing/Margin/VBox"]
+[node name="Text" type="Label" parent="IntroUI/Briefing/Margin/VBox" unique_id=172255320]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
@@ -330,27 +297,27 @@ theme_override_font_sizes/font_size = 14
 text = "Hold SPACE or mouse to raise. Release to lower. Stay in the green band for 10 seconds."
 autowrap_mode = 3
 
-[node name="Tutorial" type="TextureRect" parent="IntroUI/Briefing/Margin/VBox"]
-layout_mode = 2
+[node name="Tutorial" type="TextureRect" parent="IntroUI/Briefing/Margin/VBox" unique_id=379714211]
+texture_filter = 1
 custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("22_tutorial")
 expand_mode = 1
 stretch_mode = 5
-texture = ExtResource("22_tutorial")
-texture_filter = 1
-mouse_filter = 2
 
-[node name="Actions" type="HBoxContainer" parent="IntroUI/Briefing/Margin/VBox"]
+[node name="Actions" type="HBoxContainer" parent="IntroUI/Briefing/Margin/VBox" unique_id=6487911]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Start" type="Button" parent="IntroUI/Briefing/Margin/VBox/Actions"]
+[node name="Start" type="Button" parent="IntroUI/Briefing/Margin/VBox/Actions" unique_id=473521442]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Start launch"
 
-[node name="Back" type="Button" parent="IntroUI/Briefing/Margin/VBox/Actions"]
+[node name="Back" type="Button" parent="IntroUI/Briefing/Margin/VBox/Actions" unique_id=84209162]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3

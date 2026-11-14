@@ -232,12 +232,13 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     {
         if (!IsInsideTree()) return;
         _returnRequested = true;
-        var error = SceneLoader != null ? SceneLoader(PracticeSession.LabScene) : GetTree().ChangeSceneToFile(PracticeSession.LabScene);
+        string returnScene = PracticeSession.ExerciseOriginScene ?? PracticeSession.LabScene;
+        var error = SceneLoader != null ? SceneLoader(returnScene) : GetTree().ChangeSceneToFile(returnScene);
         if (error == Error.Ok) return;
         _returnRequested = false;
         _returnFailed = true;
         _overlay.Hide();
-        _back.Show(); _back.Text = "Return failed — retry return to lab";
+        _back.Show(); _back.Text = "Return failed — retry return";
         _back.GrabFocus();
         GD.PushError($"Practice return failed: {error}");
     }

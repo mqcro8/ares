@@ -1,9 +1,9 @@
-
 using Godot;
 
 public partial class Background : Sprite2D
 {
 	private float initialY;
+	private float _scrollOffset;
 	[Export] public Texture2D PracticeTexture { get; set; }
 	private Vector2 _launchSocket = new(510, 614);
 	public void Configure(bool practice)
@@ -18,6 +18,26 @@ public partial class Background : Sprite2D
 			_launchSocket = new Vector2(510, 614);
 		}
 		Resize();
+	}
+
+	/// <summary>Moves the scenery downward to simulate the rocket gaining altitude.</summary>
+	public void SetScrollOffset(float offset)
+	{
+		if (Texture == null) return;
+
+		float viewportHeight = GetViewportRect().Size.Y;
+		float imageHeight = Texture.GetHeight() * Scale.Y;
+		float maxScroll = Mathf.Max(0, imageHeight - viewportHeight);
+
+		_scrollOffset = Mathf.Clamp(offset, 0, maxScroll);
+		Position = new Vector2(Position.X, initialY + _scrollOffset);
+	}
+
+	/// <summary>Restores the background to the launch-pad view.</summary>
+	public void ResetScroll()
+	{
+		_scrollOffset = 0;
+		Position = new Vector2(Position.X, initialY);
 	}
 
 	public Vector2 LaunchGround => new Vector2(Position.X, initialY) +
@@ -42,6 +62,8 @@ public partial class Background : Sprite2D
 
 		// Start with the lower launch platform in view.
 		initialY = viewport.Y - imageHeight / 2f;
-		Position = new Vector2(viewport.X / 2f, initialY);
+		float maxScroll = Mathf.Max(0, imageHeight - viewport.Y);
+		_scrollOffset = Mathf.Clamp(_scrollOffset, 0, maxScroll);
+		Position = new Vector2(viewport.X / 2f, initialY + _scrollOffset);
 	}
 }

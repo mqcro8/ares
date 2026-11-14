@@ -26,6 +26,9 @@ public static class PracticeSession
     public static bool LaunchPracticeComplete => MissionState.Instance?.TrainingLaunchPracticeComplete ?? false;
     public static LaunchRequest PendingLaunch { get; private set; }
     public static string Feedback { get; private set; } = "";
+    public static string ExerciseOriginScene { get; private set; }
+    public static string ExerciseReturnSpawn { get; private set; }
+    public static Vector2 ExerciseReturnPosition { get; private set; }
     public static string SceneFor(Exercise exercise) => exercise switch
     {
         Exercise.Wires => "res://scenes/minigames/wireminigame.tscn",
@@ -46,6 +49,7 @@ public static class PracticeSession
     {
         SessionId++; Pending = null; Saved = null; Rooms.Clear();
         _exerciseTicket = 0; PendingLaunch = null; Feedback = "";
+        ExerciseOriginScene = null; ExerciseReturnSpawn = null; ExerciseReturnPosition = Vector2.Zero;
     }
     public static Travel Prepare(string source, string target, string spawn, Vector2 returnPosition)
         => Pending = new(SessionId, ++_serial, source, target, spawn, returnPosition);
@@ -65,9 +69,15 @@ public static class PracticeSession
         if (Rooms.TryGetValue(room, out var pose)) player.GetNode<PlayerAnimation>("AnimatedSprite2D").RestoreFacing(pose.Facing, pose.Flip);
     }
     public static Travel Begin(Exercise exercise, Vector2 position)
+        => Begin(exercise, LabScene, ReturnSpawn(exercise), position);
+
+    public static Travel Begin(Exercise exercise, string source, string returnSpawn, Vector2 position)
     {
         Selected = exercise;
-        var ticket = Prepare(LabScene, SceneFor(exercise), ReturnSpawn(exercise), position);
+        ExerciseOriginScene = source;
+        ExerciseReturnSpawn = returnSpawn;
+        ExerciseReturnPosition = position;
+        var ticket = Prepare(source, SceneFor(exercise), returnSpawn, position);
         _exerciseTicket = ticket.Id; return ticket;
     }
     public static long EnterExercise(Node root)
@@ -91,7 +101,8 @@ public static class PracticeSession
             MissionState.Instance.EvaluateTrainingCompletion();
         }
         Feedback = success ? "Practice complete. You can repeat it anytime." : "Practice cancelled. Previous progress kept.";
-        Prepare(SceneFor(Selected), LabScene, ReturnSpawn(Selected), Rooms[LabScene].Position);
+        Prepare(SceneFor(Selected), ExerciseOriginScene ?? LabScene,
+            ExerciseReturnSpawn ?? ReturnSpawn(Selected), ExerciseReturnPosition);
         return true;
     }
     public static void ClearFeedback() => Feedback = "";
