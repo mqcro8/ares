@@ -23,11 +23,14 @@ room_code=""
 
 [autoload]
 
-AudioManager="*res://scripts/systems/audio/AudioManager.cs"
+MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
+SceneManager="*uid://b4v2hsojp1mr2"
+AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
 ControllerRelay="*res://scripts/systems/input/ControllerRelay.cs"
 DevCheats="*res://scripts/systems/DevCheats.cs"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
@@ -36,6 +39,14 @@ window/stretch/mode="canvas_items"
 [dotnet]
 
 project/assembly_name="ares"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+
+[global_group]
+
+player=""
 
 [input]
 
@@ -87,6 +98,11 @@ hotbar_4={
 hotbar_5={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":53,"key_label":0,"unicode":53,"location":0,"echo":false,"script":null)
+]
+}
+interact={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":101,"location":0,"echo":false,"script":null)
 ]
 }
 minigame_action={

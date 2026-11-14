@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.cs" id="2_line"]
+
+[sub_resource type="Resource" id="Line0"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "Four access panels. This is usually done by four people simultaneously, but since I'm alone, I'll have to do all four myself to open the way to communications."
+
+[resource]
+script = ExtResource("1_sequence")
+Lines = Array[ExtResource("2_line")]([SubResource("Line0")])

@@ -1,0 +1,210 @@
+[gd_scene format=4 uid="uid://ctu4t2jsso1bx"]
+
+[ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="1_54i23"]
+[ext_resource type="Script" uid="uid://80fyjbwnoscg" path="res://scripts/training/TrainingCamera.cs" id="2_d3u5d"]
+[ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="3_ekc7t"]
+[ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="4_pj6e0"]
+[ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="5_v03xt"]
+[ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="6_w7rob"]
+[ext_resource type="Texture2D" uid="uid://bon0e1k84xbo6" path="res://art/player/walking/walking_front_frame_1.png" id="7_vdkoq"]
+[ext_resource type="Texture2D" uid="uid://dvxfwp2p4d1f1" path="res://art/player/walking/walking_front_frame_2.png" id="8_sq83c"]
+[ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="9_ye7yo"]
+[ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="10_egr8g"]
+[ext_resource type="Texture2D" uid="uid://bpu38kcwp634q" path="res://art/player/walking/walking_back_frame_1.png" id="11_qsg2q"]
+[ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="12_ciyq8"]
+[ext_resource type="Script" uid="uid://dbo4eteeood0r" path="res://scripts/player/PlayerAnimation.cs" id="13_ddq0d"]
+[ext_resource type="Script" uid="uid://dvpwfus68hw2o" path="res://scripts/player/HandEquip.cs" id="14_s37mp"]
+[ext_resource type="TileSet" uid="uid://cjdfc2nmml3cr" path="res://art/mars/indoor_tileset.tres" id="15_61jph"]
+[ext_resource type="Script" uid="uid://cqylqv1lyy4d6" path="res://scripts/mars/SceneTrigger.cs" id="16_3wksn"]
+[ext_resource type="Texture2D" uid="uid://cyers8wqn7umv" path="res://art/mars/mars_base_assets/4_signals/sig_console.png" id="17_64i4i"]
+[ext_resource type="Texture2D" uid="uid://p7fx3jvye0xp" path="res://art/mars/mars_base_assets/2_greenhouse/gh_pipe_h.png" id="21_jnqhj"]
+[ext_resource type="Texture2D" uid="uid://bbdnvlge8aneo" path="res://art/mars/mars_base_assets/2_greenhouse/gh_pipe_corner_wb.png" id="22_32juu"]
+[ext_resource type="Texture2D" uid="uid://bbq5eebw1gv8p" path="res://art/mars/mars_base_assets/2_greenhouse/gh_pipe_v.png" id="23_43s1w"]
+[ext_resource type="Texture2D" uid="uid://cvelfwygdieeb" path="res://art/mars/mars_base_assets/2_greenhouse/gh_o2_scrubber.png" id="24_h4d4h"]
+[ext_resource type="Texture2D" uid="uid://bdiulk5qebbqg" path="res://art/mars/mars_base_assets/6_decor_indoor/in_table.png" id="25_4hqs7"]
+[ext_resource type="Texture2D" uid="uid://byqh52y7157su" path="res://art/mars/mars_base_assets/4_signals/sig_radio.png" id="26_6xexp"]
+[ext_resource type="PackedScene" path="res://scenes/mars/SignalTable.tscn" id="27_signaltable"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="28_objective"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_pj6e0")
+}],
+"loop": 1,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_v03xt")
+}],
+"loop": 1,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_w7rob")
+}],
+"loop": 1,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_vdkoq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_sq83c")
+}],
+"loop": 1,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_ye7yo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_egr8g")
+}],
+"loop": 1,
+"name": &"walk_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("11_qsg2q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_ciyq8")
+}],
+"loop": 1,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nsnbt"]
+size = Vector2(16, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_l8xu3"]
+size = Vector2(94, 17)
+
+[node name="BaseCamp" type="Node2D" unique_id=1679263356]
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=470353977 node_paths=PackedStringArray("TrainingMovement") groups=["player"]]
+z_index = 1
+position = Vector2(-17, 133)
+script = ExtResource("1_54i23")
+TrainingMovement = NodePath("TrainingMovement")
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1543321411]
+process_physics_priority = 10
+position = Vector2(0, 5)
+zoom = Vector2(1.5, 1.5)
+process_callback = 0
+script = ExtResource("2_d3u5d")
+VerticalOffset = 5.0
+
+[node name="TrainingMovement" type="Node" parent="Player" unique_id=1672171518 node_paths=PackedStringArray("Visual", "Footprint", "Shadow")]
+script = ExtResource("3_ekc7t")
+Visual = NodePath("../AnimatedSprite2D")
+Footprint = NodePath("../CollisionShape2D")
+Shadow = NodePath("../JumpShadow")
+
+[node name="JumpShadow" type="Polygon2D" parent="Player" unique_id=884226215]
+scale = Vector2(0.75, 0.75)
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-12, -4, -7, -8, 11, -8, 16, -4, 11, 0, -7, 0)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=551615223]
+texture_filter = 1
+position = Vector2(1.5, -16.5)
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_sli3d")
+animation = &"idle_down"
+script = ExtResource("13_ddq0d")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=955952384]
+position = Vector2(2, -12)
+shape = SubResource("RectangleShape2D_nsnbt")
+
+[node name="HandEquip" type="Node" parent="Player" unique_id=660053881]
+script = ExtResource("14_s37mp")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1060414451]
+tile_map_data = PackedByteArray("AAD+//7/AQAEAAAAAAAAAAAAAQABAAEAAAABAAEAAQABAAEAAAACAAIAAQABAAEAAAADAAMAAQABAAEAAAAEAAQAAQABAAEAAAAFAAUAAQACAAIAAAAFAAQAAQACAAEAAAAFAAMAAQACAAEAAAAFAAIAAQACAAEAAAAFAAEAAQACAAEAAAAFAAAAAQACAAEAAAAFAP7/AQAEAAAAAAAEAAUAAQABAAIAAAAEAAMAAQABAAEAAAAEAAIAAQABAAEAAAAEAAEAAQABAAEAAAAEAAAAAQABAAEAAAAEAP7/AQAEAAAAAAADAAUAAQABAAIAAAADAAQAAQABAAEAAAADAAIAAQABAAEAAAADAAEAAQABAAEAAAADAAAAAQABAAEAAAADAP7/AQAEAAAAAAACAAUAAQABAAIAAAACAAQAAQABAAEAAAACAAMAAQABAAEAAAACAAEAAQABAAEAAAACAAAAAQABAAEAAAACAP7/AQAEAAAAAAABAAUAAQAAAAIAAAABAAQAAQABAAEAAAABAAMAAQABAAEAAAABAAIAAQABAAEAAAABAAAAAQABAAEAAAABAP7/AQAEAAAAAAAAAAUAAQABAAMAAAAAAAQAAQABAAIAAAAAAAMAAQABAAEAAAAAAAIAAQABAAEAAAAAAAEAAQABAAEAAAAAAP7/AQAEAAAAAAD//wUAAQABAAMAAAD//wQAAQABAAIAAAD//wMAAQABAAEAAAD//wIAAQABAAEAAAD//wEAAQABAAEAAAD//wAAAQABAAEAAAD///7/AQAEAAAAAAD+/wUAAQABAAMAAAD+/wQAAQABAAIAAAD+/wMAAQABAAEAAAD+/wIAAQABAAEAAAD+/wEAAQABAAEAAAD+/wAAAQABAAEAAAD9/wUAAQACAAIAAAD9/wQAAQABAAEAAAD9/wMAAQABAAEAAAD9/wIAAQABAAEAAAD9/wEAAQABAAEAAAD9/wAAAQABAAEAAAD9//7/AQAEAAAAAAD8/wUAAQABAAIAAAD8/wQAAQABAAEAAAD8/wMAAQABAAEAAAD8/wIAAQABAAEAAAD8/wEAAQABAAEAAAD8/wAAAQABAAEAAAD8//7/AQAEAAAAAAD7/wUAAQABAAIAAAD7/wQAAQABAAEAAAD7/wMAAQABAAEAAAD7/wIAAQABAAEAAAD7/wEAAQABAAEAAAD7/wAAAQABAAEAAAD7//7/AQAEAAAAAAD6/wUAAQAAAAIAAAD6/wQAAQAAAAEAAAD6/wMAAQAAAAEAAAD6/wIAAQAAAAEAAAD6/wEAAQAAAAEAAAD6/wAAAQAAAAEAAAD6//7/AQAEAAAAAAAGAP7/AQAFAAAAAAAGAP//AQAFAAEAAAAGAAAAAQAFAAEAAAAGAAEAAQAFAAEAAAAGAAIAAQAFAAEAAAAGAAMAAQAFAAEAAAAGAAQAAQAFAAEAAAAGAAUAAQAFAAEAAAAFAAYAAQAEAAIAAAAEAAYAAQAEAAIAAAADAAYAAQAEAAIAAAACAAYAAQAEAAIAAAABAAYAAQAEAAIAAAAAAAYAAQAEAAIAAAD//wYAAQAEAAIAAAD+/wYAAQAEAAIAAAD9/wYAAQAEAAIAAAD8/wYAAQAEAAIAAAD7/wYAAQAEAAIAAAD6/wYAAQAEAAIAAAD5//7/AQAFAAIAAAD5////AQADAAEAAAD5/wEAAQADAAEAAAD5/wAAAQADAAEAAAD5/wIAAQADAAEAAAD5/wQAAQADAAEAAAD5/wMAAQADAAEAAAD5/wUAAQADAAEAAAD5/wYAAQADAAIAAAAGAAYAAQAFAAIAAAD6////AQAAAAAAAAD7////AQABAAAAAAD8////AQABAAAAAAD9////AQABAAAAAAD+////AQABAAAAAAD/////AQABAAAAAAAAAP//AQABAAAAAAABAP//AQABAAAAAAACAP//AQABAAAAAAADAP//AQABAAAAAAAEAP//AQABAAAAAAAFAP//AQACAAAAAAA=")
+tile_set = ExtResource("15_61jph")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=341254696]
+position = Vector2(-992, -896)
+script = ExtResource("16_3wksn")
+TargetScene = "uid://boogclii86gni"
+IsExit = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=235763429]
+position = Vector2(976, 1078.5)
+shape = SubResource("RectangleShape2D_l8xu3")
+
+[node name="Node" type="Node" parent="." unique_id=94838021]
+
+[node name="SigConsole" type="Sprite2D" parent="." unique_id=1484579146]
+position = Vector2(-147, -26)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("17_64i4i")
+
+[node name="SignalTable" parent="." instance=ExtResource("27_signaltable")]
+position = Vector2(-75, -26)
+
+[node name="GhPipeH" type="Sprite2D" parent="." unique_id=796021737]
+position = Vector2(144, -15)
+texture = ExtResource("21_jnqhj")
+
+[node name="GhPipeH2" type="Sprite2D" parent="." unique_id=640228118]
+position = Vector2(112, -15)
+texture = ExtResource("21_jnqhj")
+
+[node name="GhPipeCornerWb" type="Sprite2D" parent="." unique_id=982684807]
+position = Vector2(176, -15)
+texture = ExtResource("22_32juu")
+
+[node name="GhPipeV" type="Sprite2D" parent="." unique_id=1270593737]
+position = Vector2(176, 17)
+texture = ExtResource("23_43s1w")
+
+[node name="GhPipeV2" type="Sprite2D" parent="." unique_id=2026342711]
+position = Vector2(176, 49)
+texture = ExtResource("23_43s1w")
+
+[node name="GhO2Scrubber2" type="Sprite2D" parent="." unique_id=830768006]
+position = Vector2(83, -24)
+texture = ExtResource("24_h4d4h")
+
+[node name="GhPipeV3" type="Sprite2D" parent="." unique_id=749928831]
+position = Vector2(176, 81)
+texture = ExtResource("23_43s1w")
+
+[node name="GhPipeV4" type="Sprite2D" parent="." unique_id=985682659]
+position = Vector2(176, 113)
+texture = ExtResource("23_43s1w")
+
+[node name="GhPipeV5" type="Sprite2D" parent="." unique_id=1399146031]
+position = Vector2(176, 145)
+texture = ExtResource("23_43s1w")
+
+[node name="GhPipeV6" type="Sprite2D" parent="." unique_id=329649508]
+position = Vector2(176, 177)
+texture = ExtResource("23_43s1w")
+
+[node name="InTable" type="Sprite2D" parent="." unique_id=1582796783]
+position = Vector2(-4, -26)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("25_4hqs7")
+
+[node name="SigRadio2" type="Sprite2D" parent="." unique_id=687127558]
+position = Vector2(1, -36)
+texture = ExtResource("26_6xexp")
+
+[node name="ObjectiveDialogue" parent="." instance=ExtResource("28_objective")]

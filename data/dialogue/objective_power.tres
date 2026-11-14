@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DialogueSequence" format=3 uid="uid://c7mgr2auxywxa"]
+
+[ext_resource type="Script" uid="uid://10yq5g1rtqd8" path="res://scripts/dialogue/DialogueSequence.cs" id="1_sequence"]
+[ext_resource type="Script" uid="uid://c1ixbx3dxjinm" path="res://scripts/dialogue/DialogueLine.cs" id="2_line"]
+
+[sub_resource type="Resource" id="Line0"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "Everything seems to be shut off... Strange. I need to restore base power. The storage and electrical building is the first one on the left."
+
+[resource]
+script = ExtResource("1_sequence")
+Lines = Array[ExtResource("2_line")]([SubResource("Line0")])
