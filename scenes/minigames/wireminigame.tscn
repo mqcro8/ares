@@ -82,7 +82,7 @@ offset_right = 700.0
 offset_bottom = 44.0
 theme_override_colors/font_color = Color(0.9, 0.93, 0.96, 1)
 theme_override_font_sizes/font_size = 20
-text = "PANEL DE CONEXIONES"
+text = "WIRING PANEL"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -94,7 +94,7 @@ offset_right = 700.0
 offset_bottom = 68.0
 theme_override_colors/font_color = Color(0.549, 0.573, 0.6, 1)
 theme_override_font_sizes/font_size = 12
-text = "Arrastra cada cable hasta el terminal del mismo color"
+text = "Connect each cable to the terminal with the matching color"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -106,7 +106,7 @@ offset_right = 200.0
 offset_bottom = 88.0
 theme_override_colors/font_color = Color(0.478, 0.502, 0.529, 1)
 theme_override_font_sizes/font_size = 11
-text = "ENTRADA"
+text = "INPUT"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -118,7 +118,7 @@ offset_right = 700.0
 offset_bottom = 88.0
 theme_override_colors/font_color = Color(0.478, 0.502, 0.529, 1)
 theme_override_font_sizes/font_size = 11
-text = "SALIDA"
+text = "OUTPUT"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -166,7 +166,7 @@ offset_right = 700.0
 offset_bottom = 450.0
 theme_override_colors/font_color = Color(0.341, 0.361, 0.384, 1)
 theme_override_font_sizes/font_size = 10
-text = "ZIKK SYSTEMS · MANTENIMIENTO"
+text = "ZIKK SYSTEMS · MAINTENANCE"
 horizontal_alignment = 1
 vertical_alignment = 1
 

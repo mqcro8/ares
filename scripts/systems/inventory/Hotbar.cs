@@ -32,15 +32,7 @@ public partial class Hotbar : HBoxContainer
 		Inventory = inventory;
 		if (Inventory == null) return;
 
-		for (int i = 0; i < Inventory.SlotCount; i++)
-		{
-			var slot = SlotScene.Instantiate<HotbarSlot>();
-			AddChild(slot);
-			_slots.Add(slot);
-		}
-
 		Inventory.InventoryChanged += Refresh;
-		SelectedIndex = Mathf.Clamp(SelectedIndex, 0, Inventory.SlotCount - 1);
 		Refresh();
 	}
 
@@ -77,16 +69,35 @@ public partial class Hotbar : HBoxContainer
 		EmitSignal(SignalName.SelectionChanged, SelectedIndex);
 	}
 
-	public void Cycle(int direction) =>
-		Select(Mathf.PosMod(SelectedIndex + direction, Inventory.SlotCount));
+	public void Cycle(int direction)
+	{
+		if (Inventory != null) Select(Mathf.PosMod(SelectedIndex + direction, Inventory.SlotCount));
+	}
 
 	private void Refresh()
 	{
+		if (Inventory == null) return;
+		while (_slots.Count > Inventory.SlotCount)
+		{
+			var slot = _slots[^1];
+			_slots.RemoveAt(_slots.Count - 1);
+			RemoveChild(slot);
+			slot.QueueFree();
+		}
+		while (_slots.Count < Inventory.SlotCount)
+		{
+			var slot = SlotScene.Instantiate<HotbarSlot>();
+			AddChild(slot);
+			_slots.Add(slot);
+		}
+		int previous = SelectedIndex;
+		SelectedIndex = Mathf.Clamp(SelectedIndex, 0, Inventory.SlotCount - 1);
 		for (int i = 0; i < _slots.Count; i++)
 		{
 			_slots[i].SetStack(Inventory.GetStack(i));
 			_slots[i].SetSelected(i == SelectedIndex);
 		}
+		if (previous != SelectedIndex) EmitSignal(SignalName.SelectionChanged, SelectedIndex);
 	}
 
 	private static bool Pressed(InputEvent e, string action) =>

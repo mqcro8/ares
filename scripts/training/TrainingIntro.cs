@@ -2,12 +2,18 @@ namespace ares.scripts.training;
 
 using Ares.Systems.Audio;
 using Godot;
+using ares.scripts.dialogue;
+using ares.scripts.mission;
+using ares.scripts.systems.items;
+using ares.scripts.ui.mission_monitor;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
 public partial class TrainingIntro : Node2D
 {
-	[Export] public string AstronautName { get; set; } = "Commander";
+	[Export] public DialogueSequence Briefing { get; set; }
+	[Export] public DialogueSequence CompletionNotice { get; set; }
 	[Export] public PhysicalTraining Course { get; set; }
+	[Export] public MissionMonitorView Monitor { get; set; }
 	[Export] public Marker2D LabReturnMarker { get; set; }
 	[Export] public Control LabDoorZone { get; set; }
 	[Export] public NodePath PlayerPath { get; set; } = "Tilemaps_layers/Player";
@@ -21,15 +27,35 @@ public partial class TrainingIntro : Node2D
 	private Label _speaker;
 	private Label _text;
 	private Button _continue;
-	private bool _previousPhysicsProcessing;
-	private bool _ownsPhysicsLock;
+	private readonly TrainingPlayerLock _physicsLock = new();
 	private bool _active;
 	private bool _completion;
 	private bool _completionShown;
 	private int _line;
 	private ulong _lastAdvanceFrame = ulong.MaxValue;
+	private TrainingStations _stations;
+	private TrainingControlsGuide _controlsGuide;
 	public bool BriefingActive => _active;
 	public bool CompletionShown => _completionShown;
+	public TrainingStations Stations => _stations;
+	public TrainingControlsGuide ControlsGuide => _controlsGuide;
+
+	public override void _Process(double delta)
+	{
+		if (Monitor == null || Course == null || _player is not ares.scripts.player.Player player) return;
+		var mission = MissionState.Instance;
+		var movement = player.TrainingMovement;
+		int progress = mission.TrainingCourseComplete ? 3 : Course.ClearedCount;
+		Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission,
+			inLab: false,
+			stamina: movement?.Stamina,
+			circuitProgress: progress,
+			circuitComplete: mission.TrainingCourseComplete || Course.Congratulated,
+			hasRepairKit: player.Inventory?.HasCapability(ItemCapability.Repair) == true,
+			prompt: _stations?.MonitorPrompt,
+			feedback: _stations?.MonitorFeedback,
+			visible: !_active));
+	}
 
 	public override void _Ready()
 	{
@@ -46,11 +72,24 @@ public partial class TrainingIntro : Node2D
 			return;
 		}
 
+		if (Briefing == null)
+			Briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
+		if (CompletionNotice == null)
+			CompletionNotice = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
 		_continue.Pressed += Advance;
 		if (Course != null) Course.Completed += QueueCompletion;
-		var stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
-		AddChild(stations);
-		stations.Targets.Add(new("Enter repair lab", LabDoorZone.GetGlobalRect(), PracticeSession.LabScene, "lab.from_gym"));
+		_stations = new TrainingStations { Name = "PracticeStations", Intro = this, Player = (ares.scripts.player.Player)_player };
+		AddChild(_stations);
+		_stations.Targets.Add(new("Enter repair lab", LabDoorZone, PracticeSession.LabScene, "lab.from_gym"));
+		_controlsGuide = new TrainingControlsGuide
+		{
+			Name = "ContextControlsGuide",
+			Player = (ares.scripts.player.Player)_player,
+			Intro = this,
+			Course = Course,
+			Stations = _stations
+		};
+		AddChild(_controlsGuide);
 		var arrival = PracticeSession.Arrive(PracticeSession.TrainingScene);
 		if (arrival != null)
 		{
@@ -61,7 +100,15 @@ public partial class TrainingIntro : Node2D
 			{
 				Course.Restore(saved.Course);
 				((ares.scripts.player.Player)_player).TrainingMovement.Restore(saved.Movement);
-				_completionShown = saved.CompletionShown;
+				_completionShown = saved.CompletionShown || Course.ClearedCount >= 3;
+				if (_completionShown)
+				{
+					MissionState.Instance.TrainingCourseComplete = true;
+					MissionState.Instance.EvaluateTrainingCompletion();
+					if (TrainingCompletionDialog.Open(this, (ares.scripts.player.Player)_player,
+						() => _stations.InteractionLocked = false))
+						_stations.InteractionLocked = true;
+				}
 				_line = 3;
 				_panel.Hide();
 				return;
@@ -82,28 +129,35 @@ public partial class TrainingIntro : Node2D
 	{
 		if (!IsInsideTree() || _active || _completionShown || _panel == null || _player == null) return;
 		_completionShown = true;
+		MissionState.Instance.TrainingCourseComplete = true;
+		MissionState.Instance.EvaluateTrainingCompletion();
+		if (!MissionState.Instance.TakeTrainingCompletionNotification()) return;
 		_completion = true;
 		AcquirePhysicsLock();
 		_active = true;
 		_lastAdvanceFrame = Engine.GetProcessFrames();
-		_speaker.Text = "MISSION CONTROL";
-		_text.Text = $"Excellent work, {AstronautName}. All three obstacles cleared. The repair lab is through the marked north door whenever you are ready.";
-		_continue.Text = "Keep practicing";
+		DialogueLine line = TrainingCompletionDialog.CompletionLine(CompletionNotice);
+		_speaker.Text = SpeakerFor(line);
+		_text.Text = line?.Text ?? "All training is complete.";
+		_continue.Text = "Continue";
 		_panel.Show();
 		_continue.GrabFocus();
 	}
 
 	private void ShowLine()
 	{
-		_speaker.Text = _line == 1 ? AstronautName.ToUpperInvariant() : "MISSION CONTROL";
-		_text.Text = _line switch
-		{
-			0 => "Welcome, [Name]. Gateway has been silent for two weeks. Before departure, let's prepare you to bring it back online."
-				.Replace("[Name]", AstronautName),
-			1 => "Understood. Let's get started.",
-			_ => "This is a safe place to practice. The gym and repair lab are yours to explore, at your own pace."
-		};
+		DialogueLine line = null;
+		if (Briefing != null && _line >= 0 && _line < Briefing.Lines.Count)
+			line = Briefing.Lines[_line];
+		_speaker.Text = SpeakerFor(line);
+		_text.Text = line?.Text ?? "";
 		_continue.Text = _line == 2 ? "Start training" : "Continue";
+	}
+
+	private static string SpeakerFor(DialogueLine line)
+	{
+		if (line == null || string.IsNullOrEmpty(line.Speaker)) return "MISSION CONTROL";
+		return line.Speaker;
 	}
 
 	private void Advance()
@@ -128,22 +182,12 @@ public partial class TrainingIntro : Node2D
 
 	private void AcquirePhysicsLock()
 	{
-		_previousPhysicsProcessing = _player.IsPhysicsProcessing();
-		_ownsPhysicsLock = true;
-		_player.Velocity = Vector2.Zero;
-		_player.SetPhysicsProcess(false);
+		_physicsLock.Acquire(_player);
 	}
 
 	private void RestorePhysics()
 	{
-		if (!_ownsPhysicsLock)
-			return;
-		if (GodotObject.IsInstanceValid(_player))
-		{
-			if (_player is ares.scripts.player.Player player) player.TrainingMovement?.SuppressDialogueJump();
-			_player.SetPhysicsProcess(_previousPhysicsProcessing);
-		}
-		_ownsPhysicsLock = false;
+		_physicsLock.Release();
 	}
 
 	public override void _ExitTree()

@@ -11,6 +11,7 @@ public partial class PlayerAnimation : AnimatedSprite2D
 	[Export] public float ReferenceSpeed { get; set; } = 200f;
 
 	private CharacterBody2D _body;
+	private SpriteFrames _frames;
 	private string _facing = "down";
 	public string Facing => _facing;
 	public void RestoreFacing(string facing, bool flip)
@@ -21,6 +22,7 @@ public partial class PlayerAnimation : AnimatedSprite2D
 	public override void _Ready()
 	{
 		_body = GetParent<CharacterBody2D>();
+		_frames = SpriteFrames;
 		if (_body == null)
 		{
 			GD.PushError($"{nameof(PlayerAnimation)} must be a child of a CharacterBody2D.");
@@ -33,6 +35,7 @@ public partial class PlayerAnimation : AnimatedSprite2D
 
 	public override void _Process(double delta)
 	{
+		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_body)) return;
 		Vector2 velocity = _body.Velocity;
 		bool moving = velocity.Length() > MoveThreshold;
 
@@ -44,7 +47,7 @@ public partial class PlayerAnimation : AnimatedSprite2D
 		string state = moving ? "walk" : "idle";
 		string animation = $"{state}_{_facing}";
 
-		if (SpriteFrames != null && SpriteFrames.HasAnimation(animation) && Animation != animation)
+		if (_frames != null && GodotObject.IsInstanceValid(_frames) && _frames.HasAnimation(animation) && Animation != animation)
 		{
 			Play(animation);
 		}
@@ -52,6 +55,13 @@ public partial class PlayerAnimation : AnimatedSprite2D
 		SpeedScale = (moving && ScaleSpeedWithVelocity)
 			? Mathf.Clamp(velocity.Length() / ReferenceSpeed, 0.4f, 1.5f)
 			: 1f;
+	}
+
+	public override void _ExitTree()
+	{
+		SetProcess(false);
+		_body = null;
+		_frames = null;
 	}
 
 	private void UpdateFacing(Vector2 velocity)

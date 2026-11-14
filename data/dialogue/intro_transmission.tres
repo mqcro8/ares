@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.cs" id="2_line"]
+
+[sub_resource type="Resource" id="Line0"]
+script = ExtResource("2_line")
+Speaker = "MISSION CONTROL"
+Text = "Gateway went dark fourteen days ago."
+
+[sub_resource type="Resource" id="Line1"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "And the probes?"
+
+[sub_resource type="Resource" id="Line2"]
+script = ExtResource("2_line")
+Speaker = "MISSION CONTROL"
+Text = "They went in. They didn't come back."
+
+[sub_resource type="Resource" id="Line3"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "I designed both."
+
+[sub_resource type="Resource" id="Line4"]
+script = ExtResource("2_line")
+Speaker = "MISSION CONTROL"
+Text = "Then you know what we're dealing with."
+
+[sub_resource type="Resource" id="Line5"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "No. That's why I'm going."
+
+[resource]
+script = ExtResource("1_sequence")
+Lines = Array[ExtResource("2_line")]([SubResource("Line0"), SubResource("Line1"), SubResource("Line2"), SubResource("Line3"), SubResource("Line4"), SubResource("Line5")])

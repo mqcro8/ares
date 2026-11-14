@@ -5,9 +5,9 @@ public partial class FrequencyBoxMinigame : Control
 {
 	[Signal] public delegate void CompletedEventHandler();
 
-	[Export] public float MatchThreshold { get; set; } = 0.95f;      // similitud mínima (0 a 1)
-	[Export] public float HoldSeconds { get; set; } = 0.5f;          // tiempo que debe mantenerse
-	[Export] public float KeyAdjustSpeed { get; set; } = 0.6f;       // valor/s con flechas (Shift = fino)
+	[Export] public float MatchThreshold { get; set; } = 0.9f;       // similitud mínima (0 a 1)
+	[Export] public float HoldSeconds { get; set; } = 0.35f;         // tiempo que debe mantenerse
+	[Export] public float KeyAdjustSpeed { get; set; } = 1f;          // valor/s con flechas (Shift = fino)
 	[Export] public string RevealWord { get; set; } = "";            // palabra que se muestra al completar
 	[Export] public Color TargetColor { get; set; } = new Color("3cdc50");
 	[Export] public Color PlayerColor { get; set; } = new Color("d62828");
@@ -40,7 +40,6 @@ public partial class FrequencyBoxMinigame : Control
 	private readonly List<Control> _pointers = new();
 	private readonly RandomNumberGenerator _rng = new();
 	private int _selectedKnob;
-	private int _focusKnob = -1;
 
 	// 0 = amplitud, 1 = frecuencia, 2 = fase (valores de 0 a 1)
 	private readonly float[] _target = new float[3];
@@ -50,6 +49,8 @@ public partial class FrequencyBoxMinigame : Control
 	private float _hold;
 	private float _time;
 	private bool _done;
+	public int SelectedKnob => _selectedKnob;
+	public float SelectedValue => _targetValue[_selectedKnob];
 
 	public override void _Ready()
 	{
@@ -73,7 +74,7 @@ public partial class FrequencyBoxMinigame : Control
 		_playerWave.Antialiased = PixelSize <= 0f;
 		_wordLabel.Text = "";
 		_brandLabel = GetNode<Label>("Box/BrandLabel");
-		_brandLabel.Text = "←/→ PERILLA   ENTER AJUSTA";
+		_brandLabel.Text = "1/2/3 SELECT   ARROWS ADJUST";
 		_led.Color = LedOff;
 
 		SeedGenerator();
@@ -81,6 +82,7 @@ public partial class FrequencyBoxMinigame : Control
 		DrawWave(_targetWave, _target);
 		Refresh();
 		UpdateKnobHighlight();
+		ares.scripts.training.PracticeReturn.Attach(this);
 	}
 
 	// Semilla propia de esta instancia: nunca sale la misma onda dos veces
@@ -197,25 +199,17 @@ public partial class FrequencyBoxMinigame : Control
 
 	public override void _Input(InputEvent @event)
 	{
-		if (_done) return;
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this) || _done) return;
 		if (@event is not InputEventKey k || !k.Pressed || k.Echo) return;
 
-		if (k.Keycode == Key.Left || k.Keycode == Key.Right)
+		if (k.Keycode is Key.Key1 or Key.Key2 or Key.Key3)
 		{
-			// Sin foco: cambian de perilla. Con foco: el ajuste es continuo en _Process.
-			if (_focusKnob < 0)
-			{
-				int dir = k.Keycode == Key.Right ? 1 : -1;
-				_selectedKnob = (_selectedKnob + dir + _knobs.Count) % _knobs.Count;
-				UpdateKnobHighlight();
-			}
+			_selectedKnob = (int)k.Keycode - (int)Key.Key1;
+			UpdateKnobHighlight();
 			GetViewport().SetInputAsHandled();
 		}
-		else if (k.Keycode == Key.Enter)
+		else if (k.Keycode is Key.Left or Key.Right)
 		{
-			// Enter entra o sale de la perilla elegida
-			_focusKnob = _focusKnob < 0 ? _selectedKnob : -1;
-			UpdateKnobHighlight();
 			GetViewport().SetInputAsHandled();
 		}
 	}
@@ -226,38 +220,30 @@ public partial class FrequencyBoxMinigame : Control
 	{
 		for (int i = 0; i < _knobs.Count; i++)
 		{
-			bool focused = i == _focusKnob;
-			bool selected = _focusKnob < 0 && i == _selectedKnob;
+			bool selected = i == _selectedKnob;
 
-			_knobs[i].Modulate = focused ? new Color(0.55f, 1f, 0.55f)
-				: selected ? new Color(1f, 1f, 0.7f)
+			_knobs[i].Modulate = selected ? new Color(1f, 1f, 0.7f)
 				: Colors.White;
 
 			var caption = _knobs[i].GetParent().GetNode<Label>("Caption");
-			caption.AddThemeColorOverride("font_color", focused
-				? new Color(0.235f, 0.863f, 0.314f)
-				: selected ? Colors.White
+			caption.AddThemeColorOverride("font_color", selected ? Colors.White
 				: new Color(0.8f, 0.8f, 0.8f));
 		}
 	}
 
 	public override void _Process(double delta)
 	{
-		if (_done) return;
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this) || _done) return;
 
 		float dt = (float)delta;
 		_time += dt;
 
-		// Con una perilla enfocada, las flechas ajustan su valor
-		if (_focusKnob >= 0)
-		{
-			float dir = 0f;
-			if (Input.IsKeyPressed(Key.Left)) dir -= 1f;
-			if (Input.IsKeyPressed(Key.Right)) dir += 1f;
-			if (dir != 0f)
-				_targetValue[_focusKnob] = Mathf.Clamp(
-					_targetValue[_focusKnob] + dir * KeyAdjustSpeed * FineFactor() * dt, 0f, 1f);
-		}
+		float dir = 0f;
+		if (Input.IsKeyPressed(Key.Left)) dir -= 1f;
+		if (Input.IsKeyPressed(Key.Right)) dir += 1f;
+		if (dir != 0f)
+			_targetValue[_selectedKnob] = Mathf.Clamp(
+				_targetValue[_selectedKnob] + dir * KeyAdjustSpeed * FineFactor() * dt, 0f, 1f);
 
 		AnimateValues(dt);
 
@@ -279,29 +265,11 @@ public partial class FrequencyBoxMinigame : Control
 		_led.Color = LedOn;
 		_wordLabel.Text = RevealWord;
 		Sparks(_screen.GetGlobalRect().GetCenter(), TargetColor);
-		GetTree().CreateTimer(0.8, false).Timeout += () => { EmitSignal(SignalName.Completed); };
+		MinigameEffects.CompleteAfter(this, .8, () => EmitSignal(SignalName.Completed));
 	}
 
 	private void Sparks(Vector2 globalPos, Color color)
 	{
-		var p = new CpuParticles2D
-		{
-			Position = _effects.ToLocal(globalPos),
-			OneShot = true,
-			Emitting = true,
-			Amount = 24,
-			Lifetime = 0.5f,
-			Explosiveness = 1f,
-			Direction = Vector2.Zero,
-			Spread = 180f,
-			InitialVelocityMin = 80f,
-			InitialVelocityMax = 200f,
-			Gravity = Vector2.Zero,
-			ScaleAmountMin = 2f,
-			ScaleAmountMax = 4f,
-			Color = color.Lightened(0.5f)
-		};
-		_effects.AddChild(p);
-		GetTree().CreateTimer(1.0).Timeout += p.QueueFree;
+		MinigameEffects.Sparks(_effects, _effects.ToLocal(globalPos), color);
 	}
 }

@@ -21,9 +21,19 @@ public partial class Inventory : Resource
 		get => _slots.Length;
 		set
 		{
-			value = Math.Max(1, value);
-			if (value != _slots.Length) Array.Resize(ref _slots, value);
+			TryResize(value);
 		}
+	}
+
+	public bool TryResize(int size)
+	{
+		if (size < 1) return false;
+		if (size == _slots.Length) return true;
+		for (int i = size; i < _slots.Length; i++)
+			if (_slots[i] != null && _slots[i].Count > 0) return false;
+		Array.Resize(ref _slots, size);
+		EmitSignal(SignalName.InventoryChanged);
+		return true;
 	}
 
 	public ItemStack GetStack(int slot) => IsValidSlot(slot) ? _slots[slot] : null;
@@ -95,8 +105,28 @@ public partial class Inventory : Resource
 
 	public bool Contains(ares.scripts.systems.items.ItemData item, int amount = 1) => CountOf(item) >= amount;
 
+	public int CargoUsed
+	{
+		get
+		{
+			int total = 0;
+			foreach (var stack in _slots)
+				if (stack != null) total += stack.Count * stack.Item.CargoCost;
+			return total;
+		}
+	}
+
+	public bool HasCapability(ItemCapability capability)
+	{
+		foreach (var stack in _slots)
+			if (stack != null && stack.Item.HasCapability(capability)) return true;
+		return false;
+	}
+
 	public bool CanFit(ares.scripts.systems.items.ItemData item, int amount = 1)
 	{
+		if (item == null || amount <= 0) return false;
+
 		int space = 0;
 		foreach (var stack in _slots)
 		{

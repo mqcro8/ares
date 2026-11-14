@@ -32,7 +32,6 @@ public partial class TrainingMovement : Node
         Stamina = progress.Stamina;
         _rest = progress.Rest;
         SuppressDialogueJump();
-        Course.Step(Stamina);
     }
 
     public override void _Ready()
@@ -105,7 +104,6 @@ public partial class TrainingMovement : Node
         Visual.Position = _visualOrigin + Vector2.Up * Mathf.Round(Height);
         // Shadow is a sibling of Visual: stays at the ground footprint even in flight.
         Shadow.Visible = true;
-        Course.Step(Stamina);
         return true;
     }
 }

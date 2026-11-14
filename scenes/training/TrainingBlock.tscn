@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c16gdj6jtud"]
 
-[ext_resource type="Texture2D" path="res://art/training/training_hurdle.png" id="hurdle"]
+[ext_resource type="Texture2D" path="res://art/training/environment/training_hurdle.png" id="hurdle"]
 [sub_resource type="RectangleShape2D" id="base"]
 size = Vector2(64, 16)
 
@@ -8,7 +8,7 @@ size = Vector2(64, 16)
 texture_filter = 1
 collision_layer = 2
 collision_mask = 0
-editor_description = "Padded hurdle: gameplay height 18, unchanged 64x16 footprint. Supplied 24x11 art at uniform integer 3x (72x33 visual, 4px side overhang). Origin at front feet; Base remains the only footprint source."
+editor_description = "Reusable padded training hurdle prefab: gameplay height 18, unchanged 64x16 footprint. Supplied 24x11 art at uniform integer 3x (72x33 visual, 4px side overhang). Origin at front feet; Base remains the only footprint source."
 
 [node name="Visual" type="Sprite2D" parent="."]
 position = Vector2(-36, -33)

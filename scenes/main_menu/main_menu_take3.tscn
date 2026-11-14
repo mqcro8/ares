@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bw70siatq0p6s" path="res://scripts/ui/Main_menu/MainMenu.cs" id="1_pdgn1"]
 [ext_resource type="FontFile" uid="uid://crjq2bglvji62" path="res://art/fonts/Aerospace.ttf" id="2_pdgn1"]
-[ext_resource type="Theme" path="res://scenes/main_menu/MenuTheme.tres" id="3_theme"]
+[ext_resource type="Theme" uid="uid://dnj1ucha05y10" path="res://scenes/main_menu/MenuTheme.tres" id="3_theme"]
 
 [node name="MainMenuTake3" type="Control" unique_id=725423804]
 layout_mode = 3
@@ -24,8 +24,9 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"MenuBackground"
 
-[node name="MenuLayout" type="CenterContainer" parent="."]
+[node name="MenuLayout" type="CenterContainer" parent="." unique_id=380878799]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.07
 anchor_top = 0.06
 anchor_right = 0.42
@@ -33,12 +34,12 @@ anchor_bottom = 0.94
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MenuStack" type="VBoxContainer" parent="MenuLayout"]
+[node name="MenuStack" type="VBoxContainer" parent="MenuLayout" unique_id=835606565]
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 theme_override_constants/separation = 28
 
-[node name="TitleGroup" type="VBoxContainer" parent="MenuLayout/MenuStack"]
+[node name="TitleGroup" type="VBoxContainer" parent="MenuLayout/MenuStack" unique_id=649007673]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
@@ -46,17 +47,17 @@ theme_override_constants/separation = 4
 [node name="Label" type="Label" parent="MenuLayout/MenuStack/TitleGroup" unique_id=2067251723]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.94, 0.86, 1)
-theme_override_colors/font_outline_color = Color(0.045, 0.035, 0.1, 1)
 theme_override_colors/font_shadow_color = Color(0.035, 0.025, 0.085, 1)
-theme_override_constants/outline_size = 4
+theme_override_colors/font_outline_color = Color(0.045, 0.035, 0.1, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 3
+theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("2_pdgn1")
 theme_override_font_sizes/font_size = 88
 text = "ARES"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="MenuLayout/MenuStack/TitleGroup"]
+[node name="Subtitle" type="Label" parent="MenuLayout/MenuStack/TitleGroup" unique_id=137637887]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.82, 0.94, 1)
 theme_override_colors/font_outline_color = Color(0.04, 0.035, 0.09, 1)
@@ -65,7 +66,15 @@ theme_override_font_sizes/font_size = 13
 text = "M I S S I O N   C O N T R O L"
 horizontal_alignment = 1
 
-[node name="TitleRule" type="ColorRect" parent="MenuLayout/MenuStack/TitleGroup"]
+[node name="Tagline" type="Label" parent="MenuLayout/MenuStack/TitleGroup" unique_id=1134855803]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.74, 0.86, 1)
+theme_override_font_sizes/font_size = 11
+text = "Fourteen days of silence. Two probes lost."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TitleRule" type="ColorRect" parent="MenuLayout/MenuStack/TitleGroup" unique_id=1255441439]
 custom_minimum_size = Vector2(72, 2)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -80,7 +89,7 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
-text = "Start Game"
+text = "Begin Mission"
 
 [node name="Options" type="Button" parent="MenuLayout/MenuStack/VBoxContainer2" unique_id=698796058]
 custom_minimum_size = Vector2(0, 54)
@@ -96,6 +105,20 @@ text = "Credits"
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 text = "Quit Game"
+
+[node name="Telemetry" type="Label" parent="." unique_id=1539547876]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -44.0
+offset_right = 620.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.55, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "// GATEWAY RELAY // SIGNAL LOST - 14D 06H"
 
 [connection signal="pressed" from="MenuLayout/MenuStack/VBoxContainer2/Start" to="." method="OnStartPressed"]
 [connection signal="pressed" from="MenuLayout/MenuStack/VBoxContainer2/Options" to="." method="OnOptionsPressed"]
