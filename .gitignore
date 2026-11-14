@@ -4,3 +4,8 @@
 .idea/
 controlers/node_modules/
 .DS_Store
+
+# Local editor tooling
+.addons/
+addons/
+.mcp.json

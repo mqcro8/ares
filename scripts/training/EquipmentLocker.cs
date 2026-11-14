@@ -15,8 +15,11 @@ public partial class EquipmentLocker : Node2D
     [Export] public ItemData StarterKit { get; set; }
     [Export(PropertyHint.Range, "1,8,1")] public int Slots { get; set; } = 2;
     [Export] public Control FrontZone { get; set; }
+    [Export] public Texture2D TankIcon { get; set; }
+    [Export] public Texture2D KitIcon { get; set; }
 
     public Inventory Contents { get; private set; }
+    public EquipmentPanel Panel { get; private set; }
 
     public override void _Ready()
     {
@@ -29,10 +32,38 @@ public partial class EquipmentLocker : Node2D
     public string InteractionPrompt(Player player)
     {
         if (StarterKit == null || player?.Inventory == null) return "SUPPLY LOCKER UNAVAILABLE";
-        if (player.Inventory.Contains(StarterKit)) return "E — Store maintenance kit";
-        return Contents != null && Contents.Contains(StarterKit)
-            ? "E — Take maintenance kit"
-            : "SUPPLY LOCKER EMPTY";
+        return Panel != null ? "E — Close supply locker" : "E — Open supply locker";
+    }
+
+    /// <summary>Opens the loadout view. It is the single place to take the kit and pick tanks.</summary>
+    public string Open(Player player)
+    {
+        if (StarterKit == null || player?.Inventory == null)
+            return "SUPPLY LOCKER UNAVAILABLE";
+        if (Panel != null && GodotObject.IsInstanceValid(Panel))
+        {
+            Panel.Close();
+            return "SUPPLY LOCKER CLOSED.";
+        }
+
+        Panel = new EquipmentPanel
+        {
+            Name = "EquipmentPanel",
+            Player = player,
+            Locker = this,
+            TankIcon = TankIcon,
+            KitIcon = KitIcon,
+        };
+        Panel.Closed += OnPanelClosed;
+        GetTree().CurrentScene?.AddChild(Panel);
+        Refresh();
+        return "SUPPLY LOCKER OPEN — choose your equipment.";
+    }
+
+    private void OnPanelClosed()
+    {
+        if (Panel != null) Panel.Closed -= OnPanelClosed;
+        Panel = null;
     }
 
     public string Toggle(Player player)
@@ -54,7 +85,8 @@ public partial class EquipmentLocker : Node2D
         if (!Contents.Contains(StarterKit)) return "SUPPLY LOCKER EMPTY.";
 
         if (!InventoryTransferService.TryTransfer(Contents, player.Inventory, StarterKit, 1,
-                mission?.CargoCapacity ?? 6, out string takeError))
+                mission?.CargoCapacity ?? 6, out string takeError,
+                mission?.OxygenCargoUsed ?? 0))
             return "CANNOT TAKE KIT — " + takeError;
 
         Refresh();

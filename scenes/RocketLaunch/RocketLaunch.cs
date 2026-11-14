@@ -15,9 +15,18 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	public LaunchHoldModel Model { get; private set; } = new();
 	public LaunchIgnitionModel Ignition { get; private set; } = new();
 
-	private static readonly LaunchIgnitionConfig IgnitionConfig = new(TargetClicks: 25, TimeLimitSeconds: 5);
+	private static readonly LaunchIgnitionConfig IgnitionConfig = new(
+		TargetClicks: 25, TimeLimitSeconds: 5, MinimumRatio: 0.85);
 	private static readonly LaunchHoldConfig HoldConfig = new(
 		Initial: 50, Rise: 15, Fall: 15, Low: 45, High: 55, GoalSeconds: 10);
+	private static readonly LaunchTargetConfig MovingTargetConfig = new(
+		StartCenter: 50, MinCenter: 5, MaxCenter: 95,
+		StartSpeed: 3, MaxSpeed: 8, SpeedRampSeconds: 10,
+		StartWidth: 10, EndWidth: 8);
+
+	/// <summary>Seed for the moving target path. Zero means a new random path each attempt.</summary>
+	[Export] public int TargetSeed { get; set; }
+	private LaunchIgnitionResult _ignitionResult = new(0, 25, 22, LaunchIgnitionOutcome.Pending);
 	private Rocket rocket;
 	private Background background;
 	private AnimatedSprite2D fire;
@@ -87,7 +96,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		}
 		accessDenied = !launchAllowed;
 		if (!Practice && MissionState.Instance.LaunchRecord != null) accessDenied = false;
-		Model = new(HoldConfig);
+		Model = CreateHoldModel();
 		if (accessDenied || (!Practice && MissionState.Instance.LaunchRecord != null)) State = Phase.Result;
 		background.Configure(Practice);
 		SetGaugeBand();
@@ -100,8 +109,21 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	private void SetGaugeBand()
 	{
-		band.AnchorLeft = (float)Model.Config.Low / 100;
-		band.AnchorRight = (float)Model.Config.High / 100;
+		LayoutGaugeBand();
+	}
+
+	private LaunchHoldModel CreateHoldModel()
+	{
+		int seed = TargetSeed != 0 ? TargetSeed : Random.Shared.Next(int.MaxValue);
+		var target = MovingTargetConfig with { Seed = seed, RandomDestinations = true };
+		return new LaunchHoldModel(HoldConfig, target);
+	}
+
+	private void LayoutGaugeBand()
+	{
+		if (band == null || Model == null) return;
+		band.AnchorLeft = (float)Model.TargetLow / 100;
+		band.AnchorRight = (float)Model.TargetHigh / 100;
 		band.OffsetLeft = band.OffsetRight = 0;
 	}
 
@@ -170,7 +192,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		ignitionFailed = false;
 		practiceReturnPending = false;
 		Ignition = new(IgnitionConfig);
-		Model = new(HoldConfig);
+		Model = CreateHoldModel();
 		State = Phase.Ignition;
 		spaceHeld = false;
 		mouseHeld = false;
@@ -185,9 +207,9 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	private void BeginHoldPhase()
 	{
-		if (State != Phase.Ignition || !Ignition.Complete) return;
+		if (State != Phase.Ignition) return;
 		State = Phase.Active;
-		Model = new(HoldConfig);
+		Model = CreateHoldModel();
 		lastTimestamp = Clock();
 		holding = (spaceHeld || mouseHeld) && !inputBlocked;
 		rocket.BeginThrust();
@@ -199,13 +221,24 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (Paused || State != Phase.Ignition) return;
 		Ignition.RegisterClick();
 		ignitionProgress.Value = Ignition.Clicks;
-		if (Ignition.Complete) BeginHoldPhase();
+		if (Ignition.Complete)
+		{
+			_ignitionResult = Ignition.Outcome();
+			BeginHoldPhase();
+		}
 		Refresh();
 	}
 
 	private void FailIgnition()
 	{
-		if (State != Phase.Ignition || !Ignition.Failed) return;
+		if (State != Phase.Ignition) return;
+		_ignitionResult = Ignition.Outcome();
+		if (_ignitionResult.CanProceed)
+		{
+			// A partial ignition still lifts the rocket, but it leaves faults behind.
+			BeginHoldPhase();
+			return;
+		}
 		ignitionFailed = true;
 		holding = false;
 		State = Phase.Result;
@@ -411,7 +444,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (State == Phase.Ignition)
 		{
 			Ignition.Advance(delta);
-			if (Ignition.Failed) FailIgnition();
+			if (Ignition.TimedOut) FailIgnition();
 			return;
 		}
 		if (State != Phase.Active) return;
@@ -429,13 +462,15 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 			rocket.StopFire();
 			return;
 		}
+		var result = BuildLaunchResult();
+		RunResult = result;
 		if (Practice)
 		{
 			MissionState.Instance.TrainingLaunchPracticeComplete = true;
 			MissionState.Instance.EvaluateTrainingCompletion();
 			practiceReturnPending = true;
 		}
-		else if (!MissionState.Instance.RecordLaunch(sequence, Model.Result))
+		else if (!MissionState.Instance.RecordLaunch(sequence, result))
 		{
 			launchAllowed = false;
 			accessDenied = true;
@@ -445,6 +480,22 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		}
 		rocket.LaunchSuccess();
 		Refresh();
+	}
+
+	/// <summary>Result of the current run, including the ignition faults it carries.</summary>
+	public LaunchResult RunResult { get; private set; }
+
+	/// <summary>Combines the hold result with the ignition outcome so faults travel with the launch.</summary>
+	private LaunchResult BuildLaunchResult()
+	{
+		var hold = Model.Result;
+		if (hold == null) return null;
+		return hold with
+		{
+			IgnitionClicks = _ignitionResult.Clicks,
+			IgnitionTargetClicks = _ignitionResult.TargetClicks,
+			IgnitionFaults = _ignitionResult.Faults,
+		};
 	}
 
 	private void OnAnimationFinished()
@@ -465,7 +516,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private void Refresh()
 	{
 		if (text == null) return;
-		var result = Model.Result ?? (!Practice ? MissionState.Instance.LaunchRecord : null);
+		var result = RunResult ?? Model.Result ?? (!Practice ? MissionState.Instance.LaunchRecord : null);
 		bool hidePracticeAscentHud = Practice && !Paused && backError == null && (State == Phase.Ascending || State == Phase.Complete);
 		briefing.Visible = State == Phase.Ready;
 		hud.Visible = State != Phase.Ready && !hidePracticeAscentHud;
@@ -475,9 +526,9 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		else text.Text = State switch
 		{
 			Phase.Ready => Practice
-				? "LAUNCH SIMULATOR — tap 25 times to ignite, then hold the marker in the green area for 10 seconds."
-				: "LAUNCH SEQUENCE — tap 25 times to ignite, then hold the marker in the green area for 10 seconds.",
-			Phase.Ignition => $"IGNITION — tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds.",
+				? $"LAUNCH SIMULATOR — tap {Ignition.Config.TargetClicks} times to ignite (at least {Ignition.Config.MinimumClicks} to launch), then hold the marker in the green area for 10 seconds."
+				: $"LAUNCH SEQUENCE — tap {Ignition.Config.TargetClicks} times to ignite (at least {Ignition.Config.MinimumClicks} to launch), then hold the marker in the green area for 10 seconds.",
+			Phase.Ignition => $"IGNITION — tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds. Minimum {Ignition.Config.MinimumClicks} to launch.",
 			Phase.Active => ActiveMessage(),
 			Phase.Ascending => Practice ? "SIMULATOR COMPLETE — watch the rocket ascend." : "LAUNCH COMPLETE — ascending.",
 			Phase.Complete => Practice ? "SIMULATOR COMPLETE — returning to the lab." : "ASCENT COMPLETE — waiting for the next scene.",
@@ -485,8 +536,8 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		};
 		briefingSpeaker.Text = Practice ? "LAUNCH SIMULATOR" : "LAUNCH PAD AUTHORIZED";
 		briefingText.Text = Practice
-			? "Tap SPACE or click 25 times within 5 seconds to ignite. Then hold SPACE or mouse to raise and stay in the green band for 10 seconds."
-			: "Tap SPACE or click 25 times within 5 seconds to ignite. Then hold in the green band for 10 seconds.";
+			? $"Tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds to ignite. {Ignition.Config.MinimumClicks} taps still lift the rocket. Then hold SPACE or mouse to raise and stay in the green band for 10 seconds."
+			: $"Tap SPACE or click {Ignition.Config.TargetClicks} times within {Ignition.Config.TimeLimitSeconds:F0} seconds to ignite. {Ignition.Config.MinimumClicks} taps still lift the rocket. Then hold in the green band for 10 seconds.";
 		briefingTutorial.Visible = Practice;
 		if (Practice)
 		{
@@ -528,23 +579,34 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		? IgnitionStats()
 		: $"CENTERED {Model.CenteredTime:F1}/{Model.Config.GoalSeconds:F0}s | MARKER {Model.Heat:F0}";
 
-	private string IgnitionStats() => $"IGNITION {Ignition.Clicks}/{Ignition.Config.TargetClicks} | {Ignition.Remaining:F1}s";
+	private string IgnitionStats() =>
+		$"IGNITION {Ignition.Clicks}/{Ignition.Config.TargetClicks} (MIN {Ignition.Config.MinimumClicks}) | {Ignition.Remaining:F1}s";
 
-	private string ResultStats(LaunchResult result) => $"CENTERED {result.CenteredSeconds:F0}/{Model.Config.GoalSeconds:F0}s | COMPLETE";
+	private string ResultStats(LaunchResult result)
+	{
+		string faults = result.IgnitionFaults > 0
+			? $" | IGNITION FAULTS {result.IgnitionFaults}"
+			: " | IGNITION PERFECT";
+		return $"CENTERED {result.CenteredSeconds:F0}/{Model.Config.GoalSeconds:F0}s{faults}";
+	}
 
 	private string ResultMessage()
 	{
 		if (ignitionFailed)
 			return fromTraining ? "IGNITION FAILED — return to the lab when you are ready to try again."
 				: "IGNITION FAILED — return to Mission Control.";
+		string faults = _ignitionResult.Faults > 0
+			? $" IGNITION FAULTS: {_ignitionResult.Faults}."
+			: string.Empty;
 		return Practice
-			? "SIMULATOR COMPLETE — launch practice requirement cleared. Return to the lab and walk to LAUNCH PAD."
-			: "LAUNCH COMPLETE — waiting for the next scene.";
+			? $"SIMULATOR COMPLETE — launch practice requirement cleared.{faults} Return to the lab and walk to LAUNCH PAD."
+			: $"LAUNCH COMPLETE — waiting for the next scene.{faults}";
 	}
 
 	private void LayoutGauge()
 	{
 		if (gauge == null || handle == null) return;
+		LayoutGaugeBand();
 		float width = Math.Max(1, gauge.Size.X);
 		float halfHandle = handle.Size.X / 2;
 		float center = width <= handle.Size.X ? width / 2

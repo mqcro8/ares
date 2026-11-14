@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mission/OxygenPickup.cs" id="1_pickup"]
+[ext_resource type="Texture2D" path="res://art/training/equipment/tanque_oxigeno.png" id="2_tank"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_station"]
+radius = 40.0
+
+[node name="OxygenStation" type="Area2D"]
+script = ExtResource("1_pickup")
+RefillToFull = true
+PickupName = "REFILL SUIT"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.46, 0.89, 0.96, 1)
+texture = ExtResource("2_tank")
+texture_filter = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_station")

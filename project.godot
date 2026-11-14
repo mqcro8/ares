@@ -27,6 +27,7 @@ AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
 ControllerRelay="*res://scripts/systems/input/ControllerRelay.cs"
+DevCheats="*res://scripts/systems/DevCheats.cs"
 
 [display]
 

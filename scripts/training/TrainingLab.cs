@@ -1,5 +1,6 @@
 namespace ares.scripts.training;
 using Godot;
+using System;
 using ares.scripts.player;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
@@ -63,7 +64,7 @@ public partial class TrainingLab : Node2D
 		_stations.Targets.Add(new("Hull repair bench", HullRepairZone, PracticeSession.SceneFor(PracticeSession.Exercise.HullRepair), "lab.hull.return", PracticeSession.Exercise.HullRepair, RequiredCapability: ItemCapability.Repair));
 		if (Locker != null)
 			_stations.Targets.Add(new("Supply locker", Locker.FrontZone, null, null,
-				Interact: () => Locker.Toggle(Player), Prompt: () => Locker.InteractionPrompt(Player)));
+				Interact: () => Locker.Open(Player), Prompt: () => Locker.InteractionPrompt(Player)));
 		_stations.Targets.Add(new("Return to gym", GymZone, PracticeSession.TrainingScene, "gym.from_lab"));
 		AddLaunchTargets();
 		ControlsGuide = new TrainingControlsGuide
@@ -133,12 +134,17 @@ public partial class TrainingLab : Node2D
 		_stations.Targets.Add(new("Launch simulator", SimulatorZone,
 			"res://scenes/RocketLaunch/Launching.tscn", "launch.practice", null,
 			PracticeSession.LaunchMode.Practice));
-		string locked = !mission.LaunchPadUnlocked
-			? "LAUNCH PAD: LOCKED — complete course, wiring, fuses and simulator."
-			: mission.LaunchRecord != null ? "LAUNCH COMPLETE — review the mission." : null;
 		_stations.Targets.Add(new("Launch pad", LaunchPadZone,
 			"res://scenes/RocketLaunch/Launching.tscn", "launch.real", null,
-			PracticeSession.LaunchMode.Real, locked));
+			PracticeSession.LaunchMode.Real, LaunchPadLockMessage));
+	}
+
+	private static string LaunchPadLockMessage()
+	{
+		var mission = MissionState.Instance;
+		if (!mission.LaunchPadUnlocked)
+			return "LAUNCH PAD: LOCKED — complete course, wiring, fuses and simulator.";
+		return mission.LaunchRecord != null ? "LAUNCH COMPLETE — review the mission." : null;
 	}
 
 	private void FitCamera()

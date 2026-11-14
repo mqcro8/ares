@@ -25,6 +25,7 @@ public partial class Player : CharacterBody2D
 
 	public override void _Ready()
 	{
+		if (!IsInGroup("player")) AddToGroup("player");
 		int size = Hotbar?.SlotCount ?? Inventory.DefaultSlots;
 		var mission = MissionState.Instance;
 		bool created;
