@@ -12,6 +12,8 @@ public partial class MissionState : Node
 	public const int OxygenTankCargoCost = 1;
 	public static MissionState Instance { get; private set; }
 
+	public const int DoorAccessCount = 4;
+
 	public MissionStage Stage { get; set; } = MissionStage.MainMenu;
 	public double MissionTime { get; set; }
 	public Inventory PlayerInventory { get; private set; }
@@ -22,6 +24,69 @@ public partial class MissionState : Node
 	public int OxygenTankCount => Oxygen.TankCount;
 	public int OxygenCargoUsed => OxygenTankCount * OxygenTankCargoCost;
 	public int CargoUsed => (PlayerInventory?.CargoUsed ?? 0) + OxygenCargoUsed;
+
+	// Puzzle progress. Lives here so it survives building/scene changes.
+	public bool GeneratorRepaired { get; private set; }
+	public bool WireBoxRepaired { get; private set; }
+	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && AllDoorAccessOn;
+
+	private readonly bool[] _doorAccess = new bool[DoorAccessCount];
+	public int DoorAccessOnCount
+	{
+		get
+		{
+			int count = 0;
+			foreach (bool on in _doorAccess)
+				if (on) count++;
+			return count;
+		}
+	}
+	public bool AllDoorAccessOn => DoorAccessOnCount == DoorAccessCount;
+
+	[Signal] public delegate void GeneratorRepairedChangedEventHandler(bool repaired);
+	[Signal] public delegate void WireBoxRepairedChangedEventHandler(bool repaired);
+	[Signal] public delegate void DoorAccessChangedEventHandler(int index, bool on);
+	[Signal] public delegate void AllDoorAccessCompletedEventHandler();
+
+	public bool IsDoorAccessOn(int index)
+		=> index >= 0 && index < DoorAccessCount && _doorAccess[index];
+
+	public void SetDoorAccess(int index, bool on)
+	{
+		if (index < 0 || index >= DoorAccessCount || _doorAccess[index] == on)
+			return;
+
+		_doorAccess[index] = on;
+		EmitSignal(SignalName.DoorAccessChanged, index, on);
+		if (on && AllDoorAccessOn)
+			EmitSignal(SignalName.AllDoorAccessCompleted);
+	}
+
+	public void MarkGeneratorRepaired()
+	{
+		if (GeneratorRepaired)
+			return;
+
+		GeneratorRepaired = true;
+		EmitSignal(SignalName.GeneratorRepairedChanged, true);
+	}
+
+	public void MarkWireBoxRepaired()
+	{
+		if (WireBoxRepaired)
+			return;
+
+		WireBoxRepaired = true;
+		EmitSignal(SignalName.WireBoxRepairedChanged, true);
+	}
+
+	public void ResetPuzzleProgress()
+	{
+		GeneratorRepaired = false;
+		WireBoxRepaired = false;
+		for (int i = 0; i < _doorAccess.Length; i++)
+			_doorAccess[i] = false;
+	}
 
 	// Resource axes from the design doc. Exact axes and starting values are an M0 decision.
 	public int Budget { get; set; }

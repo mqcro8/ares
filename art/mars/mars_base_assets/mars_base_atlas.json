@@ -1,0 +1,457 @@
+{
+ "sci_microscope_bench": {
+  "category": "1_science",
+  "x": 0,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "sci_centrifuge": {
+  "category": "1_science",
+  "x": 32,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "sci_sample_cabinet": {
+  "category": "1_science",
+  "x": 64,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "sci_spectrometer": {
+  "category": "1_science",
+  "x": 96,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "sci_sample_fridge": {
+  "category": "1_science",
+  "x": 128,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "sci_chem_bench": {
+  "category": "1_science",
+  "x": 160,
+  "y": 0,
+  "w": 32,
+  "h": 32
+ },
+ "gh_floor_grate": {
+  "category": "2_greenhouse",
+  "x": 0,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_bed_empty": {
+  "category": "2_greenhouse",
+  "x": 32,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_bed_sprouts": {
+  "category": "2_greenhouse",
+  "x": 64,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_bed_leafy": {
+  "category": "2_greenhouse",
+  "x": 96,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_bed_tomato": {
+  "category": "2_greenhouse",
+  "x": 128,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_bed_wheat": {
+  "category": "2_greenhouse",
+  "x": 160,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_hydro_tray": {
+  "category": "2_greenhouse",
+  "x": 192,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_grow_light": {
+  "category": "2_greenhouse",
+  "x": 224,
+  "y": 32,
+  "w": 32,
+  "h": 32
+ },
+ "gh_water_tank": {
+  "category": "2_greenhouse",
+  "x": 0,
+  "y": 64,
+  "w": 32,
+  "h": 32
+ },
+ "gh_o2_scrubber": {
+  "category": "2_greenhouse",
+  "x": 32,
+  "y": 64,
+  "w": 32,
+  "h": 32
+ },
+ "gh_pipe_h": {
+  "category": "2_greenhouse",
+  "x": 64,
+  "y": 64,
+  "w": 32,
+  "h": 32
+ },
+ "gh_pipe_v": {
+  "category": "2_greenhouse",
+  "x": 96,
+  "y": 64,
+  "w": 32,
+  "h": 32
+ },
+ "gh_pipe_corner_wb": {
+  "category": "2_greenhouse",
+  "x": 128,
+  "y": 64,
+  "w": 32,
+  "h": 32
+ },
+ "elec_box_closed": {
+  "category": "3_electrical",
+  "x": 0,
+  "y": 96,
+  "w": 32,
+  "h": 32
+ },
+ "elec_box_open": {
+  "category": "3_electrical",
+  "x": 32,
+  "y": 96,
+  "w": 32,
+  "h": 32
+ },
+ "elec_generator_off": {
+  "category": "3_electrical",
+  "x": 64,
+  "y": 96,
+  "w": 32,
+  "h": 32
+ },
+ "elec_generator_on_f0": {
+  "category": "3_electrical",
+  "x": 96,
+  "y": 96,
+  "w": 32,
+  "h": 32
+ },
+ "elec_generator_on_f1": {
+  "category": "3_electrical",
+  "x": 128,
+  "y": 96,
+  "w": 32,
+  "h": 32
+ },
+ "sig_desk_f0": {
+  "category": "4_signals",
+  "x": 0,
+  "y": 128,
+  "w": 64,
+  "h": 32
+ },
+ "sig_desk_f1": {
+  "category": "4_signals",
+  "x": 64,
+  "y": 128,
+  "w": 64,
+  "h": 32
+ },
+ "sig_console": {
+  "category": "4_signals",
+  "x": 128,
+  "y": 128,
+  "w": 32,
+  "h": 32
+ },
+ "sig_radio": {
+  "category": "4_signals",
+  "x": 160,
+  "y": 128,
+  "w": 32,
+  "h": 32
+ },
+ "door_panel_idle_16": {
+  "category": "5_door_access",
+  "x": 8,
+  "y": 176,
+  "w": 16,
+  "h": 16
+ },
+ "door_panel_granted_16": {
+  "category": "5_door_access",
+  "x": 40,
+  "y": 176,
+  "w": 16,
+  "h": 16
+ },
+ "door_panel_denied_16": {
+  "category": "5_door_access",
+  "x": 72,
+  "y": 176,
+  "w": 16,
+  "h": 16
+ },
+ "door_closed": {
+  "category": "5_door_access",
+  "x": 96,
+  "y": 160,
+  "w": 32,
+  "h": 32
+ },
+ "door_half": {
+  "category": "5_door_access",
+  "x": 128,
+  "y": 160,
+  "w": 32,
+  "h": 32
+ },
+ "door_open": {
+  "category": "5_door_access",
+  "x": 160,
+  "y": 160,
+  "w": 32,
+  "h": 32
+ },
+ "in_floor_metal": {
+  "category": "6_decor_indoor",
+  "x": 0,
+  "y": 192,
+  "w": 32,
+  "h": 32
+ },
+ "in_floor_hazard": {
+  "category": "6_decor_indoor",
+  "x": 32,
+  "y": 192,
+  "w": 32,
+  "h": 32
+ },
+ "in_wall_panel": {
+  "category": "6_decor_indoor",
+  "x": 64,
+  "y": 192,
+  "w": 32,
+  "h": 32
+ },
+ "in_wall_window_mars": {
+  "category": "6_decor_indoor",
+  "x": 96,
+  "y": 192,
+  "w": 32,
+  "h": 32
+ },
+ "in_crate_big": {
+  "category": "6_decor_indoor",
+  "x": 128,
+  "y": 192,
+  "w": 32,
+  "h": 32
+ },
+ "in_crate_small_16": {
+  "category": "6_decor_indoor",
+  "x": 168,
+  "y": 208,
+  "w": 16,
+  "h": 16
+ },
+ "in_oxygen_tank_16x32": {
+  "category": "6_decor_indoor",
+  "x": 200,
+  "y": 192,
+  "w": 16,
+  "h": 32
+ },
+ "in_chair_16": {
+  "category": "6_decor_indoor",
+  "x": 232,
+  "y": 208,
+  "w": 16,
+  "h": 16
+ },
+ "in_potted_plant_16x32": {
+  "category": "6_decor_indoor",
+  "x": 8,
+  "y": 224,
+  "w": 16,
+  "h": 32
+ },
+ "in_locker": {
+  "category": "6_decor_indoor",
+  "x": 32,
+  "y": 224,
+  "w": 32,
+  "h": 32
+ },
+ "in_bunk_bed": {
+  "category": "6_decor_indoor",
+  "x": 64,
+  "y": 224,
+  "w": 32,
+  "h": 32
+ },
+ "in_table": {
+  "category": "6_decor_indoor",
+  "x": 96,
+  "y": 224,
+  "w": 32,
+  "h": 32
+ },
+ "in_wall_screen_32x16": {
+  "category": "6_decor_indoor",
+  "x": 128,
+  "y": 240,
+  "w": 32,
+  "h": 16
+ },
+ "in_floor_lamp_16x32": {
+  "category": "6_decor_indoor",
+  "x": 168,
+  "y": 224,
+  "w": 16,
+  "h": 32
+ },
+ "mars_ground_a": {
+  "category": "7_decor_outdoor",
+  "x": 0,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "mars_ground_b_pebbles": {
+  "category": "7_decor_outdoor",
+  "x": 32,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "mars_ground_c_ripples": {
+  "category": "7_decor_outdoor",
+  "x": 64,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "mars_ground_d_cracked": {
+  "category": "7_decor_outdoor",
+  "x": 96,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "out_rock_small_16": {
+  "category": "7_decor_outdoor",
+  "x": 136,
+  "y": 272,
+  "w": 16,
+  "h": 16
+ },
+ "out_rock_boulder": {
+  "category": "7_decor_outdoor",
+  "x": 160,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "out_rock_cluster": {
+  "category": "7_decor_outdoor",
+  "x": 192,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "out_crater": {
+  "category": "7_decor_outdoor",
+  "x": 224,
+  "y": 256,
+  "w": 32,
+  "h": 32
+ },
+ "out_dune": {
+  "category": "7_decor_outdoor",
+  "x": 0,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_ice_patch": {
+  "category": "7_decor_outdoor",
+  "x": 32,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_rover_tracks": {
+  "category": "7_decor_outdoor",
+  "x": 64,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_solar_panel": {
+  "category": "7_decor_outdoor",
+  "x": 96,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_dish": {
+  "category": "7_decor_outdoor",
+  "x": 128,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_rover": {
+  "category": "7_decor_outdoor",
+  "x": 160,
+  "y": 288,
+  "w": 32,
+  "h": 32
+ },
+ "out_flag_16x32": {
+  "category": "7_decor_outdoor",
+  "x": 200,
+  "y": 288,
+  "w": 16,
+  "h": 32
+ },
+ "out_beacon_off_16x32": {
+  "category": "7_decor_outdoor",
+  "x": 232,
+  "y": 288,
+  "w": 16,
+  "h": 32
+ },
+ "out_beacon_on_16x32": {
+  "category": "7_decor_outdoor",
+  "x": 8,
+  "y": 320,
+  "w": 16,
+  "h": 32
+ }
+}

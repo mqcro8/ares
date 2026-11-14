@@ -1,0 +1,45 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/mars/Generator.cs" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://3miwc2numhng" path="res://art/mars/mars_base_assets/3_electrical/elec_generator_off.png" id="2_off"]
+[ext_resource type="Texture2D" uid="uid://nfw8gl2eunr" path="res://art/mars/mars_base_assets/3_electrical/elec_generator_on_f0.png" id="3_on0"]
+[ext_resource type="Texture2D" uid="uid://dsetxmofi1hcc" path="res://art/mars/mars_base_assets/3_electrical/elec_generator_on_f1.png" id="4_on1"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_generator"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_off")
+}],
+"loop": 0,
+"name": &"off",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_on0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_on1")
+}],
+"loop": 1,
+"name": &"on",
+"speed": 4.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_generator"]
+size = Vector2(96, 96)
+
+[node name="Generator" type="Area2D"]
+script = ExtResource("1_script")
+PromptText = "Press E to interact"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -32)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_generator")
+animation = &"off"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -32)
+shape = SubResource("RectangleShape2D_generator")

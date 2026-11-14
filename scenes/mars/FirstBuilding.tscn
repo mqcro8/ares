@@ -16,6 +16,13 @@
 [ext_resource type="Script" uid="uid://dvpwfus68hw2o" path="res://scripts/player/HandEquip.cs" id="14_mfwx4"]
 [ext_resource type="TileSet" uid="uid://cjdfc2nmml3cr" path="res://art/mars/indoor_tileset.tres" id="15_322w3"]
 [ext_resource type="Script" uid="uid://cqylqv1lyy4d6" path="res://scripts/mars/SceneTrigger.cs" id="16_8pe31"]
+[ext_resource type="PackedScene" path="res://scenes/mars/Generator.tscn" id="17_generator"]
+[ext_resource type="PackedScene" path="res://scenes/mars/ElectricalBox.tscn" id="18_electricalbox"]
+[ext_resource type="Texture2D" uid="uid://bl3eqflm1an18" path="res://art/mars/mars_base_assets/6_decor_indoor/in_locker.png" id="19_omkbe"]
+[ext_resource type="Texture2D" uid="uid://bs3gy2640qt1n" path="res://art/mars/mars_base_assets/6_decor_indoor/in_crate_small_16.png" id="20_btbv3"]
+[ext_resource type="Texture2D" uid="uid://d1mwsqxdjyv3k" path="res://art/mars/mars_base_assets/6_decor_indoor/in_crate_big.png" id="21_tsjde"]
+[ext_resource type="Texture2D" uid="uid://l6qk4tvqm8xi" path="res://art/mars/mars_base_assets/6_decor_indoor/in_bunk_bed.png" id="22_j4fts"]
+[ext_resource type="Texture2D" uid="uid://bsxwmutul5gjw" path="res://art/mars/mars_base_assets/6_decor_indoor/in_oxygen_tank_16x32.png" id="23_ok057"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -137,3 +144,79 @@ IsExit = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1037221185]
 position = Vector2(976, 1078.5)
 shape = SubResource("RectangleShape2D_oco33")
+
+[node name="Generator" parent="." unique_id=2095440601 instance=ExtResource("17_generator")]
+position = Vector2(1238, 646)
+
+[node name="ElectricalBox" parent="." unique_id=721646611 instance=ExtResource("18_electricalbox")]
+position = Vector2(658, 591)
+scale = Vector2(0.5, 0.5)
+
+[node name="Node" type="Node" parent="." unique_id=2110823835]
+
+[node name="InLocker" type="Sprite2D" parent="Node" unique_id=715366975]
+position = Vector2(1064, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InLocker2" type="Sprite2D" parent="Node" unique_id=244019687]
+position = Vector2(1104, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InLocker3" type="Sprite2D" parent="Node" unique_id=723035425]
+position = Vector2(1144, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InLocker4" type="Sprite2D" parent="Node" unique_id=1732122983]
+position = Vector2(1184, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InLocker5" type="Sprite2D" parent="Node" unique_id=344919653]
+position = Vector2(1224, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InLocker6" type="Sprite2D" parent="Node" unique_id=1305536623]
+position = Vector2(1264, 877)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("19_omkbe")
+
+[node name="InCrateSmall16" type="Sprite2D" parent="Node" unique_id=1785051954]
+position = Vector2(1270, 945)
+texture = ExtResource("20_btbv3")
+
+[node name="InCrateSmall17" type="Sprite2D" parent="Node" unique_id=2023823726]
+z_index = 1
+position = Vector2(1295, 930)
+texture = ExtResource("20_btbv3")
+
+[node name="InCrateBig" type="Sprite2D" parent="Node" unique_id=1595945803]
+position = Vector2(1290, 938)
+texture = ExtResource("21_tsjde")
+
+[node name="InBunkBed" type="Sprite2D" parent="Node" unique_id=1394354763]
+position = Vector2(662, 650)
+texture = ExtResource("22_j4fts")
+
+[node name="InBunkBed2" type="Sprite2D" parent="Node" unique_id=1955528170]
+position = Vector2(694, 650)
+texture = ExtResource("22_j4fts")
+
+[node name="InBunkBed3" type="Sprite2D" parent="Node" unique_id=1070244600]
+position = Vector2(727, 650)
+texture = ExtResource("22_j4fts")
+
+[node name="InOxygenTank16x32" type="Sprite2D" parent="Node" unique_id=42210659]
+position = Vector2(684, 586)
+texture = ExtResource("23_ok057")
+
+[node name="InOxygenTank16x33" type="Sprite2D" parent="Node" unique_id=1106727881]
+position = Vector2(692, 586)
+texture = ExtResource("23_ok057")
+
+[node name="InOxygenTank16x34" type="Sprite2D" parent="Node" unique_id=1976545049]
+position = Vector2(688, 588)
+texture = ExtResource("23_ok057")
