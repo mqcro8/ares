@@ -192,11 +192,11 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		_dragWire = null;
 		_dragGlow = null;
 		_dragFrom = null;
+		_selectedLeft = -1;
 		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 		ResetHighlights();
+		PublishControllerContext();
 	}
-
-	public override void _ExitTree() => CancelInteraction();
 
 	private void AimKeyboard()
 	{
@@ -274,6 +274,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 		ResetHighlights();
 		if (_finished) EmitSignal(SignalName.Completed);
+		PublishControllerContext();
 	}
 
 	private void UpdateHover(Vector2 pos)
@@ -352,6 +353,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 	public override void _ExitTree()
 	{
+		CancelInteraction();
 		ControllerCommandRouter.Unregister(this);
 		ControllerContext.End(this);
 	}

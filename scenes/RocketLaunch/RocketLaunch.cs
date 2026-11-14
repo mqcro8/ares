@@ -3,6 +3,7 @@ using System;
 using ares.scripts.mission;
 using ares.scripts.training;
 using ares.scripts.systems;
+using Ares.Systems.Controllers;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource
@@ -120,6 +121,8 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		fire.AnimationFinished -= OnAnimationFinished;
 		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
 		pause.Pressed -= TogglePause; back.Pressed -= Back;
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
 	}
 
 	private void Back()
@@ -151,6 +154,12 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		{
 			accessDenied = true; State = Phase.Result; Refresh(); return;
 		}
+		BeginIgnition();
+	}
+
+	private void RetryIgnition()
+	{
+		if (!launchAllowed || State != Phase.Result || !ignitionFailed) return;
 		BeginIgnition();
 	}
 
@@ -338,7 +347,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 				return false;
 
 			case ControllerCommands.LaunchStart:
-				if (!Paused) StartOrRetry();
+				if (!Paused) BeginIgnitionFromReady();
 				return true;
 
 			case ControllerCommands.LaunchTap:

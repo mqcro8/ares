@@ -279,6 +279,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 		_led.Color = LedOn;
 		_wordLabel.Text = RevealWord;
 		Sparks(_screen.GetGlobalRect().GetCenter(), TargetColor);
+		PublishControllerContext();
 		MinigameEffects.CompleteAfter(this, .8, () => EmitSignal(SignalName.Completed));
 	}
 
