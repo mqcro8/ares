@@ -56,6 +56,91 @@ test("forwards controller input to the game", async (t) => {
   assert.deepEqual(await received, { type: "input", action: "move_left", strength: 0.75 });
 });
 
+test("forwards touch-native minigame commands to the game", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+
+  const game = await connect(port, "CMD1", "game");
+  const controller = await connect(port, "CMD1", "controller");
+  t.after(() => closeAll(game, controller));
+
+  const pick = nextMessage(game, (message) => message.type === "command");
+  controller.send(JSON.stringify({ type: "command", name: "wire_pick", index: 2 }));
+  assert.deepEqual(await pick, { type: "command", name: "wire_pick", index: 2 });
+
+  const set = nextMessage(game, (message) => message.type === "command" && message.name === "freq_set");
+  controller.send(JSON.stringify({ type: "command", name: "freq_set", index: 1, value: 0.42 }));
+  assert.deepEqual(await set, { type: "command", name: "freq_set", index: 1, value: 0.42 });
+
+  const select = nextMessage(game, (message) => message.type === "command" && message.name === "hull_select");
+  controller.send(JSON.stringify({ type: "command", name: "hull_select", index: 3 }));
+  assert.deepEqual(await select, { type: "command", name: "hull_select", index: 3 });
+});
+
+test("drops invalid minigame commands", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+
+  const game = await connect(port, "CMD2", "game");
+  const controller = await connect(port, "CMD2", "controller");
+  t.after(() => closeAll(game, controller));
+
+  const invalid = [
+    { type: "command", name: "pause" },
+    { type: "command", name: "wire_pick" },
+    { type: "command", name: "wire_pick", index: -1 },
+    { type: "command", name: "wire_pick", index: 1.5 },
+    { type: "command", name: "freq_set", index: 0, value: 2 },
+    { type: "command", name: "freq_set", index: 0 },
+    { type: "command", name: "hull_select", index: 4 },
+    { type: "command", name: "hull_select", value: 1 },
+    { type: "command", name: "hull_restart", index: 0 },
+  ];
+  for (const message of invalid) controller.send(JSON.stringify(message));
+
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.deepEqual(game.received.filter((message) => message.type === "command"), []);
+});
+
+test("forwards context to the phone and replays it when a phone joins", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+
+  const game = await connect(port, "CTX1", "game");
+  t.after(() => closeAll(game));
+
+  const context = { type: "context", mode: "wires", active: true, state: { left: ["#f00"] } };
+  game.send(JSON.stringify(context));
+
+  const first = await connect(port, "CTX1", "controller");
+  t.after(() => closeAll(first));
+  assert.deepEqual(await nextMessage(first, (message) => message.type === "context"), context);
+
+  const second = await connect(port, "CTX1", "controller");
+  t.after(() => closeAll(second));
+  assert.deepEqual(await nextMessage(second, (message) => message.type === "context"), context);
+});
+
+test("drops invalid context and never forwards it from the phone", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+
+  const game = await connect(port, "CTX2", "game");
+  const controller = await connect(port, "CTX2", "controller");
+  t.after(() => closeAll(game, controller));
+
+  for (const message of [
+    { type: "context", mode: "unknown", active: true, state: {} },
+    { type: "context", mode: "wires", active: "yes", state: {} },
+    { type: "context", mode: "wires", active: true, state: [] },
+  ]) game.send(JSON.stringify(message));
+
+  controller.send(JSON.stringify({ type: "context", mode: "wires", active: true, state: {} }));
+
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.deepEqual(controller.received.filter((message) => message.type === "context"), []);
+});
+
 test("drops invalid controls instead of forwarding them", async (t) => {
   const { relay, port } = await startRelay();
   t.after(() => relay.close());

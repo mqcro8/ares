@@ -18,7 +18,9 @@ body[data-view=wheel]{background:linear-gradient(rgba(30,10,5,.7),rgba(9,10,27,.
 @keyframes ground{to{background-position:0 160px}}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
 section{display:none;height:100%;padding:14px 18px}
-body[data-view=menu] #menu,body[data-view=pad] #pad,body[data-view=wheel] #wheel{display:grid}
+body[data-view=menu] #menu,body[data-view=pad] #pad,body[data-view=wheel] #wheel,
+body[data-view=wires] #wires,body[data-view=fuses] #fuses,body[data-view=frequency] #frequency,
+body[data-view=hull] #hull,body[data-view=launch] #launch{display:grid}
 a{color:inherit;text-decoration:none}
 
 /* status + nav */
@@ -75,6 +77,57 @@ h1{font:88px/1 Aerospace,Pixel;margin:0;color:var(--cream);text-shadow:2px 3px #
 #rotate,#err{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:30px;font-size:11px;line-height:1.8}
 #err.show{display:flex;color:var(--red)}
 @media (orientation:portrait){body[data-view=pad] #rotate,body[data-view=wheel] #rotate{display:flex}h1{font-size:56px}.modes{flex-direction:column}.mode{width:80vw}}
+
+/* minigames */
+.mg{gap:10px;padding-top:40px;overflow:auto;grid-auto-rows:auto;align-content:start}
+#wires{grid-template-rows:auto auto 1fr;min-height:0}
+.mg h2{font:20px/1.2 Aerospace;margin:0;color:var(--cream);letter-spacing:2px}
+.mg-sub{font-size:9px;line-height:1.6;color:#b9c3e0;margin:0}
+.mg-sub b{color:var(--cyan)}
+.mg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+.mg-btn{min-width:64px;min-height:52px;padding:8px 12px;background:var(--panel);border:2px solid var(--line);border-radius:4px;color:var(--cream);font:11px Pixel;text-align:center;touch-action:none;white-space:pre-line}
+.mg-btn.on{background:#47216e;border-color:var(--cyan);color:var(--cyan)}
+.mg-btn.sel{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan) inset;color:var(--cyan)}
+.mg-btn:disabled{opacity:.32}
+.mg-btn.big{min-height:82px;width:100%;font-size:14px;border-color:var(--amber);color:#ffe0a6}
+.mg-btn.big.on{background:#47216e;border-color:var(--cyan);color:var(--cyan)}
+.mg-meter{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:9px;color:#c7d1f0}
+.mg-bar{height:12px;background:#161a34;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.mg-bar i{display:block;height:100%;width:0;background:var(--cyan);transition:width .08s linear}
+.mg-bar.heat i{background:linear-gradient(90deg,#3cdc50,#f5c542,#d62828)}
+.mg-bar.match i{background:var(--amber)}
+#gate{position:fixed;inset:0;z-index:8;display:none;place-items:center;padding:24px;background:rgba(5,7,20,.9);text-align:center}
+#gate.show{display:grid}
+#gate .card{max-width:360px;display:grid;gap:12px}
+#gate h3{font:18px/1.3 Aerospace;margin:0;color:var(--cream)}
+#gate p{font-size:10px;line-height:1.7;color:#c7d1f0;margin:0}
+#wireLeft,#wireRight{display:grid;gap:10px;align-content:center}
+.wire-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
+.wire{height:54px;border-radius:4px;border:3px solid #0b091a;color:#fff;font:10px Pixel;text-shadow:0 1px 3px #000;position:relative}
+.wire.done{opacity:.3;filter:grayscale(.4)}
+.wire.sel{outline:3px solid var(--cyan);outline-offset:2px}
+.fuse-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start}
+.fuse{min-height:74px;font-size:10px;line-height:1.7}
+#freqRows{display:grid;gap:14px;align-content:start}
+.freq-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:4px;background:rgba(9,10,27,.7)}
+.freq-row.sel{border-color:var(--cyan)}
+.freq-row label{font-size:9px;color:#c7d1f0}
+.freq-row input{width:100%;accent-color:var(--cyan);touch-action:auto}
+.freq-row output{font-size:10px;color:var(--cyan)}
+.hull-main{display:grid;grid-template-columns:minmax(120px,1fr) 1.2fr;gap:14px;align-items:center}
+.mg-stick{position:relative;width:min(34vh,180px);aspect-ratio:1;border-radius:50%;background:var(--panel);border:2px solid var(--line);justify-self:center;touch-action:none}
+.mg-stick::before{content:"";position:absolute;inset:28%;border-radius:50%;border:1px dashed rgba(140,122,186,.5)}
+.mg-knob{position:absolute;left:50%;top:50%;width:38%;aspect-ratio:1;margin:-19% 0 0 -19%;border-radius:50%;background:var(--amber);border:3px solid var(--cream);pointer-events:none}
+.hull-actions{display:grid;gap:8px}
+.hull-actions .mg-row{gap:6px}
+#hullPlates{gap:10px}
+#hullPlates .mg-btn{width:62px}
+#launchAction{display:grid;gap:10px;align-content:start}
+#launchAction .mg-btn{display:none}
+#launchAction .mg-btn.show{display:block}
+#launchDot{position:relative;height:18px;background:#161a34;border:1px solid var(--line);border-radius:3px}
+#launchDot i{position:absolute;top:0;bottom:0;left:0;width:1px;background:var(--cyan)}
+#launchBand{position:absolute;top:0;bottom:0;left:45%;width:10%;background:rgba(60,220,80,.28);border-left:1px solid #3cdc50;border-right:1px solid #3cdc50}
 </style>
 </head>
 <body data-view="menu">
@@ -114,6 +167,63 @@ h1{font:88px/1 Aerospace,Pixel;margin:0;color:var(--cream);text-shadow:2px 3px #
 </section>
 
 <div id="rotate">Turn your phone sideways.<br>Hold it like a steering wheel.</div>
+
+<section id="wires" class="mg">
+  <h2>WIRING</h2>
+  <p id="wireHint" class="mg-sub">Tap a color on the left, then its match on the right.</p>
+  <div class="wire-cols"><div id="wireLeft"></div><div id="wireRight"></div></div>
+</section>
+
+<section id="fuses" class="mg">
+  <h2>FUSE BOX</h2>
+  <p id="fuseInfo" class="mg-sub"></p>
+  <div id="fuseGrid" class="fuse-grid"></div>
+</section>
+
+<section id="frequency" class="mg">
+  <h2>FREQUENCY</h2>
+  <p class="mg-sub">Match the target waveform. Drag a knob or tap a row to select it.</p>
+  <div id="freqRows"></div>
+  <div class="mg-meter">MATCH <div class="mg-bar match"><i id="freqMatchBar"></i></div><span id="freqMatch">0%</span></div>
+  <div class="mg-meter">HOLD <div class="mg-bar"><i id="freqHoldBar"></i></div><span id="freqHold">0%</span></div>
+</section>
+
+<section id="hull" class="mg">
+  <h2>HULL REPAIR</h2>
+  <p class="mg-sub"><b id="hullPhase">SELECT A PLATE</b> <span id="hullSeam"></span></p>
+  <div class="mg-meter">HEAT <div class="mg-bar heat"><i id="hullHeat"></i></div><span id="hullHeatVal">0%</span></div>
+  <div class="mg-meter">STABILITY <div class="mg-bar"><i id="hullStability"></i></div><span id="hullStabilityVal">100%</span></div>
+  <div class="hull-main">
+    <div id="hullStick" class="mg-stick"><div class="mg-knob"></div></div>
+    <div class="hull-actions">
+      <div class="mg-row">
+        <button class="mg-btn btn-hold" data-act="minigame_rotate_left">⟲</button>
+        <button class="mg-btn btn-hold" data-act="minigame_rotate_right">⟳</button>
+        <button class="mg-btn btn-hold" data-act="minigame_fine">FINE</button>
+      </div>
+      <button id="hullAction" class="mg-btn big btn-hold" data-act="minigame_action">PICK</button>
+      <button id="hullRestart" class="mg-btn">RESTART</button>
+    </div>
+  </div>
+  <div id="hullPlates" class="mg-row"></div>
+</section>
+
+<section id="launch" class="mg">
+  <h2>LAUNCH</h2>
+  <p id="launchInfo" class="mg-sub"></p>
+  <div class="mg-meter">IGNITION <div class="mg-bar"><i id="launchIgn"></i></div><span id="launchClicks"></span></div>
+  <div class="mg-meter">HEAT <div id="launchDot"><div id="launchBand"></div><i id="launchHeatDot"></i></div><span id="launchBandText"></span></div>
+  <div class="mg-meter">CENTERED <div class="mg-bar"><i id="launchCenter"></i></div><span id="launchCenterVal"></span></div>
+  <div id="launchAction">
+    <button id="launchStart" class="mg-btn big">BEGIN IGNITION</button>
+    <button id="launchTap" class="mg-btn big">TAP TO IGNITE</button>
+    <button id="launchHold" class="mg-btn big btn-hold" data-act="launch_hold">HOLD IN BAND</button>
+    <button id="launchRetry" class="mg-btn big">RETRY IGNITION</button>
+  </div>
+</section>
+
+<div id="gate"><div class="card"><h3 id="gateTitle"></h3><p id="gateText"></p><button id="gateBtn" class="mg-btn big"></button></div></div>
+
 <div id="err"></div>
 
 <script>
@@ -154,12 +264,14 @@ let ws;
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
     if (msg.type === "game_connected") setLink("LINK " + room, true);
-    else if (msg.type === "game_disconnected") { releaseAll(); setLink("GAME OFFLINE", false); }
+    else if (msg.type === "game_disconnected") { exitContext(); setLink("GAME OFFLINE", false); }
+    else if (msg.type === "context") applyContext(msg);
   };
-  ws.onclose = () => { setLink("SIGNAL LOST", false); releaseAll(); setTimeout(connect, 1000); };
+  ws.onclose = () => { exitContext(); setLink("SIGNAL LOST", false); setTimeout(connect, 1000); };
 })();
 
 const state = {};
+const stickReleases = [];
 function set(action, v) {
   v = Math.round(v * 100) / 100;
   if ((state[action] || 0) === v) return;
@@ -167,17 +279,72 @@ function set(action, v) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action, strength: v }));
   document.querySelectorAll(`[data-act="${action}"]`).forEach(el => el.classList.toggle("on", v > 0));
 }
-function releaseAll() { for (const a in state) set(a, 0); }
+function releaseAll() {
+  for (const a in state) set(a, 0);
+  stickReleases.forEach(release => release());
+  document.querySelectorAll("#knob,.mg-knob").forEach(k => k.style.transform = "");
+}
+function sendCommand(name, extra) {
+  if (ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: "command", name, ...extra }));
+  navigator.vibrate?.(8);
+}
 document.addEventListener("visibilitychange", () => document.hidden && releaseAll());
 document.addEventListener("contextmenu", e => e.preventDefault());
 
-// ---- Routing: #pad, #wheel, anything else = menu ---------------------------
-function route() {
-  const v = location.hash.slice(1);
-  document.body.dataset.view = v === "pad" || v === "wheel" ? v : "menu";
+// ---- Routing: fixed views plus the minigame views the game can switch to ----
+const VIEWS = new Set(["pad", "wheel", "wires", "fuses", "frequency", "hull", "launch"]);
+const MINIGAME_VIEWS = new Set(["wires", "fuses", "frequency", "hull", "launch"]);
+let previousView = "menu";
+let currentContext = null;
+
+function setView(value, remember = true) {
+  const view = VIEWS.has(value) ? value : "menu";
+  if (remember && MINIGAME_VIEWS.has(document.body.dataset.view) && !MINIGAME_VIEWS.has(view))
+    previousView = view;
+  document.body.dataset.view = view;
   releaseAll();
+  return view;
 }
-addEventListener("hashchange", route); route();
+function route() {
+  const view = location.hash.slice(1);
+  if (MINIGAME_VIEWS.has(view)) previousView = "menu";
+  setView(view, true);
+}
+addEventListener("hashchange", route);
+
+// The game owns the active view while a minigame is running; restore whatever
+// the player was looking at when the context ends.
+function showView(view) {
+  setView(view, false);
+  history.replaceState(null, "", view === "menu" ? location.pathname + location.search : "#" + view);
+}
+
+function applyContext(msg) {
+  if (msg.active && msg.mode && msg.mode !== "none" && MINIGAME_VIEWS.has(msg.mode)) {
+    const view = msg.mode;
+    if (document.body.dataset.view !== view) {
+      // Remember the player's own page so it comes back when the mode ends.
+      if (!MINIGAME_VIEWS.has(document.body.dataset.view))
+        previousView = document.body.dataset.view || "menu";
+      showView(view);
+    }
+    currentContext = msg;
+    renderContext(view, msg.state || {});
+    return;
+  }
+  exitContext();
+}
+
+function exitContext() {
+  const wasMinigame = MINIGAME_VIEWS.has(document.body.dataset.view);
+  currentContext = null;
+  hideGate();
+  releaseAll();
+  if (wasMinigame) showView(previousView || "menu");
+}
+
+route();
 
 // ---- Field pad: hold buttons + joystick ---------------------------------------
 document.querySelectorAll(".btn-hold").forEach(b => {
@@ -186,24 +353,30 @@ document.querySelectorAll(".btn-hold").forEach(b => {
 });
 
 const stick = $("#stick"), knob = $("#knob");
-let stickId = null;
 const strength = v => Math.max(0, (Math.abs(v) - DEADZONE) / (1 - DEADZONE));
-function aim(e) {
-  const b = stick.getBoundingClientRect(), r = b.width / 2 - knob.offsetWidth / 2;
-  let x = e.clientX - (b.left + b.width / 2), y = e.clientY - (b.top + b.height / 2);
-  const m = Math.hypot(x, y);
-  if (m > r) { x *= r / m; y *= r / m; }
-  knob.style.transform = `translate(${x}px,${y}px)`;
-  x /= r; y /= r;
-  set("move_left", x < 0 ? strength(x) : 0); set("move_right", x > 0 ? strength(x) : 0);
-  set("move_up", y < 0 ? strength(y) : 0);   set("move_down", y > 0 ? strength(y) : 0);
+function bindStick(stickEl, knobEl) {
+  let pointerId = null;
+  const aim = e => {
+    const b = stickEl.getBoundingClientRect(), r = b.width / 2 - knobEl.offsetWidth / 2;
+    let x = e.clientX - (b.left + b.width / 2), y = e.clientY - (b.top + b.height / 2);
+    const m = Math.hypot(x, y);
+    if (m > r) { x *= r / m; y *= r / m; }
+    knobEl.style.transform = `translate(${x}px,${y}px)`;
+    x /= r; y /= r;
+    set("move_left", x < 0 ? strength(x) : 0); set("move_right", x > 0 ? strength(x) : 0);
+    set("move_up", y < 0 ? strength(y) : 0);   set("move_down", y > 0 ? strength(y) : 0);
+  };
+  const release = () => {
+    pointerId = null; knobEl.style.transform = "";
+    ["move_left", "move_right", "move_up", "move_down"].forEach(a => set(a, 0));
+  };
+  stickReleases.push(release);
+  stickEl.onpointerdown = e => { pointerId = e.pointerId; stickEl.setPointerCapture(pointerId); aim(e); };
+  stickEl.onpointermove = e => e.pointerId === pointerId && aim(e);
+  stickEl.onpointerup = stickEl.onpointercancel = release;
 }
-stick.onpointerdown = e => { stickId = e.pointerId; stick.setPointerCapture(stickId); aim(e); };
-stick.onpointermove = e => e.pointerId === stickId && aim(e);
-stick.onpointerup = stick.onpointercancel = () => {
-  stickId = null; knob.style.transform = "";
-  ["move_left", "move_right", "move_up", "move_down"].forEach(a => set(a, 0));
-};
+bindStick(stick, knob);
+bindStick($("#hullStick"), $("#hullStick .mg-knob"));
 
 // ---- Rover wheel: gravity vector -> steer / tilt -> A D W S ----------------------
 let engaged = false, raw = { steer: 0, tilt: 0 }, zero = { steer: 0, tilt: 0 };
@@ -246,6 +419,208 @@ $("#engage").onclick = async () => {
   $("#engage").hidden = true; $("#wtools").hidden = false;
 };
 $("#wtools").onclick = e => { e.preventDefault(); zeroNow(); };
+
+// ---- Minigames: the game publishes context, the page renders the controls -----
+const gate = $("#gate"), gateTitle = $("#gateTitle"), gateText = $("#gateText"), gateBtn = $("#gateBtn");
+function hideGate() { gate.classList.remove("show"); }
+function updateGate(s) {
+  if (s.overlay === "instructions") {
+    gate.classList.add("show");
+    gateTitle.textContent = "PRACTICE READY";
+    gateText.textContent = "Check the tutorial on the PC, then start when you are ready.";
+    gateBtn.textContent = "START";
+    gateBtn.disabled = false;
+    gateBtn.onclick = () => sendCommand("minigame_start");
+  } else if (s.overlay === "complete") {
+    gate.classList.add("show");
+    gateTitle.textContent = "PRACTICE COMPLETE";
+    gateText.textContent = "The PC shows the completed repair.";
+    gateBtn.textContent = "RESTART";
+    gateBtn.disabled = false;
+    gateBtn.onclick = () => sendCommand("minigame_cancel");
+  } else {
+    hideGate();
+  }
+}
+
+function renderContext(view, s) {
+  updateGate(s);
+  if (view === "wires") renderWires(s);
+  else if (view === "fuses") renderFuses(s);
+  else if (view === "frequency") renderFrequency(s);
+  else if (view === "hull") renderHull(s);
+  else if (view === "launch") renderLaunch(s);
+}
+
+// Wires ---------------------------------------------------------------------
+$("#wireLeft").onclick = e => {
+  const b = e.target.closest(".wire");
+  if (b && !b.disabled) sendCommand("wire_pick", { index: Number(b.dataset.i) });
+};
+$("#wireRight").onclick = e => {
+  const b = e.target.closest(".wire");
+  if (b && !b.disabled) sendCommand("wire_connect", { index: Number(b.dataset.i) });
+};
+function renderWires(s) {
+  const left = s.left || [], right = s.right || [];
+  const lc = s.leftConnected || [], rc = s.rightConnected || [];
+  const locked = s.overlay && s.overlay !== "active";
+  $("#wireLeft").innerHTML = left.map((c, i) =>
+    `<button class="wire ${lc[i] ? "done" : ""} ${s.selected === i ? "sel" : ""}"
+      data-i="${i}" style="background:${c}" ${lc[i] || locked ? "disabled" : ""}>${i + 1}</button>`).join("");
+  $("#wireRight").innerHTML = right.map((c, i) =>
+    `<button class="wire ${rc[i] ? "done" : ""}" data-i="${i}"
+      style="background:${c}" ${rc[i] || s.selected < 0 || locked ? "disabled" : ""}>${i + 1}</button>`).join("");
+  $("#wireHint").innerHTML = s.selected >= 0
+    ? "Now tap the matching color on the <b>right</b>."
+    : "Tap a color on the <b>left</b>, then its match on the right.";
+}
+
+// Fuses ---------------------------------------------------------------------
+$("#fuseGrid").onclick = e => {
+  const b = e.target.closest(".fuse");
+  if (b && !b.disabled) sendCommand("fuse_press", { index: Number(b.dataset.i) });
+};
+function renderFuses(s) {
+  const switches = s.switches || [];
+  const grid = $("#fuseGrid");
+  if (grid.children.length !== switches.length) {
+    grid.innerHTML = switches.map((_, i) => `<button class="mg-btn fuse" data-i="${i}"></button>`).join("");
+  }
+  const locked = s.overlay && s.overlay !== "active";
+  switches.forEach((on, i) => {
+    const b = grid.children[i];
+    b.textContent = `${i + 1}\n${on ? "ON" : "OFF"}`;
+    b.classList.toggle("on", !!on);
+    b.disabled = !!s.busy || locked;
+  });
+  $("#fuseInfo").innerHTML = `Presses left: <b>${s.presses ?? 0}/${s.maxPresses ?? 0}</b>` +
+    ` &nbsp;·&nbsp; DOUBLE: <b>${(s.double ?? 0) + 1}</b> toggles <b>${(s.partner ?? 0) + 1}</b>`;
+}
+
+// Frequency -----------------------------------------------------------------
+const freqRows = [];
+(function buildFrequency() {
+  const host = $("#freqRows");
+  ["AMPLITUDE", "FREQUENCY", "PHASE"].forEach((label, i) => {
+    const row = document.createElement("div");
+    row.className = "freq-row";
+    row.dataset.i = i;
+    row.innerHTML = `<label>${label}</label><input type="range" min="0" max="1000" value="0"><output>0%</output>`;
+    const input = row.querySelector("input");
+    row.onpointerdown = () => { freqDragging = i; sendCommand("freq_select", { index: i }); };
+    row.onpointerup = row.onpointercancel = () => { if (freqDragging === i) freqDragging = -1; };
+    input.oninput = () => {
+      const value = Number(input.value) / 1000;
+      row.querySelector("output").textContent = `${Math.round(value * 100)}%`;
+      sendCommand("freq_set", { index: i, value });
+    };
+    host.appendChild(row);
+    freqRows.push({ row, input, output: row.querySelector("output") });
+  });
+})();
+let freqDragging = -1;
+function renderFrequency(s) {
+  const values = s.values || [0, 0, 0];
+  const locked = s.overlay && s.overlay !== "active";
+  freqRows.forEach((r, i) => {
+    if (freqDragging !== i) {
+      r.input.value = Math.round((values[i] ?? 0) * 1000);
+      r.output.textContent = `${Math.round((values[i] ?? 0) * 100)}%`;
+    }
+    r.row.classList.toggle("sel", s.selected === i);
+    r.input.disabled = locked || !!s.done;
+  });
+  const match = Math.round((s.similarity ?? 0) * 100);
+  $("#freqMatchBar").style.width = `${match}%`;
+  $("#freqMatch").textContent = `${match}%`;
+  $("#freqHoldBar").style.width = `${Math.round((s.hold ?? 0) * 100)}%`;
+  $("#freqHold").textContent = `${Math.round((s.hold ?? 0) * 100)}%`;
+}
+
+// Hull ----------------------------------------------------------------------
+const hullPlates = [];
+(function buildHullPlates() {
+  const host = $("#hullPlates");
+  for (let i = 0; i < 4; i++) {
+    const b = document.createElement("button");
+    b.className = "mg-btn";
+    b.dataset.i = i;
+    b.textContent = `${i + 1}`;
+    b.onclick = () => sendCommand("hull_select", { index: i });
+    host.appendChild(b);
+    hullPlates.push(b);
+  }
+})();
+$("#hullRestart").onclick = () => sendCommand("hull_restart");
+const HULL_PHASES = {
+  pick: "SELECT A PLATE", hold: "MOVE & ROTATE", weld: "WELD THE SEAM",
+  done: "HULL REPAIRED", failed: "HULL UNSTABLE", locked: "LOCKED",
+};
+function renderHull(s) {
+  const phase = s.phase || "pick";
+  const locked = s.overlay && s.overlay !== "active";
+  $("#hullPhase").textContent = HULL_PHASES[phase] || phase.toUpperCase();
+  $("#hullSeam").textContent = phase === "weld"
+    ? `· SEAM ${(s.seam ?? 0) + 1}/${s.seams ?? 0} ${Math.round((s.progress ?? 0) * 100)}%`
+    : "";
+  const heat = Math.round((s.heat ?? 0) * 100), stability = Math.round((s.stability ?? 1) * 100);
+  $("#hullHeat").style.width = `${heat}%`;
+  $("#hullHeatVal").textContent = `${heat}%`;
+  $("#hullStability").style.width = `${stability}%`;
+  $("#hullStabilityVal").textContent = `${stability}%`;
+
+  const action = $("#hullAction");
+  action.textContent = phase === "pick" ? "PICK PLATE" : phase === "hold" ? "PLACE PLATE" : "WELD (HOLD)";
+  action.style.display = phase === "done" || phase === "failed" ? "none" : "";
+
+  const placed = s.placed || [];
+  hullPlates.forEach((b, i) => {
+    b.disabled = locked || !!placed[i] || phase !== "pick";
+    b.classList.toggle("sel", s.selected === i);
+    b.textContent = placed[i] ? "✓" : `${i + 1}`;
+  });
+}
+
+// Launch --------------------------------------------------------------------
+$("#launchStart").onclick = () => sendCommand("launch_start");
+$("#launchTap").onpointerdown = () => sendCommand("launch_tap");
+$("#launchRetry").onclick = () => sendCommand("launch_retry");
+function renderLaunch(s) {
+  const phase = s.phase || "ready";
+  const target = s.targetClicks || 25;
+  const clicks = s.clicks || 0;
+  $("#launchIgn").style.width = `${Math.round((clicks / target) * 100)}%`;
+  $("#launchClicks").textContent = `${clicks}/${target}`;
+
+  const heat = Math.max(0, Math.min(1, s.heat ?? 0.5));
+  $("#launchHeatDot").style.left = `${heat * 100}%`;
+  const low = (s.low ?? 0.45) * 100, high = (s.high ?? 0.55) * 100;
+  $("#launchBand").style.left = `${low}%`;
+  $("#launchBand").style.width = `${high - low}%`;
+  $("#launchBandText").textContent = phase === "active" ? (s.inBand ? "IN BAND" : "ADJUST") : "—";
+
+  $("#launchCenter").style.width = `${Math.round((s.centered ?? 0) * 100)}%`;
+  $("#launchCenterVal").textContent = `${Math.round((s.centered ?? 0) * 100)}%`;
+
+  const info = $("#launchInfo");
+  if (s.accessDenied) info.textContent = "Launch pad locked. Finish the training requirements on the PC.";
+  else if (phase === "ready") info.textContent = "Begin ignition, then tap quickly and hold the marker in the green band.";
+  else if (phase === "ignition") info.textContent = `Tap ${target} times in ${Math.ceil(s.ignitionRemaining ?? 0)}s.`;
+  else if (phase === "active") info.textContent = "Keep the heat marker inside the green band for 10 seconds.";
+  else if (phase === "result") info.textContent = s.ignitionFailed ? "Ignition failed. Retry or return to the lab." : "Launch complete.";
+  else info.textContent = "Launch in progress…";
+
+  const show = (el, on, disabled = false) => {
+    el.classList.toggle("show", !!on);
+    el.disabled = !!disabled;
+  };
+  show($("#launchStart"), phase === "ready", !s.canStart);
+  show($("#launchTap"), phase === "ignition", !!s.paused);
+  show($("#launchHold"), phase === "active", !!s.paused);
+  show($("#launchRetry"), phase === "result" && !!s.canRetry);
+}
+
 </script>
 </body>
 </html>

@@ -52,6 +52,13 @@ an error, so add one when previewing.
   gesture to grant motion access. That tap also zeroes the angles; **ZERO**
   recalibrates.
 
+The game can also take over the page with a touch panel for the active
+minigame: `#wires`, `#fuses`, `#frequency`, `#hull` and `#launch`. Opening one of
+those hashes manually previews the panel, but during play the context message
+drives the switch. When the context ends the page returns to whatever the player
+was using (pad, wheel or menu). Practice minigames and the launch scene also
+push a start/restart overlay onto the phone, so the phone alone can begin.
+
 Steering is the rotation of the phone about its screen and tilt is the lean of
 its top edge. Both come from the direction of gravity. −35° is A, +38° is D,
 +25° is W and −25° is S; each key releases 10° before neutral so it does not
@@ -59,19 +66,53 @@ flicker.
 
 ## Protocol
 
-Phone → relay:
+Phone → relay, held input:
 
 ```json
 { "action": "move_left", "strength": 0.62 }
 ```
 
-`action` uses Godot input-map names (`move_*`, `training_jump`, `hotbar_1`–`5`),
-except `interact`, and `strength` is between 0 and 1. The relay validates the
-payload and forwards it as:
+`action` uses Godot input-map names (`move_*`, `training_jump`, `hotbar_1`–`5`,
+`minigame_action`, `minigame_fine`, `minigame_rotate_left`,
+`minigame_rotate_right`, `launch_hold`), except `interact`, and `strength` is
+between 0 and 1. The relay validates the payload and forwards it as:
 
 ```json
 { "type": "input", "action": "move_left", "strength": 0.62 }
 ```
+
+Phone → relay, semantic minigame command:
+
+```json
+{ "type": "command", "name": "fuse_press", "index": 2 }
+```
+
+| Command | Arguments | Meaning |
+| --- | --- | --- |
+| `wire_pick` | `index` 0–7 | Start dragging a left terminal |
+| `wire_connect` | `index` 0–7 | Connect the held wire to a right terminal |
+| `fuse_press` | `index` 0–7 | Flip one fuse switch |
+| `freq_select` | `index` 0–2 | Focus one frequency knob |
+| `freq_set` | `index` 0–2, `value` 0–1 | Set a knob to an absolute value |
+| `hull_select` | `index` 0–3 | Select a patch plate |
+| `hull_restart` | — | Restart hull repair |
+| `minigame_start` | — | Dismiss the phone start gate |
+| `minigame_cancel` | — | Return to the lab / restart the exercise |
+| `launch_start` | — | Begin ignition |
+| `launch_tap` | — | Register one ignition tap |
+| `launch_retry` | — | Retry a failed ignition |
+
+The relay drops unknown names, mistyped indexes and unexpected arguments. Game →
+phone context:
+
+```json
+{ "type": "context", "mode": "hull", "active": true, "state": { "phase": "weld" } }
+```
+
+Modes are `none`, `wires`, `fuses`, `frequency`, `hull` and `launch`. The relay
+caches the latest context and replays it to a phone that joins late, and clears
+it when the game disconnects. `active:false` (or `none`) tells the page to
+restore its previous view. Context is state, not input: phones may never send it.
 
 Lifecycle messages:
 
@@ -90,12 +131,22 @@ or restarting the game reconnects cleanly. Room codes are 4–8 characters from
 seconds while enabled, and exposes `Enabled`, `RelayUrl`, `RoomCode`, `JoinUrl`,
 `State` and `StatusText` to the Controls screen.
 
-`ControllerInputBridge` turns messages into real Godot input events:
+`ControllerInputBridge` turns held messages into real Godot input events:
 
 | Message | Godot event | Consumer |
 | --- | --- | --- |
 | `move_*`, `training_jump`, `hotbar_1`–`5` | `InputEventAction` | Rover, Player, Hotbar |
+| `minigame_action`, `minigame_fine`, `minigame_rotate_*`, `launch_hold` | `InputEventAction` | Hull repair, launch |
 | `interact` | `InputEventKey` (`Key.E`) | TrainingStations |
+
+Commands bypass the input map and reach the active scene through
+`ControllerCommandRouter`. A minigame registers itself as
+`IControllerCommandSink` and publishes phone state as `IControllerContextSource`;
+`PracticeReturn` handles `minigame_start` / `minigame_cancel` and gates gameplay
+commands while its instructions overlay is open. `ControllerContext` is
+token-scoped, so a scene that is leaving cannot clear a newer scene's context.
+The relay sends context at most ~15 times a second and immediately re-sends it
+when a phone connects.
 
 Nothing in the gameplay scripts changes. The bridge releases every held action
 when the phone disconnects, the relay drops, the controller is disabled, or the
@@ -119,7 +170,10 @@ cd controlers
 npm test
 ```
 
-The Node tests cover input forwarding, invalid payloads, presence messages,
-connection replacement and static-file serving. On the Godot side, run
-`tests/ControllerInputTest.tscn`; it checks message parsing, input injection,
-release-all, room codes, relay URLs and QR generation.
+The Node tests cover input forwarding, minigame commands, context
+forwarding/replay, invalid payloads, presence messages, connection replacement
+and static-file serving. On the Godot side, run `tests/ControllerInputTest.tscn`;
+it checks message parsing, input injection, command parsing/validation/routing,
+context publishing, release-all, room codes, relay URLs and QR generation. Also
+run `tests/TrainingPracticeTest.tscn` and `tests/RocketLaunchTest.tscn` after
+touching the minigame hooks.

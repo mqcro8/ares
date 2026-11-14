@@ -21,7 +21,31 @@ const AllowedActions = new Set([
   "hotbar_3",
   "hotbar_4",
   "hotbar_5",
+  "minigame_action",
+  "minigame_fine",
+  "minigame_rotate_left",
+  "minigame_rotate_right",
+  "launch_hold",
 ]);
+
+// Commands are the touch-native minigame controls. Index-based commands use a
+// 0-based slot; freq_set adds an absolute value and hull_select caps at 3.
+const CommandRules = new Map([
+  ["wire_pick", { index: true }],
+  ["wire_connect", { index: true }],
+  ["fuse_press", { index: true }],
+  ["freq_select", { index: true }],
+  ["freq_set", { index: true, value: true }],
+  ["hull_select", { index: true }],
+  ["hull_restart", {}],
+  ["minigame_start", {}],
+  ["minigame_cancel", {}],
+  ["launch_start", {}],
+  ["launch_tap", {}],
+  ["launch_retry", {}],
+]);
+
+const ContextModes = new Set(["none", "wires", "fuses", "frequency", "hull", "launch"]);
 
 const RoomPattern = /^[A-Z0-9]{4,8}$/;
 const Roles = new Set(["controller", "game"]);
@@ -54,6 +78,56 @@ function sendJson(socket, payload) {
   if (socket?.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload));
   }
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validIndex(index) {
+  return Number.isInteger(index) && index >= 0 && index <= 7;
+}
+
+// Returns a normalized command payload, or null when the message is invalid.
+function normalizeCommand(message) {
+  if (!isPlainObject(message)) return null;
+  const name = message.name;
+  const rule = CommandRules.get(name);
+  if (!rule) return null;
+
+  const command = { type: "command", name };
+
+  if (rule.index) {
+    if (!validIndex(message.index)) return null;
+    if (name === "hull_select" && message.index > 3) return null;
+    command.index = message.index;
+  } else if (message.index !== undefined) {
+    return null;
+  }
+
+  if (rule.value) {
+    if (typeof message.value !== "number" || !Number.isFinite(message.value)) return null;
+    if (name === "freq_set" && (message.value < 0 || message.value > 1)) return null;
+    command.value = message.value;
+  } else if (message.value !== undefined) {
+    return null;
+  }
+
+  return command;
+}
+
+// Returns a normalized context payload, or null when the message is invalid.
+function normalizeContext(message) {
+  if (!isPlainObject(message)) return null;
+  if (!ContextModes.has(message.mode)) return null;
+  if (typeof message.active !== "boolean") return null;
+  if (!isPlainObject(message.state)) return null;
+  return {
+    type: "context",
+    mode: message.mode,
+    active: message.active,
+    state: message.state,
+  };
 }
 
 function resolveStaticFile(pathname) {
@@ -161,7 +235,7 @@ export function createRelayServer({
 
     let room = rooms.get(roomId);
     if (!room) {
-      room = { controller: null, game: null };
+      room = { controller: null, game: null, context: null };
       rooms.set(roomId, room);
     }
 
@@ -185,17 +259,37 @@ export function createRelayServer({
       notify(room, "controller", { type: "game_connected" });
     } else {
       sendJson(socket, room.game ? { type: "game_connected" } : { type: "room_ready" });
+      if (room.context) sendJson(socket, room.context);
       notify(room, "game", { type: "controller_connected" });
     }
 
     socket.on("message", (data) => {
-      if (role !== "controller") return;
-
       let message;
       try {
         message = JSON.parse(data.toString());
       } catch {
         log(`[${roomId}] Invalid JSON received`);
+        return;
+      }
+
+      if (role === "game") {
+        const context = normalizeContext(message);
+        if (!context) {
+          log(`[${roomId}] Invalid context message`);
+          return;
+        }
+        room.context = context;
+        notify(room, "controller", context);
+        return;
+      }
+
+      if (message?.type === "command") {
+        const command = normalizeCommand(message);
+        if (!command) {
+          log(`[${roomId}] Invalid command message`);
+          return;
+        }
+        notify(room, "game", command);
         return;
       }
 
@@ -223,6 +317,7 @@ export function createRelayServer({
       if (role === "controller") {
         notify(room, "game", { type: "controller_disconnected" });
       } else {
+        room.context = null;
         notify(room, "controller", { type: "game_disconnected" });
       }
 
