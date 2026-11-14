@@ -15,6 +15,21 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private Control _overlay;
     private TextureRect _tutorial;
     private Button _start, _back;
+    public bool IsActive => _active && !_finished;
+    public static bool CanPlay(Control game) => game.IsInsideTree() && !game.GetTree().Paused &&
+        (game.GetNodeOrNull<PracticeReturn>("PracticeReturn")?.IsActive ?? true);
+    private void SetBoardActive(bool active)
+    {
+        _active = active;
+        _game.SetProcess(active);
+        _game.SetPhysicsProcess(active);
+        _game.SetProcessInput(active);
+        if (!active)
+        {
+            if (_game is WireMinigame wire) wire.CancelInteraction();
+            if (_game is FuseBoxMinigame fuse) fuse.StopPending();
+        }
+    }
     public static void Attach(Control game) => game.AddChild(new PracticeReturn { Name = "PracticeReturn", Layer = 20 });
 
     /// <summary>True while the instructions or completion overlay owns the screen.</summary>
@@ -27,8 +42,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     {
         _game = (Control)GetParent();
         _session = PracticeSession.SessionId; _ticket = PracticeSession.EnterExercise(_game);
-        ControllerCommandRouter.Register(this, this);
-        _game.SetProcessInput(false);
+        SetBoardActive(false);
         if (_game is WireMinigame wire) wire.Completed += Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed += Success;
         if (_game is FrequencyBoxMinigame frequency) frequency.Completed += Success;
@@ -155,31 +169,9 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     {
         if (!_starting || Input.IsPhysicalKeyPressed(Key.E) || Input.IsKeyPressed(Key.Enter) || Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left)) return;
         for (int i = 0; i < 6; i++) if (Input.IsKeyPressed((Key)((int)Key.Key1 + i))) return;
-        StartGame();
-    }
-
-    private void StartGame()
-    {
-        if (_active || _completed) return;
-        _starting = false; _active = true; _overlay.Hide(); _back.Show(); _game.SetProcessInput(true);
-        NotifyGame();
-    }
-
-    public bool HandleControllerCommand(ControllerCommand command)
-    {
-        switch (command.Name)
-        {
-            case ControllerCommands.MinigameStart:
-                StartGame();
-                return true;
-
-            case ControllerCommands.MinigameCancel:
-                Cancel();
-                return true;
-
-            default:
-                return false;
-        }
+        foreach (Key key in new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.W, Key.A, Key.S, Key.D, Key.R })
+            if (Input.IsKeyPressed(key)) return;
+        _starting = false; SetBoardActive(true); _overlay.Hide(); _back.Show();
     }
 
     private void NotifyGame() => (_game as IControllerContextSource)?.PublishControllerContext();
@@ -194,8 +186,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void Success()
     {
         if (!_active || _finished) return;
-        _completed = true;
-        if (_ticket == 0) { _game.SetProcessInput(false); _back.Text = "Complete — restart"; NotifyGame(); return; }
+        if (_ticket == 0) { SetBoardActive(false); _back.Text = "Complete — restart"; return; }
         Finish(true);
     }
     private void Cancel()
@@ -207,9 +198,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void Finish(bool success)
     {
         if (_finished || !PracticeSession.Finish(_session, _ticket, success)) return;
-        _finished = true; _starting = false; _completed = true; _game.SetProcessInput(false);
-        ControllerContext.End(_game);
-        if (_game is FuseBoxMinigame fuse) fuse.StopPending();
+        _finished = true; _starting = false; SetBoardActive(false);
         Callable.From(Return).CallDeferred();
     }
     private void Return()
@@ -227,6 +216,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     }
     public override void _ExitTree()
     {
+        SetBoardActive(false);
         GetViewport().SizeChanged -= FitLayout;
         ControllerCommandRouter.Unregister(this);
         ControllerContext.End(_game);

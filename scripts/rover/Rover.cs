@@ -35,7 +35,6 @@ public partial class Rover : CharacterBody2D
 			return;
 		}
 
-		GD.Print("Node is ready!");
 	}
 
 	private enum Lane {Left = 0, Middle = 1, Right = 2}

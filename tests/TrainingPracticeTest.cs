@@ -66,7 +66,7 @@ public partial class TrainingPracticeTest : Node
         Input.ParseInputEvent(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = down });
         Input.FlushBufferedEvents();
     }
-    private void CompleteLaunchPractice(RocketLaunch launch)
+    private async Task CompleteLaunchPractice(RocketLaunch launch)
     {
         double now = Time.GetTicksUsec() / 1_000_000.0;
         launch.Clock = () => now;
@@ -87,6 +87,17 @@ public partial class TrainingPracticeTest : Node
             "Practice finishes after ten centered seconds");
         Check(ares.scripts.mission.MissionState.Instance.TrainingLaunchPracticeComplete,
             "Completed simulator marks its training requirement");
+        for (int i = 0; i < 150 && launch.State != RocketLaunch.Phase.Ascending; i++) await Frames();
+        Check(launch.State == RocketLaunch.Phase.Ascending,
+            "Simulator success animation starts the ascent");
+        var rocket = launch.GetNode<Sprite2D>("Rocket/Rocket");
+        float ascentStartY = rocket.GlobalPosition.Y;
+        for (int i = 0; i < 15; i++) await Frames();
+        Check(launch.State == RocketLaunch.Phase.Ascending && rocket.GlobalPosition.Y < ascentStartY,
+            "Practice rocket visibly rises before returning to the gym");
+        await Capture("launch-practice-ascent");
+        for (int i = 0; i < 240 && Scene is RocketLaunch; i++) await Frames();
+        Check(Scene is TrainingLab, "Completed practice returns to the lab after ascent");
     }
     private static T Find<T>(Node node, Func<T, bool> predicate) where T : Node
     {
@@ -205,14 +216,17 @@ public partial class TrainingPracticeTest : Node
         for (int i = 0; i < 3; i++) { KeyPress(Key.Enter); await Frames(); }
         Check(!Gym.BriefingActive, "Briefing closes");
         Check(Gym.Monitor.IsDisplayed && Gym.Monitor.IsExpanded, "Monitor starts expanded in the gym");
-        Check(Gym.Monitor.PromptText.Contains("WASD: move") && Gym.Monitor.PromptText.Contains("E: interact"),
-            "Gym repeats movement and interaction controls after briefing");
+        Check(Gym.ControlsGuide.CurrentHint == "MOVE" && Gym.ControlsGuide.CurrentKeys == "WASD",
+            "Movement keys appear beside the player after the briefing");
         KeyPress(Key.Q); await Frames();
         Check(!Gym.Monitor.IsExpanded, "Q collapses the expanded objective monitor");
         KeyPress(Key.Q); await Frames();
         Check(Gym.Monitor.IsExpanded, "Q expands the objective monitor again");
         await Capture("gym-monitor-expanded");
-        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Capture("gym-door");
+        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames(); await Capture("gym-door");
+        Check(Gym.ControlsGuide.CurrentHint == "INTERACT" && Gym.ControlsGuide.CurrentKeys == "E" &&
+            Gym.ControlsGuide.CurrentMessage.Contains("Enter repair lab"),
+            "Interaction key appears beside the nearby lab door");
         var shadow = Player.GetNode<Polygon2D>("JumpShadow");
         Vector2 shadowOrigin = shadow.Position;
         Check(shadow.Visible, "Gym shadow visible at rest");
@@ -309,7 +323,10 @@ public partial class TrainingPracticeTest : Node
         KeyPress(Key.E); await Frames();
         Check(Scene is TrainingLab, "Repair station rejects a loadout without the maintenance kit");
         var lockerZone = labScene.Locker.FrontZone;
-        await WalkTo(lockerZone.GetGlobalTransform() * (lockerZone.Size / 2)); await Frames();
+        await WalkTo(lockerZone.GetGlobalTransform() * (lockerZone.Size / 2) + Vector2.Up * 24); await Frames();
+        Check(labScene.ControlsGuide.CurrentHint == "INTERACT" && labScene.ControlsGuide.CurrentKeys == "E" &&
+            labScene.ControlsGuide.CurrentMessage.Contains("Take maintenance kit"),
+            "Supply locker shows its interaction key beside the object");
         KeyPress(Key.E); await Frames();
         Check(Player.Inventory.Contains(labScene.Locker.StarterKit), "Supply locker transfers the maintenance kit");
         Check(Player.SelectedStack?.Item == labScene.Locker.StarterKit, "Maintenance kit is selected in the hotbar");
@@ -374,7 +391,7 @@ public partial class TrainingPracticeTest : Node
         await WalkTo(simulatorZone.GetGlobalTransform() * (simulatorZone.Size / 2));
         await Frames(); KeyPress(Key.E); await Frames(8);
         Check(Scene is RocketLaunch && ((RocketLaunch)Scene).Practice && PracticeSession.Pending == null, "Simulator opens the practice launch without a stale travel ticket");
-        CompleteLaunchPractice((RocketLaunch)Scene);
+        await CompleteLaunchPractice((RocketLaunch)Scene);
         for (int i = 0; i < 90 && Scene is RocketLaunch; i++) await Frames();
         Check(Scene is TrainingLab, "Completed launch practice returns to the lab automatically");
         Check(((TrainingLab)Scene).GetNode<Sprite2D>("LaunchSimulator/Sprite2D").Texture.ResourcePath ==
@@ -395,7 +412,8 @@ public partial class TrainingPracticeTest : Node
         Check(Mathf.Abs(Player.TrainingMovement.Stamina - saved.Movement.Stamina) < 1, "Stamina restored");
         Check(Player.GetNode<PlayerAnimation>("AnimatedSprite2D").Facing == "side" && Player.GetNode<PlayerAnimation>("AnimatedSprite2D").FlipH, "Orientation restored");
         await WalkTo(new(400, 510)); await Frames(); await Capture("gym-circuit-hint");
-        Check(Gym.Monitor.PromptText.Contains("SPACE: jump"), "Circuit prompt explains the jump control");
+        Check(Gym.ControlsGuide.CurrentHint == "JUMP" && Gym.ControlsGuide.CurrentKeys == "SPACE",
+            "Jump key appears when the player reaches a hurdle");
         await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames();
         Cross(1); Check(Gym.Course.ClearedCount == 2, "Reverse direction survives travel");
         Cross(0); await Frames(); Check(Gym.CompletionShown && Gym.Course.Congratulated, "Final crossing congratulates once");
@@ -404,7 +422,10 @@ public partial class TrainingPracticeTest : Node
         await Capture("gym-all-training-complete");
         Gym.GetNode<Button>(Gym.ContinuePath).EmitSignal(BaseButton.SignalName.Pressed); await Frames(8);
         Check(Scene is TrainingIntro && !Gym.BriefingActive, "Course completion does not launch automatically");
-        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames(); KeyPress(Key.E); await Frames(8);
+        await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames();
+        Check(Gym.ControlsGuide.CurrentHint == "INTERACT" && Gym.ControlsGuide.CurrentKeys == "E",
+            "Completing the circuit does not permanently hide interaction guidance");
+        KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingLab && mission.LaunchPadUnlocked, "All four training requirements unlock the pad");
         Check(((TrainingLab)Scene).SimulatorZone != null && ((TrainingLab)Scene).LaunchPadZone != null, "Lab exposes launch stations");
         await Capture("lab-launch-unlocked");
@@ -569,6 +590,8 @@ public partial class TrainingPracticeTest : Node
                 Check(Player.TestMove(Player.GlobalTransform, new Vector2(0, direction * 45)), "Hurdle blocks grounded approach");
                 if (direction == 1 && step == 0)
                 {
+                    Check(Gym.ControlsGuide.CurrentHint == "JUMP" && Gym.ControlsGuide.CurrentKeys == "SPACE",
+                        "First hurdle shows the jump control beside the obstacle");
                     await Capture("gym-hurdle-rest");
                     if (Visual)
                     {

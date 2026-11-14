@@ -3,3 +3,4 @@
 /android/
 .idea/
 controlers/node_modules/
+.DS_Store

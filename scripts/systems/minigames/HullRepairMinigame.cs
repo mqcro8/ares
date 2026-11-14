@@ -95,6 +95,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	private int _placedCount;
 
 	private Phase _phase = Phase.Pick;
+	private Timer _completionTimer;
 
 	private Vector2[] _seam;
 	private int _seamIndex;
@@ -364,6 +365,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	public override void _Input(InputEvent @event)
 	{
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
 		if (_phase == Phase.Done || _phase == Phase.Failed) return;
 
 		if (@event is InputEventKey k && k.Pressed && !k.Echo)
@@ -544,6 +546,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	public override void _Process(double delta)
 	{
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
 		float dt = (float)delta;
 
 		// Mantener R para reiniciar todo el minijuego
@@ -931,11 +934,11 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 		_heatBar.Visible = false;
 		for (int h = 0; h < _holes.Length; h++)
 			Sparks(HoleCenters[h], BeadColor);
-		GetTree().CreateTimer(0.8, false).Timeout += () =>
+		_completionTimer = MinigameEffects.CompleteAfter(this, .8, () =>
 		{
 			if (_phase == Phase.Done)
 				EmitSignal(SignalName.Completed);
-		};
+		});
 	}
 
 	private void Shake()
@@ -950,29 +953,17 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	private void Sparks(Vector2 worldPos, Color color)
 	{
-		var p = new CpuParticles2D
-		{
-			Position = worldPos,
-			OneShot = true,
-			Emitting = true,
-			Amount = 24,
-			Lifetime = 0.5f,
-			Explosiveness = 1f,
-			Direction = Vector2.Zero,
-			Spread = 180f,
-			InitialVelocityMin = 80f,
-			InitialVelocityMax = 200f,
-			Gravity = Vector2.Zero,
-			ScaleAmountMin = 2f,
-			ScaleAmountMax = 4f,
-			Color = color.Lightened(0.5f)
-		};
-		_effects.AddChild(p);
-		GetTree().CreateTimer(1.0).Timeout += p.QueueFree;
+		MinigameEffects.Sparks(_effects, worldPos, color);
 	}
 
 	private void Restart()
 	{
+		if (GodotObject.IsInstanceValid(_completionTimer))
+		{
+			_completionTimer.Stop();
+			_completionTimer.QueueFree();
+		}
+		_completionTimer = null;
 		ClearDynamic();
 		BuildScene();
 		SetPhase(Phase.Pick);

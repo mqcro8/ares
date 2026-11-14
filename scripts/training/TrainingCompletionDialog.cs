@@ -12,8 +12,7 @@ public partial class TrainingCompletionDialog : CanvasLayer
     public Player Player { get; set; }
     public Action Closed { get; set; }
 
-    private bool _previousPhysicsProcessing;
-    private bool _ownsPhysicsLock;
+    private readonly TrainingPlayerLock _physicsLock = new();
     private Button _continue;
     private PanelContainer _panel;
 
@@ -27,10 +26,7 @@ public partial class TrainingCompletionDialog : CanvasLayer
     public override void _Ready()
     {
         Layer = 24;
-        _previousPhysicsProcessing = Player.IsPhysicsProcessing();
-        _ownsPhysicsLock = true;
-        Player.Velocity = Vector2.Zero;
-        Player.SetPhysicsProcess(false);
+        _physicsLock.Acquire(Player);
 
         var shade = new ColorRect { Color = new Color(0.01f, 0.025f, 0.045f, 0.62f), MouseFilter = Control.MouseFilterEnum.Stop };
         shade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -62,7 +58,7 @@ public partial class TrainingCompletionDialog : CanvasLayer
         column.AddChild(title);
         var message = new Label
         {
-            Text = CompletionMessage(),
+            Text = CompletionLine().Text,
             HorizontalAlignment = HorizontalAlignment.Center,
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(0, 86)
@@ -74,22 +70,17 @@ public partial class TrainingCompletionDialog : CanvasLayer
         _continue.GrabFocus();
     }
 
-    private static string CompletionMessage()
+    public static DialogueLine CompletionLine(DialogueSequence sequence = null)
     {
-        var sequence = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
+        sequence ??= GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
         return sequence != null && sequence.Lines.Count > 0
-            ? sequence.Lines[0].Text
-            : "All training is complete.";
+            ? sequence.Lines[0]
+            : new DialogueLine { Speaker = "MISSION CONTROL", Text = "All training is complete." };
     }
 
     private void Close()
     {
-        if (_ownsPhysicsLock && GodotObject.IsInstanceValid(Player))
-        {
-            Player.TrainingMovement?.SuppressDialogueJump();
-            Player.SetPhysicsProcess(_previousPhysicsProcessing);
-            _ownsPhysicsLock = false;
-        }
+        _physicsLock.Release();
         Closed?.Invoke();
         QueueFree();
     }
@@ -97,8 +88,6 @@ public partial class TrainingCompletionDialog : CanvasLayer
     public override void _ExitTree()
     {
         if (GodotObject.IsInstanceValid(_continue)) _continue.Pressed -= Close;
-        if (_ownsPhysicsLock && GodotObject.IsInstanceValid(Player))
-            Player.SetPhysicsProcess(_previousPhysicsProcessing);
-        _ownsPhysicsLock = false;
+        _physicsLock.Release();
     }
 }

@@ -23,6 +23,15 @@ public sealed record MonitorSnapshot(
 /// <summary>Builds the training monitor view-model from actual mission/training state.</summary>
 public static class MissionMonitorPresenter
 {
+    public static MonitorSnapshot CaptureTraining(ares.scripts.mission.MissionState mission,
+        bool inLab, float? stamina, int circuitProgress, bool circuitComplete, bool hasRepairKit,
+        string prompt = "", string feedback = "", bool visible = true) => BuildTraining(
+            inLab, stamina, circuitProgress, circuitComplete, hasRepairKit,
+            mission.TrainingWiresComplete, mission.TrainingFusesComplete,
+            mission.TrainingLaunchPracticeComplete, mission.LaunchPadUnlocked,
+            mission.LaunchRecord?.Completed == true, prompt, feedback, visible,
+            mission.TrainingFrequencyComplete, mission.TrainingHullRepairComplete);
+
     public static MonitorSnapshot BuildTraining(bool inLab, float? stamina, int circuitProgress,
         bool circuitComplete, bool hasRepairKit, bool wiresComplete, bool fusesComplete,
         bool simulatorComplete, bool launchUnlocked, bool launchComplete,

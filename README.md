@@ -30,6 +30,7 @@ Autoloads: `AudioManager`, `MissionState`, `PauseManager`, and `ControllerRelay`
 `Hotbar.cs` also checks `hotbar_next` / `hotbar_prev`, but those actions are not in the input map yet.
 
 The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction. While a minigame is open the phone switches to a matching touch panel (wiring, fuse box, frequency, hull repair, launch), with a start/restart overlay for practice modes; the previous page returns when the mode ends. See [`controlers/README.md`](controlers/README.md) for the relay setup and message protocol.
+In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab.
 
 ## Architecture
 
@@ -53,9 +54,8 @@ ares/
 │   ├── mars/ gateway/ ending/ credits/ (planned, empty)
 │
 ├── scripts/                      C# (.cs); .cs.uid sidecars are Godot-generated
-│   ├── rocket_launch/             LaunchHoldModel.cs
-│   ├── player/                   Player.cs, PlayerAnimation.cs, HandEquip.cs,
-│   │                             player_scene.tscn (prefab with hotbar + test item)
+│   ├── rocket_launch/             LaunchHoldModel.cs, LaunchIgnitionModel.cs
+│   ├── player/                   Player.cs, PlayerAnimation.cs, HandEquip.cs
 │   ├── rover/                    Rover.cs, Rover_scence.cs, RoverAnimation.cs
 │   ├── training/                 training flow, repair practice, supply locker and room interaction
 │   ├── mission/                  MissionState.cs (autoload), MissionStage.cs
@@ -74,14 +74,13 @@ ares/
 │   │   │                         ControllerMessage.cs, ControllerCommand.cs,
 │   │   │                         ControllerContext.cs, ControllerQr.cs
 │   │   └── minigames/            WireMinigame, FuseBoxMinigame, FrequencyBoxMinigame,
-│   │                             HullRepairMinigame
+│   │                             HullRepairMinigame, MinigameEffects
 │   ├── ui/
 │   │   ├── Main_menu/            MainMenu.cs, OptionsMenu.cs, VolumeMenu.cs, ControlsMenu.cs
 │   │   ├── mission_monitor/       snapshot model/presenter, monitor view and segmented bar
 │   │   └── ...                    HotbarUI.cs, ItemButton.cs, button_1.tscn
 │   ├── data/                     Resource class definitions (schemas)  (planned, empty)
-│   ├── Hotbar.tscn, hotbar_scene.tscn     early hotbar scenes
-│   └── test_scene.tscn           scratch scene, misplaced under scripts/
+│   └── Hotbar.tscn, hotbar_scene.tscn     retained hotbar UI and active slot prefab
 │
 ├── data/                         .tres instances of those schemas
 │   ├── dialogue/                 intro_transmission.tres, training_intro.tres,

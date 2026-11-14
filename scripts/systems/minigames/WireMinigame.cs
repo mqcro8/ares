@@ -40,7 +40,6 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 	// Bloque 2: asignar colores
 	public override void _Ready()
 	{
-		GD.Print("Wires listo, colores: ", WireColors.Count);
 		_leftBox = GetNode<VBoxContainer>("LeftTerminals");
 		_rightBox = GetNode<VBoxContainer>("RightTerminals");
 		_wires = GetNode<Node2D>("Wires");
@@ -78,6 +77,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 	public override void _Input(InputEvent @event)
 	{
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
 		if (_finished) return;
 		if (@event is InputEventKey { Pressed: true, Echo: false } key)
 		{
@@ -185,6 +185,19 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		PublishControllerContext();
 	}
 
+	public void CancelInteraction()
+	{
+		_dragWire?.QueueFree();
+		_dragGlow?.QueueFree();
+		_dragWire = null;
+		_dragGlow = null;
+		_dragFrom = null;
+		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
+		ResetHighlights();
+	}
+
+	public override void _ExitTree() => CancelInteraction();
+
 	private void AimKeyboard()
 	{
 		if (_dragWire == null) return;
@@ -243,7 +256,6 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 			{
 				_finished = true;
 				ResetHighlights();
-				EmitSignal(SignalName.Completed);
 			}
 		}
 		else
@@ -261,7 +273,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		_selectedLeft = -1;
 		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 		ResetHighlights();
-		PublishControllerContext();
+		if (_finished) EmitSignal(SignalName.Completed);
 	}
 
 	private void UpdateHover(Vector2 pos)
@@ -413,24 +425,6 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 	private void Sparks(Control t, Color color)
 	{
-		var p = new CpuParticles2D
-		{
-			Position = _effects.ToLocal(t.GetGlobalRect().GetCenter()),
-			OneShot = true,
-			Emitting = true,
-			Amount = 14,
-			Lifetime = 0.4f,
-			Explosiveness = 1f,
-			Direction = Vector2.Zero,
-			Spread = 180f,
-			InitialVelocityMin = 80f,
-			InitialVelocityMax = 180f,
-			Gravity = Vector2.Zero,
-			ScaleAmountMin = 2f,
-			ScaleAmountMax = 4f,
-			Color = color.Lightened(0.5f)
-		};
-		_effects.AddChild(p);
-		GetTree().CreateTimer(1.0).Timeout += p.QueueFree;
+		MinigameEffects.Sparks(_effects, _effects.ToLocal(t.GetGlobalRect().GetCenter()), color, 14, .4f, 180);
 	}
 }

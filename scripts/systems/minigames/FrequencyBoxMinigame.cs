@@ -205,7 +205,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	public override void _Input(InputEvent @event)
 	{
-		if (_done) return;
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this) || _done) return;
 		if (@event is not InputEventKey k || !k.Pressed || k.Echo) return;
 
 		if (k.Keycode is Key.Key1 or Key.Key2 or Key.Key3)
@@ -240,7 +240,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	public override void _Process(double delta)
 	{
-		if (_done) return;
+		if (!ares.scripts.training.PracticeReturn.CanPlay(this) || _done) return;
 
 		float dt = (float)delta;
 		_time += dt;
@@ -279,8 +279,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 		_led.Color = LedOn;
 		_wordLabel.Text = RevealWord;
 		Sparks(_screen.GetGlobalRect().GetCenter(), TargetColor);
-		PublishControllerContext();
-		GetTree().CreateTimer(0.8, false).Timeout += () => { EmitSignal(SignalName.Completed); };
+		MinigameEffects.CompleteAfter(this, .8, () => EmitSignal(SignalName.Completed));
 	}
 
 	public override void _ExitTree()
@@ -346,24 +345,6 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	private void Sparks(Vector2 globalPos, Color color)
 	{
-		var p = new CpuParticles2D
-		{
-			Position = _effects.ToLocal(globalPos),
-			OneShot = true,
-			Emitting = true,
-			Amount = 24,
-			Lifetime = 0.5f,
-			Explosiveness = 1f,
-			Direction = Vector2.Zero,
-			Spread = 180f,
-			InitialVelocityMin = 80f,
-			InitialVelocityMax = 200f,
-			Gravity = Vector2.Zero,
-			ScaleAmountMin = 2f,
-			ScaleAmountMax = 4f,
-			Color = color.Lightened(0.5f)
-		};
-		_effects.AddChild(p);
-		GetTree().CreateTimer(1.0).Timeout += p.QueueFree;
+		MinigameEffects.Sparks(_effects, _effects.ToLocal(globalPos), color);
 	}
 }

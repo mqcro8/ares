@@ -55,6 +55,9 @@ public partial class Rover_scence : Node2D
 	private const float TutorialDangerY = -120.0f;
 	private const int TutorialLane = 1; // Middle lane, where the rover starts.
 	private ColorRect _fadeRect;
+	private bool _leaving;
+	private readonly List<TaskCompletionSource<bool>> _waits = new();
+	internal Func<string, Error> SceneLoader { get; set; }
 	// 0 disables the timer; useful while testing the scene.
 	[Export(PropertyHint.Range, "0,300,1")]
 	public float VictoryTime { get; set; } = 100f;
@@ -85,7 +88,6 @@ public partial class Rover_scence : Node2D
 
 		_ = ShowPanel();
 
-		GD.Print("Node is ready!");
 		_rover.CollisionRegistered += OnCollisionRegistered;
 
 		obstacles[0] = GD.Load<Texture2D>("res://art/rover/obstacle_wreck.png");
@@ -105,7 +107,6 @@ public partial class Rover_scence : Node2D
 	}
 	private void _on_continue_pressed()
 	{	
-		GD.Print($"pressed {_line}");
 		_line++;
 		Showline();
 	}
@@ -139,7 +140,7 @@ public partial class Rover_scence : Node2D
 	private async Task ShowPanel()
 	{
 		_roverAnimation.Play("wakeup");
-		await ToSignal(_roverAnimation, AnimatedSprite2D.SignalName.AnimationFinished);
+		if (!await WaitUntil(() => !_roverAnimation.IsPlaying())) return;
 		_roverAnimation.Play("idle");
 		_panel.Visible = true;
 	}
@@ -278,6 +279,7 @@ public partial class Rover_scence : Node2D
 
 	private void ScrollWorld(float delta)
 	{
+		_spawnedObstacles.RemoveAll(obstacle => !GodotObject.IsInstanceValid(obstacle));
 		_groundScroll -= _levelVelocity / GetGroundHeight() * delta;
 		_groundMaterial.SetShaderParameter("scroll_offset", new Vector2(0, _groundScroll));
 		foreach (var obstacle in _spawnedObstacles)
@@ -295,6 +297,9 @@ public partial class Rover_scence : Node2D
 
 	public override void _ExitTree()
 	{
+		_leaving = true;
+		foreach (var wait in _waits.ToArray()) wait.TrySetResult(false);
+		_waits.Clear();
 		if (_rover != null)
 			_rover.CollisionRegistered -= OnCollisionRegistered;
 
@@ -311,19 +316,13 @@ public partial class Rover_scence : Node2D
 		{
 			_label.Show();
 
-			await ToSignal(
-				GetTree().CreateTimer(1),
-				SceneTreeTimer.SignalName.Timeout
-			);
+			if (!await WaitSeconds(1)) return;
 
 			if (_tutorialActive || _gameStarted) return;
 
 			_label.Hide();
 
-			await ToSignal(
-				GetTree().CreateTimer(0.4),
-				SceneTreeTimer.SignalName.Timeout
-			);
+			if (!await WaitSeconds(.4)) return;
 		}
 
 		// Only clear the prompt if the tutorial has not taken over the label.
@@ -349,7 +348,6 @@ public partial class Rover_scence : Node2D
 	// Teaches steering and speed before the real mission begins.
 	private async Task BeginTutorial()
 	{
-		GD.Print("Tutorial started");
 
 		_label.Hide();
 		_roverAnimation.PlayAnimation("walk");
@@ -364,13 +362,13 @@ public partial class Rover_scence : Node2D
 		_spawnTimer = 0f;
 		_survivalTime = 0f;
 
-		await ToSignal(GetTree().CreateTimer(1.1), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(1.1)) return;
 		ShowMessage("Obstacle ahead!");
 		SpawnTutorialObstacle(TutorialLane);
 
-		await WaitUntil(() =>
+		if (!await WaitUntil(() =>
 			!GodotObject.IsInstanceValid(_tutorialObstacle) ||
-			_tutorialObstacle.Position.Y >= TutorialDangerY);
+			_tutorialObstacle.Position.Y >= TutorialDangerY)) return;
 
 		if (!GodotObject.IsInstanceValid(_tutorialObstacle))
 		{
@@ -385,8 +383,8 @@ public partial class Rover_scence : Node2D
 
 		ShowMessage("Danger! Press 'A' or 'D' to dodge");
 
-		await WaitUntil(() => _rover.CurrentLaneIndex != TutorialLane);
-		await WaitUntil(() => !_rover.IsChangingLane);
+		if (!await WaitUntil(() => _rover.CurrentLaneIndex != TutorialLane)) return;
+		if (!await WaitUntil(() => !_rover.IsChangingLane)) return;
 		
 
 		_tutorialPaused = false;
@@ -396,51 +394,39 @@ public partial class Rover_scence : Node2D
 		HideMessage();
 
 		// Let the obstacle slide past before praising the player.
-		await ToSignal(GetTree().CreateTimer(1.1), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(1.1)) return;
 
 		ShowMessage("Well done!");
-		await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(2)) return;
 
 		ShowMessage("It could take a bit...");
-		await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(2)) return;
 		ShowMessage("Hold W to speed up");
 		_tutorialSpeedActive = true;
 		
 
-		bool triedUp = false;
-		ulong deadline = Time.GetTicksMsec() + 8000;
-		while (!triedUp && Time.GetTicksMsec() < deadline)
-		{
-			if (Input.IsActionPressed("move_up")) triedUp = true;
-			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		}
+		if (!await WaitUntil(() => Input.IsActionPressed("move_up"), 8)) return;
 
 		HideMessage();
 		_rover.CanMove = false;
 		SpawnTutorialObstacle(0);
 		SpawnTutorialObstacle(2);
 		// Let the obstacle slide past before praising the player.
-		await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(2)) return;
 
 		_rover.CanMove = true;
 		ShowMessage("Actually, it can be somewhat dangerous");
-		await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
-		ShowMessage("Hold S to slow dow");
+		if (!await WaitSeconds(2)) return;
+		ShowMessage("Hold S to slow down");
 		
-		bool triedDown = false;
-		deadline = Time.GetTicksMsec() + 8000;
-		while (!triedDown && Time.GetTicksMsec() < deadline)
-		{
-			if (Input.IsActionPressed("move_down")) triedDown = true;
-			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		}
+		if (!await WaitUntil(() => Input.IsActionPressed("move_down"), 8)) return;
 
 		ShowMessage("Well done!");
-		await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(.8)) return;
 
 		_tutorialSpeedActive = false;
 		ShowMessage("Mission start!");
-		await ToSignal(GetTree().CreateTimer(0.8), SceneTreeTimer.SignalName.Timeout);
+		if (!await WaitSeconds(.8)) return;
 
 		HideMessage();
 		StartMission();
@@ -457,10 +443,30 @@ public partial class Rover_scence : Node2D
 		_spawnedObstacles.Add(_tutorialObstacle);
 	}
 
-	private async Task WaitUntil(Func<bool> condition)
+	private async Task<bool> WaitUntil(Func<bool> condition, double timeout = double.PositiveInfinity)
 	{
-		while (!condition())
-			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		double elapsed = 0;
+		while (!_leaving && !condition() && elapsed < timeout)
+		{
+			if (!await WaitSeconds(.02)) return false;
+			elapsed += .02;
+		}
+		return !_leaving;
+	}
+
+	private async Task<bool> WaitSeconds(double seconds, bool allowResult = false)
+	{
+		if (_leaving || !IsInsideTree()) return false;
+		var completion = new TaskCompletionSource<bool>();
+		var timer = new Timer { OneShot = true, WaitTime = seconds };
+		_waits.Add(completion);
+		AddChild(timer);
+		timer.Timeout += () => completion.TrySetResult(true);
+		timer.Start();
+		bool elapsed = await completion.Task;
+		_waits.Remove(completion);
+		if (GodotObject.IsInstanceValid(timer)) timer.QueueFree();
+		return elapsed && !_leaving && (allowResult || (!_gameOver && !_victory));
 	}
 
 	private void ShowMessage(string text)
@@ -476,7 +482,6 @@ public partial class Rover_scence : Node2D
 
 	private void StartMission()
 	{
-		GD.Print("Game started!");
 
 		_tutorialActive = false;
 		_tutorialPaused = false;
@@ -497,18 +502,26 @@ public partial class Rover_scence : Node2D
 
 	private async Task FadeAndChangeScene(string scenePath)
 	{
+		GetNode<CanvasLayer>("TransitionLayer").Visible = true;
+		_fadeRect.Color = new Color(0, 0, 0, 0);
 		Tween tween = CreateTween();
 
 		tween.TweenProperty(
 			_fadeRect,
 			"color:a",
-			5.0f,
+			1.0f,
 			4f
 		);
 
-		await ToSignal(tween, Tween.SignalName.Finished);
-
-		GetTree().ChangeSceneToFile(scenePath);
+		if (!await WaitSeconds(4, allowResult: true)) return;
+		var error = SceneLoader != null ? SceneLoader(scenePath) : GetTree().ChangeSceneToFile(scenePath);
+		if (error == Error.Ok) return;
+		GetNode<CanvasLayer>("TransitionLayer").Visible = false;
+		ShowMessage("Unable to open the next scene. Return to Mission Control.");
+		var back = new Button { Text = "Return to Mission Control" };
+		_hud.AddChild(back);
+		back.Pressed += () => GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn");
+		back.GrabFocus();
 	}
 	private async void GameOver()
 	{

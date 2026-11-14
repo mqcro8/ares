@@ -18,7 +18,6 @@ public partial class Hud : CanvasLayer
 		}
 
 		_emptyHeart = GD.Load<Texture2D>("res://art/rover/heart_lost.png");
-		GD.Print("Node ready");
 	}
 
 	public void UpdateCollisions(int collisions)

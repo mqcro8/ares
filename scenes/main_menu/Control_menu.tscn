@@ -108,7 +108,17 @@ autowrap_mode = 3
 [node name="Spacer" type="Control" parent="Panel/Panel2" index="4"]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="ControlsList" type="Label" parent="Panel/Panel2/ControlsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_font_sizes/font_size = 15
+text = "W A S D — Move\nSPACE — Jump in the gym\nE — Interact\nQ — Mission monitor\n1–5 — Select hotbar slot\nESC — Pause / resume\n\nLAUNCH\nTap SPACE or left click to ignite.\nHold to increase thrust; release to reduce.\n\nROVER\nA / D — Steer    W / S — Speed"
+vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="Back" type="Button" parent="Panel/Panel2" index="5"]
 custom_minimum_size = Vector2(0, 54)
