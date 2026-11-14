@@ -189,23 +189,12 @@ layer = 10
 
 [node name="Panel" type="PanelContainer" parent="IntroUI" unique_id=1312481023]
 anchors_preset = -1
-<<<<<<< HEAD
-anchor_left = 0.003
-anchor_top = 1.0
-anchor_right = 0.365
-anchor_bottom = 1.0
-offset_left = 1161.544
-offset_top = -247.0
-offset_right = 1161.52
-offset_bottom = -39.0
-=======
 anchor_left = 0.02
 anchor_top = 0.02
 anchor_right = 0.98
 anchor_bottom = 0.02
 offset_top = 0.0
 offset_bottom = 100.0
->>>>>>> 4b84f23b42ddb982200c415dedafc0603fe70505
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
 metadata/_edit_group_ = true

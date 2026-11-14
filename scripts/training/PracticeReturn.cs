@@ -42,6 +42,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     {
         _game = (Control)GetParent();
         _session = PracticeSession.SessionId; _ticket = PracticeSession.EnterExercise(_game);
+        ControllerCommandRouter.Register(this, this);
         SetBoardActive(false);
         if (_game is WireMinigame wire) wire.Completed += Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed += Success;
@@ -171,7 +172,31 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
         for (int i = 0; i < 6; i++) if (Input.IsKeyPressed((Key)((int)Key.Key1 + i))) return;
         foreach (Key key in new[] { Key.Left, Key.Right, Key.Up, Key.Down, Key.W, Key.A, Key.S, Key.D, Key.R })
             if (Input.IsKeyPressed(key)) return;
+        StartGame();
+    }
+
+    private void StartGame()
+    {
+        if (_active || _completed) return;
         _starting = false; SetBoardActive(true); _overlay.Hide(); _back.Show();
+        NotifyGame();
+    }
+
+    public bool HandleControllerCommand(ControllerCommand command)
+    {
+        switch (command.Name)
+        {
+            case ControllerCommands.MinigameStart:
+                StartGame();
+                return true;
+
+            case ControllerCommands.MinigameCancel:
+                Cancel();
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private void NotifyGame() => (_game as IControllerContextSource)?.PublishControllerContext();
@@ -186,7 +211,8 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void Success()
     {
         if (!_active || _finished) return;
-        if (_ticket == 0) { SetBoardActive(false); _back.Text = "Complete — restart"; return; }
+        _completed = true;
+        if (_ticket == 0) { SetBoardActive(false); _back.Text = "Complete — restart"; NotifyGame(); return; }
         Finish(true);
     }
     private void Cancel()
@@ -198,7 +224,8 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void Finish(bool success)
     {
         if (_finished || !PracticeSession.Finish(_session, _ticket, success)) return;
-        _finished = true; _starting = false; SetBoardActive(false);
+        _finished = true; _starting = false; _completed = true; SetBoardActive(false);
+        ControllerContext.End(_game);
         Callable.From(Return).CallDeferred();
     }
     private void Return()
