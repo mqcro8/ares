@@ -18,6 +18,18 @@ public partial class ControllerInputTest : Node
         }
     }
 
+    private sealed class CommandCapture : IControllerCommandSink
+    {
+        public readonly List<ControllerCommand> Commands = new();
+        public bool Handled;
+
+        public bool HandleControllerCommand(ControllerCommand command)
+        {
+            Commands.Add(command);
+            return Handled;
+        }
+    }
+
     public override void _Ready()
     {
         try
@@ -44,6 +56,10 @@ public partial class ControllerInputTest : Node
     private void Run()
     {
         MessageParsing();
+        CommandParsing();
+        CommandValidation();
+        CommandRouting();
+        ContextPublishing();
         RoomCodes();
         RelayUrls();
         BridgeInjection();
@@ -85,6 +101,133 @@ public partial class ControllerInputTest : Node
         Check(!ControllerMessage.Parse("{\"action\":\"move_left\",\"strength\":\"1\"}").IsInput, "String strength is rejected");
         Check(ControllerMessage.Parse("{\"type\":\"input\",\"action\":\"move_left\",\"strength\":0.5,\"extra\":1}").IsInput,
             "Unknown extra fields are tolerated");
+    }
+
+    private void CommandParsing()
+    {
+        var pick = ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"wire_pick\",\"index\":2}");
+        Check(pick.IsCommand && pick.Command.Name == "wire_pick" && pick.Command.HasIndex &&
+            pick.Command.Index == 2 && !pick.Command.HasValue, "Index commands parse");
+
+        var set = ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"freq_set\",\"index\":1,\"value\":0.42}");
+        Check(set.IsCommand && set.Command.HasIndex && set.Command.Index == 1 &&
+            set.Command.HasValue && Mathf.IsEqualApprox(set.Command.Value, 0.42f),
+            "Command values parse");
+
+        var select = ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"hull_select\",\"index\":3}");
+        Check(select.IsCommand && select.Command.HasIndex && select.Command.Index == 3 &&
+            !select.Command.HasValue, "Hull plate selection parses");
+
+        var restart = ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"hull_restart\"}");
+        Check(restart.IsCommand && !restart.Command.HasIndex && !restart.Command.HasValue,
+            "No-argument commands parse");
+
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"pause\"}").IsCommand,
+            "Unknown command names are rejected");
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"fuse_press\",\"index\":8}").IsCommand,
+            "Out-of-range command indexes are rejected");
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"wire_pick\",\"index\":1.5}").IsCommand,
+            "Fractional command indexes are rejected");
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"freq_set\",\"index\":0,\"value\":2}").IsCommand,
+            "Out-of-range command values are rejected");
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"name\":\"wire_pick\",\"value\":1}").IsCommand,
+            "Unexpected command values are rejected");
+        Check(!ControllerMessage.Parse("{\"type\":\"command\",\"index\":0}").IsCommand,
+            "Commands without a name are rejected");
+    }
+
+    private void CommandValidation()
+    {
+        ControllerCommand Make(string name, int index, bool hasIndex, float value, bool hasValue) =>
+            new(name, index, hasIndex, value, hasValue);
+
+        Check(ControllerCommands.Validate(Make("wire_pick", 0, true, 0, false), out _),
+            "wire_pick accepts index 0");
+        Check(!ControllerCommands.Validate(Make("wire_pick", -1, true, 0, false), out _),
+            "wire_pick rejects negative indexes");
+        Check(!ControllerCommands.Validate(Make("freq_set", 3, true, 0.5f, true), out _),
+            "freq_set rejects knob indexes above 2");
+        Check(!ControllerCommands.Validate(Make("freq_set", 0, true, float.NaN, true), out _),
+            "freq_set rejects non-finite values");
+        Check(!ControllerCommands.Validate(Make("hull_select", 0, true, 1f, true), out _),
+            "hull_select rejects a value");
+        Check(!ControllerCommands.Validate(Make("hull_select", 4, true, 0, false), out _),
+            "hull_select rejects plates above 3");
+        Check(ControllerCommands.Validate(Make("hull_select", 3, true, 0, false), out _),
+            "hull_select accepts plate 3");
+        Check(ControllerCommands.Validate(Make("launch_retry", 0, false, 0, false), out _),
+            "launch_retry takes no arguments");
+
+        Check(ControllerActions.IsSupported(ControllerActions.MinigameAction),
+            "minigame_action is a supported held action");
+        Check(ControllerActions.IsSupported(ControllerActions.RotateLeft),
+            "rotate actions are supported");
+        Check(ControllerActions.IsSupported(ControllerActions.LaunchHold),
+            "launch_hold is a supported held action");
+    }
+
+    private void CommandRouting()
+    {
+        ControllerCommandRouter.Clear();
+        var first = new CommandCapture { Handled = false };
+        var second = new CommandCapture { Handled = true };
+        var owner = new object();
+        ControllerCommandRouter.Register(owner, first);
+        ControllerCommandRouter.Register(new object(), second);
+
+        var command = new ControllerCommand("fuse_press", 1, true, 0, false);
+        Check(ControllerCommandRouter.Dispatch(command), "A later sink can handle a command");
+        Check(first.Commands.Count == 1 && second.Commands.Count == 1,
+            "Every sink is tried until one handles the command");
+        Check(first.Commands[0].Name == "fuse_press" && first.Commands[0].Index == 1,
+            "Dispatched commands keep their payload");
+
+        ControllerCommandRouter.Unregister(owner);
+        Check(ControllerCommandRouter.Count == 1, "Unregister removes a sink");
+        ControllerCommandRouter.Clear();
+        Check(!ControllerCommandRouter.Dispatch(command), "Dispatch with no sinks fails cleanly");
+    }
+
+    private void ContextPublishing()
+    {
+        ControllerContext.Reset();
+        var owner = new object();
+        var stale = new object();
+
+        ControllerContext.Begin(owner, ControllerContextMode.Wires);
+        Check(ControllerContext.IsActive && ControllerContext.Mode == ControllerContextMode.Wires,
+            "Begin activates the context");
+
+        var state = new Godot.Collections.Dictionary { ["selected"] = 2 };
+        ControllerContext.Update(owner, state);
+        ControllerContext.Set(owner, "connected", 1);
+        ulong revision = ControllerContext.Revision;
+
+        var json = new Json();
+        Check(json.Parse(ControllerContext.BuildMessage()) == Error.Ok, "Context builds valid JSON");
+        var data = json.Data.AsGodotDictionary();
+        Check(data["type"].AsString() == "context" && data["mode"].AsString() == "wires" &&
+            data["active"].AsBool(), "Context message carries mode and active flag");
+        var published = data["state"].AsGodotDictionary();
+        Check(published["selected"].AsInt32() == 2 && published["connected"].AsInt32() == 1,
+            "Context message carries published state");
+
+        ControllerContext.Update(stale, new Godot.Collections.Dictionary { ["hijack"] = 1 });
+        Check(ControllerContext.Revision == revision, "A stale owner cannot update the context");
+
+        ControllerContext.End(stale);
+        Check(ControllerContext.IsActive, "A stale owner cannot end the context");
+
+        ControllerContext.Remove(owner, "connected");
+        Check(ControllerContext.Revision > revision, "Removing a key bumps the revision");
+
+        ControllerContext.End(owner);
+        Check(!ControllerContext.IsActive, "End clears the context");
+        json.Parse(ControllerContext.BuildMessage());
+        data = json.Data.AsGodotDictionary();
+        Check(data["mode"].AsString() == "none" && !data["active"].AsBool(),
+            "Inactive context tells the phone to restore its previous view");
+        ControllerContext.Reset();
     }
 
     private void RoomCodes()

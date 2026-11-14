@@ -27,6 +27,7 @@ public partial class ControllerRelay : Node
 
     private const string ConfigSection = "controller";
     private const double ReconnectDelay = 2.0;
+    private const double ContextInterval = 1.0 / 15.0;
     private const string RoomAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private const int RoomLength = 5;
 
@@ -37,9 +38,12 @@ public partial class ControllerRelay : Node
     private readonly ControllerInputBridge _bridge = new();
     private WebSocketPeer _socket;
     private double _reconnectTimer;
+    private double _contextTimer;
     private bool _controllerConnected;
     private bool _wasOpen;
     private bool _pendingStart;
+    private bool _forceContext;
+    private ulong _lastContextRevision;
 
     public bool Enabled { get; private set; }
     public string RelayUrl { get; private set; } = "";
@@ -113,6 +117,8 @@ public partial class ControllerRelay : Node
                 byte[] packet = _socket.GetPacket();
                 HandleMessage(packet.GetStringFromUtf8());
             }
+
+            PumpContext(delta);
         }
         else if (readyState == WebSocketPeer.State.Closed)
         {
@@ -353,16 +359,17 @@ public partial class ControllerRelay : Node
         {
             case ControllerMessageKind.Input:
                 _bridge.Apply(message);
-                if (!_controllerConnected)
-                {
-                    _controllerConnected = true;
-                    SetState(ControllerLinkState.ControllerConnected);
-                }
+                MarkControllerConnected();
+                break;
+
+            case ControllerMessageKind.Command:
+                MarkControllerConnected();
+                if (!ControllerCommandRouter.Dispatch(message.Command))
+                    GD.PushWarning($"Controller relay: no minigame handled '{message.Command}'.");
                 break;
 
             case ControllerMessageKind.ControllerConnected:
-                _controllerConnected = true;
-                SetState(ControllerLinkState.ControllerConnected);
+                MarkControllerConnected();
                 break;
 
             case ControllerMessageKind.ControllerDisconnected:
@@ -371,6 +378,33 @@ public partial class ControllerRelay : Node
                 SetState(ControllerLinkState.WaitingForController);
                 break;
         }
+    }
+
+    private void MarkControllerConnected()
+    {
+        if (_controllerConnected) return;
+        _controllerConnected = true;
+        // A phone that joins late has missed every earlier context update.
+        _forceContext = true;
+        SetState(ControllerLinkState.ControllerConnected);
+    }
+
+    /// <summary>Sends the active minigame context, throttled to a few updates a second.</summary>
+    private void PumpContext(double delta)
+    {
+        if (!_controllerConnected || _socket == null) return;
+
+        _contextTimer += delta;
+        if (!_forceContext && _contextTimer < ContextInterval) return;
+        if (!_forceContext && ControllerContext.Revision == _lastContextRevision) return;
+
+        _contextTimer = 0;
+        _forceContext = false;
+        _lastContextRevision = ControllerContext.Revision;
+
+        Error error = _socket.SendText(ControllerContext.BuildMessage());
+        if (error != Error.Ok)
+            GD.PushWarning($"Controller relay: could not send context: {error}");
     }
 
     private void SetState(ControllerLinkState state)

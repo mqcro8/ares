@@ -1,12 +1,13 @@
 namespace ares.scripts.training;
 using Godot;
+using Ares.Systems.Controllers;
 
 /// <summary>Instructions inside the real minigame, with standalone completion signals intact.</summary>
-public partial class PracticeReturn : CanvasLayer
+public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
 {
     private Control _game;
     private long _ticket, _session;
-    private bool _finished, _starting, _active, _returnRequested;
+    private bool _finished, _starting, _active, _returnRequested, _completed;
     private bool _returnFailed;
     // Per-instance loader seam permits deterministic IO-failure regression tests.
     internal System.Func<string, Error> SceneLoader { get; set; }
@@ -15,10 +16,18 @@ public partial class PracticeReturn : CanvasLayer
     private TextureRect _tutorial;
     private Button _start, _back;
     public static void Attach(Control game) => game.AddChild(new PracticeReturn { Name = "PracticeReturn", Layer = 20 });
+
+    /// <summary>True while the instructions or completion overlay owns the screen.</summary>
+    public bool BlocksGameplay => !_active || _completed;
+
+    /// <summary>Overlay state published to the phone context.</summary>
+    public string ControllerOverlay => _completed ? "complete" : _active ? "active" : "instructions";
+
     public override void _Ready()
     {
         _game = (Control)GetParent();
         _session = PracticeSession.SessionId; _ticket = PracticeSession.EnterExercise(_game);
+        ControllerCommandRouter.Register(this, this);
         _game.SetProcessInput(false);
         if (_game is WireMinigame wire) wire.Completed += Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed += Success;
@@ -66,6 +75,9 @@ public partial class PracticeReturn : CanvasLayer
         var cancel = new Button { Text = _back.Text }; box.AddChild(cancel); cancel.Pressed += Cancel;
         GetViewport().SizeChanged += FitLayout;
         FitLayout();
+        // Tell the phone the instructions overlay is up even for minigames that
+        // do not otherwise publish per-frame state.
+        NotifyGame();
     }
     private void FitLayout()
     {
@@ -143,8 +155,34 @@ public partial class PracticeReturn : CanvasLayer
     {
         if (!_starting || Input.IsPhysicalKeyPressed(Key.E) || Input.IsKeyPressed(Key.Enter) || Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left)) return;
         for (int i = 0; i < 6; i++) if (Input.IsKeyPressed((Key)((int)Key.Key1 + i))) return;
-        _starting = false; _active = true; _overlay.Hide(); _back.Show(); _game.SetProcessInput(true);
+        StartGame();
     }
+
+    private void StartGame()
+    {
+        if (_active || _completed) return;
+        _starting = false; _active = true; _overlay.Hide(); _back.Show(); _game.SetProcessInput(true);
+        NotifyGame();
+    }
+
+    public bool HandleControllerCommand(ControllerCommand command)
+    {
+        switch (command.Name)
+        {
+            case ControllerCommands.MinigameStart:
+                StartGame();
+                return true;
+
+            case ControllerCommands.MinigameCancel:
+                Cancel();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private void NotifyGame() => (_game as IControllerContextSource)?.PublishControllerContext();
     public override void _Input(InputEvent ev)
     {
         if (ev is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && !_active)
@@ -156,7 +194,8 @@ public partial class PracticeReturn : CanvasLayer
     private void Success()
     {
         if (!_active || _finished) return;
-        if (_ticket == 0) { _game.SetProcessInput(false); _back.Text = "Complete — restart"; return; }
+        _completed = true;
+        if (_ticket == 0) { _game.SetProcessInput(false); _back.Text = "Complete — restart"; NotifyGame(); return; }
         Finish(true);
     }
     private void Cancel()
@@ -168,7 +207,8 @@ public partial class PracticeReturn : CanvasLayer
     private void Finish(bool success)
     {
         if (_finished || !PracticeSession.Finish(_session, _ticket, success)) return;
-        _finished = true; _starting = false; _game.SetProcessInput(false);
+        _finished = true; _starting = false; _completed = true; _game.SetProcessInput(false);
+        ControllerContext.End(_game);
         if (_game is FuseBoxMinigame fuse) fuse.StopPending();
         Callable.From(Return).CallDeferred();
     }
@@ -188,6 +228,8 @@ public partial class PracticeReturn : CanvasLayer
     public override void _ExitTree()
     {
         GetViewport().SizeChanged -= FitLayout;
+        ControllerCommandRouter.Unregister(this);
+        ControllerContext.End(_game);
         if (_game is WireMinigame wire) wire.Completed -= Success;
         if (_game is FuseBoxMinigame fuse) fuse.Completed -= Success;
         if (_game is FrequencyBoxMinigame frequency) frequency.Completed -= Success;

@@ -29,7 +29,7 @@ Autoloads: `AudioManager`, `MissionState`, `PauseManager`, and `ControllerRelay`
 
 `Hotbar.cs` also checks `hotbar_next` / `hotbar_prev`, but those actions are not in the input map yet.
 
-The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction; see [`controlers/README.md`](controlers/README.md) for the relay setup.
+The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction. While a minigame is open the phone switches to a matching touch panel (wiring, fuse box, frequency, hull repair, launch), with a start/restart overlay for practice modes; the previous page returns when the mode ends. See [`controlers/README.md`](controlers/README.md) for the relay setup and message protocol.
 
 ## Architecture
 
@@ -71,7 +71,8 @@ ares/
 │   │   ├── items/                Item.cs, ItemData.cs ([GlobalClass] Resource),
 │   │   │                         ItemCapability.cs, ItemStack.cs, EquipableItem.cs
 │   │   ├── input/                ControllerRelay.cs (autoload), ControllerInputBridge.cs,
-│   │   │                         ControllerMessage.cs, ControllerQr.cs
+│   │   │                         ControllerMessage.cs, ControllerCommand.cs,
+│   │   │                         ControllerContext.cs, ControllerQr.cs
 │   │   └── minigames/            WireMinigame, FuseBoxMinigame, FrequencyBoxMinigame,
 │   │                             HullRepairMinigame
 │   ├── ui/

@@ -1,8 +1,10 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using ares.scripts.training;
+using Ares.Systems.Controllers;
 
-public partial class HullRepairMinigame : Control
+public partial class HullRepairMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
 	[Signal] public delegate void FailedEventHandler();
@@ -113,6 +115,8 @@ public partial class HullRepairMinigame : Control
 
 	private float _resetHold;
 	private bool _resetArmed = true;
+	private bool _actionWasPressed;
+	private float _contextTimer;
 
 	public override void _Ready()
 	{
@@ -136,7 +140,10 @@ public partial class HullRepairMinigame : Control
 		CreateStabilityBar();
 		BuildScene();
 		SetPhase(Phase.Pick);
-		ares.scripts.training.PracticeReturn.Attach(this);
+		ControllerCommandRouter.Register(this, this);
+		ControllerContext.Begin(this, ControllerContextMode.Hull);
+		PublishControllerContext();
+		PracticeReturn.Attach(this);
 	}
 
 	private void BuildTorch()
@@ -340,6 +347,7 @@ public partial class HullRepairMinigame : Control
 				break;
 		}
 		UpdateSelection();
+		PublishControllerContext();
 	}
 
 	private void UpdateSelection()
@@ -361,6 +369,16 @@ public partial class HullRepairMinigame : Control
 		if (@event is InputEventKey k && k.Pressed && !k.Echo)
 		{
 			HandleKey(k);
+			return;
+		}
+
+		if (@event is InputEventAction action && action.Pressed &&
+			action.Action == ControllerActions.MinigameAction && !GameplayBlocked)
+		{
+			if (_phase == Phase.Pick) PickPlate();
+			else if (_phase == Phase.Hold) TryPlace();
+			_actionWasPressed = true;
+			Handle();
 			return;
 		}
 
@@ -498,6 +516,7 @@ public partial class HullRepairMinigame : Control
 			if (!_platePlaced[_selected]) break;
 		}
 		UpdateSelection();
+		PublishControllerContext();
 	}
 
 	private void SelectNextAvailable()
@@ -550,20 +569,40 @@ public partial class HullRepairMinigame : Control
 
 		if (_phase == Phase.Hold) ProcessHold(dt);
 		else if (_phase == Phase.Weld) ProcessWeld(dt);
+
+		// The phone sends minigame_action as a held action; use its rising edge to
+		// pick or place just like a Space tap.
+		bool action = Input.IsActionPressed(ControllerActions.MinigameAction);
+		if (action && !_actionWasPressed && !GameplayBlocked)
+		{
+			if (_phase == Phase.Pick) PickPlate();
+			else if (_phase == Phase.Hold) TryPlace();
+		}
+		_actionWasPressed = action;
+
+		_contextTimer += dt;
+		if (_phase == Phase.Weld && _contextTimer >= 0.15f)
+		{
+			_contextTimer = 0f;
+			PublishControllerContext();
+		}
 	}
 
 	private static Vector2 ReadDirection()
 	{
-		float x = 0f, y = 0f;
-		if (Input.IsKeyPressed(Key.Left) || Input.IsKeyPressed(Key.A)) x -= 1f;
-		if (Input.IsKeyPressed(Key.Right) || Input.IsKeyPressed(Key.D)) x += 1f;
-		if (Input.IsKeyPressed(Key.Up) || Input.IsKeyPressed(Key.W)) y -= 1f;
-		if (Input.IsKeyPressed(Key.Down) || Input.IsKeyPressed(Key.S)) y += 1f;
-		var v = new Vector2(x, y);
-		return v.LengthSquared() > 0f ? v.Normalized() : Vector2.Zero;
+		Vector2 move = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+		float x = move.X, y = move.Y;
+		if (Input.IsKeyPressed(Key.Left)) x -= 1f;
+		if (Input.IsKeyPressed(Key.Right)) x += 1f;
+		if (Input.IsKeyPressed(Key.Up)) y -= 1f;
+		if (Input.IsKeyPressed(Key.Down)) y += 1f;
+		return new Vector2(x, y).LimitLength(1f);
 	}
 
-	private float Fine() => Input.IsKeyPressed(Key.Shift) ? FineFactor : 1f;
+	private float Fine() =>
+		Input.IsKeyPressed(Key.Shift) || Input.IsActionPressed(ControllerActions.MinigameFine)
+			? FineFactor
+			: 1f;
 
 	private static Vector2 ClampToBounds(Vector2 p) => new Vector2(
 		Mathf.Clamp(p.X, Bounds.Position.X, Bounds.End.X),
@@ -576,8 +615,8 @@ public partial class HullRepairMinigame : Control
 		_held.Position = ClampToBounds(_held.Position + ReadDirection() * PlateSpeed * f * dt);
 
 		float rot = 0f;
-		if (Input.IsKeyPressed(Key.E)) rot += 1f;
-		if (Input.IsKeyPressed(Key.Q)) rot -= 1f;
+		if (Input.IsKeyPressed(Key.E) || Input.IsActionPressed(ControllerActions.RotateRight)) rot += 1f;
+		if (Input.IsKeyPressed(Key.Q) || Input.IsActionPressed(ControllerActions.RotateLeft)) rot -= 1f;
 		_held.RotationDegrees += rot * PlateRotSpeed * f * dt;
 
 		// Guía: el contorno del hueco se pone verde cuando la placa correcta está alineada
@@ -703,6 +742,7 @@ public partial class HullRepairMinigame : Control
 		_torch.Position = _torchPos;
 		_torchSparks.Emitting = false;
 		UpdateSeamHighlight();
+		PublishControllerContext();
 	}
 
 	private void UpdateSeamHighlight()
@@ -721,7 +761,8 @@ public partial class HullRepairMinigame : Control
 		_torch.Position = _torchPos;
 
 		// Bloque 7: mantener Espacio o clic izquierdo (se ignora hasta soltarlo una vez)
-		bool on = Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left);
+		bool on = Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left) ||
+			Input.IsActionPressed(ControllerActions.MinigameAction);
 		if (_requireRelease)
 		{
 			if (!on) _requireRelease = false;
@@ -832,6 +873,7 @@ public partial class HullRepairMinigame : Control
 		_stability = Mathf.Clamp(_stability - StabilityLoss, 0f, 1f);
 		UpdateStabilityBar();
 		AddDamageMark();
+		PublishControllerContext();
 
 		if (_stability <= StabilityLossThreshold)
 			Fail();
@@ -875,6 +917,7 @@ public partial class HullRepairMinigame : Control
 		_torch.Visible = false;
 		_heatBar.Visible = false;
 		EmitSignal(SignalName.Failed);
+		PublishControllerContext();
 	}
 
 	// Bloque 12: emitir completed
@@ -992,6 +1035,78 @@ public partial class HullRepairMinigame : Control
 		_phase = Phase.Pick;
 		UpdateStabilityBar();
 	}
+
+	public override void _ExitTree()
+	{
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
+	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameStart:
+			case ControllerCommands.MinigameCancel:
+				return false;
+
+			case ControllerCommands.HullSelect:
+				if (GameplayBlocked) return true;
+				if (_phase == Phase.Pick && command.Index >= 0 && command.Index < _platePlaced.Count &&
+					!_platePlaced[command.Index])
+				{
+					_selected = command.Index;
+					UpdateSelection();
+					PublishControllerContext();
+				}
+				return true;
+
+			case ControllerCommands.HullRestart:
+				if (GameplayBlocked) return true;
+				Restart();
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	public void PublishControllerContext()
+	{
+		var placed = new Godot.Collections.Array();
+		for (int i = 0; i < _platePlaced.Count; i++) placed.Add(_platePlaced[i]);
+
+		float progress = _seam is { Length: > 1 } ? _progress / (float)(_seam.Length - 1) : 0f;
+
+		ControllerContext.Update(this, new Godot.Collections.Dictionary
+		{
+			["phase"] = PhaseId(_phase),
+			["selected"] = _selected,
+			["heldSlot"] = _held != null ? _heldSlot : -1,
+			["placed"] = placed,
+			["seam"] = _seamIndex,
+			["seams"] = _seamPoints?.Length ?? 0,
+			["progress"] = Mathf.Snapped(Mathf.Clamp(progress, 0f, 1f), 0.01f),
+			["heat"] = Mathf.Snapped(_heat, 0.01f),
+			["stability"] = Mathf.Snapped(_stability, 0.01f),
+			["overlay"] = OverlayState,
+		});
+	}
+
+	private static string PhaseId(Phase phase) => phase switch
+	{
+		Phase.Pick => "pick",
+		Phase.Hold => "hold",
+		Phase.Weld => "weld",
+		Phase.Done => "done",
+		Phase.Failed => "failed",
+		_ => "locked",
+	};
+
+	private bool GameplayBlocked => GetNodeOrNull<PracticeReturn>("PracticeReturn")?.BlocksGameplay ?? false;
+
+	private string OverlayState =>
+		GetNodeOrNull<PracticeReturn>("PracticeReturn")?.ControllerOverlay ?? "active";
 
 	private static void RemoveAndFree(Node node)
 	{
