@@ -1,8 +1,10 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using ares.scripts.training;
+using Ares.Systems.Controllers;
 
-public partial class WireMinigame : Control
+public partial class WireMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
 
@@ -30,6 +32,7 @@ public partial class WireMinigame : Control
 	private ColorRect _dragFrom;
 	private ColorRect _hover;
 	private int _keyboardTarget;
+	private int _selectedLeft = -1;
 	private bool _finished;
 
 	private readonly List<(Line2D Wire, Line2D Glow, ColorRect From, ColorRect To)> _links = new();
@@ -66,7 +69,10 @@ public partial class WireMinigame : Control
 			_leftTerminals.Add(left);
 			_rightTerminals.Add(rightTerminal);
 		}
-		ares.scripts.training.PracticeReturn.Attach(this);
+		ControllerCommandRouter.Register(this, this);
+		ControllerContext.Begin(this, ControllerContextMode.Wires);
+		PublishControllerContext();
+		PracticeReturn.Attach(this);
 	}
 
 	public override void _Input(InputEvent @event)
@@ -146,6 +152,7 @@ public partial class WireMinigame : Control
 		_dragWire?.QueueFree();
 		_dragGlow?.QueueFree();
 		_dragFrom = t;
+		_selectedLeft = _leftTerminals.IndexOf(t);
 		var start = Center(t);
 
 		// Halo suave detrás del cable para darle profundidad
@@ -175,6 +182,7 @@ public partial class WireMinigame : Control
 
 		Input.SetDefaultCursorShape(Input.CursorShape.Drag);
 		UpdateDragHighlights();
+		PublishControllerContext();
 	}
 
 	public void CancelInteraction()
@@ -216,12 +224,13 @@ public partial class WireMinigame : Control
 		if (_dragGlow != null) _dragGlow.SetPointPosition(0, Center(_dragFrom));
 	}
 
-	private void EndDrag(Vector2 pos)
+	private void EndDrag(Vector2 pos) => EndDragAt(TerminalAt(_rightBox, pos));
+
+	private void EndDragAt(ColorRect target)
 	{
 		var from = _dragFrom;
 		var wire = _dragWire;
 		var glow = _dragGlow;
-		var target = TerminalAt(_rightBox, pos);
 		// Bloque 7: ¿mismo color y libre?
 		bool success = from != null && target != null
 			&& !_connected.Contains(target) && target.Color == from.Color;
@@ -261,6 +270,7 @@ public partial class WireMinigame : Control
 		_dragWire = null;
 		_dragGlow = null;
 		_dragFrom = null;
+		_selectedLeft = -1;
 		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 		ResetHighlights();
 		if (_finished) EmitSignal(SignalName.Completed);
@@ -339,6 +349,79 @@ public partial class WireMinigame : Control
 		_shakeTween.TweenProperty(_frame, "position:x", _frameBaseX + 5f, 0.05);
 		_shakeTween.TweenProperty(_frame, "position:x", _frameBaseX, 0.05);
 	}
+
+	public override void _ExitTree()
+	{
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
+	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameStart:
+			case ControllerCommands.MinigameCancel:
+				return false;
+
+			case ControllerCommands.WirePick:
+				if (GameplayBlocked || _finished) return true;
+				if (command.Index >= 0 && command.Index < _leftTerminals.Count &&
+					!_connected.Contains(_leftTerminals[command.Index]))
+				{
+					StartDrag(_leftTerminals[command.Index]);
+				}
+				return true;
+
+			case ControllerCommands.WireConnect:
+				if (GameplayBlocked || _finished) return true;
+				if (_dragWire != null && command.Index >= 0 && command.Index < _rightTerminals.Count)
+					EndDragAt(_rightTerminals[command.Index]);
+				else
+					PublishControllerContext();
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	public void PublishControllerContext()
+	{
+		var left = new Godot.Collections.Array();
+		var right = new Godot.Collections.Array();
+		var leftConnected = new Godot.Collections.Array();
+		var rightConnected = new Godot.Collections.Array();
+
+		for (int i = 0; i < _leftTerminals.Count; i++)
+		{
+			left.Add(Hex(_leftTerminals[i].Color));
+			leftConnected.Add(_connected.Contains(_leftTerminals[i]));
+		}
+		for (int i = 0; i < _rightTerminals.Count; i++)
+		{
+			right.Add(Hex(_rightTerminals[i].Color));
+			rightConnected.Add(_connected.Contains(_rightTerminals[i]));
+		}
+
+		ControllerContext.Update(this, new Godot.Collections.Dictionary
+		{
+			["left"] = left,
+			["right"] = right,
+			["leftConnected"] = leftConnected,
+			["rightConnected"] = rightConnected,
+			["selected"] = _selectedLeft,
+			["done"] = _finished,
+			["overlay"] = OverlayState,
+		});
+	}
+
+	private static string Hex(Color color) => "#" + color.ToHtml(false);
+
+	private bool GameplayBlocked => GetNodeOrNull<PracticeReturn>("PracticeReturn")?.BlocksGameplay ?? false;
+
+	private string OverlayState =>
+		GetNodeOrNull<PracticeReturn>("PracticeReturn")?.ControllerOverlay ?? "active";
 
 	private void Sparks(Control t, Color color)
 	{

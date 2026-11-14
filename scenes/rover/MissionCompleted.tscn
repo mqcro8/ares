@@ -47,7 +47,7 @@ anchor_bottom = 1.0
 offset_left = 523.0
 offset_top = 470.0
 offset_right = 1131.0
-offset_bottom = 686.0
+offset_bottom = 730.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_rmqsd")
@@ -84,7 +84,7 @@ autowrap_mode = 3
 
 [node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=1818521968]
 z_index = 1
-custom_minimum_size = Vector2(60, 60)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 18
