@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://cvmwunkdyqxan"]
 
 [ext_resource type="Script" uid="uid://ctlfwtorbk1hw" path="res://scripts/systems/minigames/WireMinigame.cs" id="1_ae87p"]
-[ext_resource type="Texture2D" path="res://art/training/props/elec_box_closed.png" id="prop_elec_box"]
-[ext_resource type="Texture2D" path="res://art/training/props/gh_pipe_v.png" id="prop_pipe"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
 bg_color = Color(0.102, 0.11, 0.118, 1)
@@ -75,17 +73,6 @@ offset_bottom = 230.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
-
-[node name="Props" type="Node2D" parent="Frame"]
-texture_filter = 1
-
-[node name="ElectricalBox" type="Sprite2D" parent="Frame/Props"]
-position = Vector2(36, 230)
-texture = ExtResource("prop_elec_box")
-
-[node name="Pipe" type="Sprite2D" parent="Frame/Props"]
-position = Vector2(684, 230)
-texture = ExtResource("prop_pipe")
 
 [node name="Title" type="Label" parent="Frame"]
 layout_mode = 0

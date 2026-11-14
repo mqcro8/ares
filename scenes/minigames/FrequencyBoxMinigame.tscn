@@ -1,8 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/minigames/FrequencyBoxMinigame.cs" id="1_freq"]
-[ext_resource type="Texture2D" path="res://art/training/props/sig_radio.png" id="prop_radio"]
-[ext_resource type="Texture2D" path="res://art/training/props/sig_console.png" id="prop_console"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
 bg_color = Color(0.102, 0.11, 0.118, 1)
@@ -86,17 +84,6 @@ offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_box")
-
-[node name="Props" type="Node2D" parent="Box"]
-texture_filter = 1
-
-[node name="Radio" type="Sprite2D" parent="Box/Props"]
-position = Vector2(30, 250)
-texture = ExtResource("prop_radio")
-
-[node name="SignalConsole" type="Sprite2D" parent="Box/Props"]
-position = Vector2(290, 250)
-texture = ExtResource("prop_console")
 
 [node name="Screen" type="Panel" parent="Box"]
 layout_mode = 1

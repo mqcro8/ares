@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://3go6dcujtw7j"]
 
 [ext_resource type="Script" uid="uid://gfltyemn45dq" path="res://scripts/systems/minigames/FuseBoxMinigame.cs" id="1_fuse"]
-[ext_resource type="Texture2D" path="res://art/training/props/elec_generator_off.png" id="prop_generator"]
-[ext_resource type="Texture2D" path="res://art/training/props/elec_box_closed.png" id="prop_elec_box"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
 bg_color = Color(0.09, 0.098, 0.106, 1)
@@ -63,17 +61,6 @@ offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_box")
-
-[node name="Props" type="Node2D" parent="Box"]
-texture_filter = 1
-
-[node name="Generator" type="Sprite2D" parent="Box/Props"]
-position = Vector2(30, 250)
-texture = ExtResource("prop_generator")
-
-[node name="ElectricalBox" type="Sprite2D" parent="Box/Props"]
-position = Vector2(330, 250)
-texture = ExtResource("prop_elec_box")
 
 [node name="TopRow" type="HBoxContainer" parent="Box" unique_id=446321369]
 layout_mode = 1
