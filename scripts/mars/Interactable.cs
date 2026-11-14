@@ -88,7 +88,7 @@ public abstract partial class Interactable : Area2D
 
 	protected void ShowPrompt()
 	{
-		if (_prompt == null || !PlayerInRange)
+		if (_prompt == null || !PlayerInRange || !Enabled)
 			return;
 
 		_prompt.Text = PromptText;

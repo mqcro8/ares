@@ -234,15 +234,15 @@ scale = Vector2(1.5, 1.5)
 texture = ExtResource("20_u6byl")
 
 [node name="InOxygenTank16x32" type="Sprite2D" parent="Node" unique_id=232282615]
-position = Vector2(-150, -128)
+position = Vector2(-304, -118)
 texture = ExtResource("21_ydnrm")
 
 [node name="InOxygenTank16x33" type="Sprite2D" parent="Node" unique_id=2049983372]
-position = Vector2(-161, -128)
+position = Vector2(-315, -118)
 texture = ExtResource("21_ydnrm")
 
 [node name="InOxygenTank16x34" type="Sprite2D" parent="Node" unique_id=1733006726]
-position = Vector2(-156, -124)
+position = Vector2(-310, -114)
 texture = ExtResource("21_ydnrm")
 
 [node name="InCrateBig" type="Sprite2D" parent="Node" unique_id=1303882425]

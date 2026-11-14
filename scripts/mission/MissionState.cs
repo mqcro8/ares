@@ -28,7 +28,8 @@ public partial class MissionState : Node
 	// Puzzle progress. Lives here so it survives building/scene changes.
 	public bool GeneratorRepaired { get; private set; }
 	public bool WireBoxRepaired { get; private set; }
-	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && AllDoorAccessOn;
+	public bool SignalTableRepaired { get; private set; }
+	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && SignalTableRepaired && AllDoorAccessOn;
 
 	private readonly bool[] _doorAccess = new bool[DoorAccessCount];
 	public int DoorAccessOnCount
@@ -45,6 +46,7 @@ public partial class MissionState : Node
 
 	[Signal] public delegate void GeneratorRepairedChangedEventHandler(bool repaired);
 	[Signal] public delegate void WireBoxRepairedChangedEventHandler(bool repaired);
+	[Signal] public delegate void SignalTableRepairedChangedEventHandler(bool repaired);
 	[Signal] public delegate void DoorAccessChangedEventHandler(int index, bool on);
 	[Signal] public delegate void AllDoorAccessCompletedEventHandler();
 
@@ -80,10 +82,20 @@ public partial class MissionState : Node
 		EmitSignal(SignalName.WireBoxRepairedChanged, true);
 	}
 
+	public void MarkSignalTableRepaired()
+	{
+		if (SignalTableRepaired)
+			return;
+
+		SignalTableRepaired = true;
+		EmitSignal(SignalName.SignalTableRepairedChanged, true);
+	}
+
 	public void ResetPuzzleProgress()
 	{
 		GeneratorRepaired = false;
 		WireBoxRepaired = false;
+		SignalTableRepaired = false;
 		for (int i = 0; i < _doorAccess.Length; i++)
 			_doorAccess[i] = false;
 	}

@@ -17,11 +17,13 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 	private Control _game;
 	private Node2D _player;
 	private Label _title;
+	private string _completedTitle;
 	private bool _closed;
 	private bool _solved;
 	private int _session;
 
-	public static MinigameOverlay Open(Node owner, Node2D player, string scenePath, string title, string hint)
+	public static MinigameOverlay Open(Node owner, Node2D player, string scenePath, string title, string hint,
+		string completedTitle = "Repaired!")
 	{
 		var packed = GD.Load<PackedScene>(scenePath);
 		if (packed == null)
@@ -32,13 +34,14 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 		var overlay = new MinigameOverlay { Layer = 50 };
 		owner.AddChild(overlay);
-		overlay.Build(packed, player, title, hint);
+		overlay.Build(packed, player, title, hint, completedTitle);
 		return overlay;
 	}
 
-	private void Build(PackedScene packed, Node2D player, string title, string hint)
+	private void Build(PackedScene packed, Node2D player, string title, string hint, string completedTitle)
 	{
 		_player = player;
+		_completedTitle = completedTitle;
 		_player?.SetPhysicsProcess(false);
 
 		_game = packed.Instantiate<Control>();
@@ -202,7 +205,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 		_solved = true;
 		SetGameActive(false);
 		if (_title != null)
-			_title.Text = "Repaired!";
+			_title.Text = _completedTitle;
 
 		int session = _session;
 		await ToSignal(GetTree().CreateTimer(0.9f), SceneTreeTimer.SignalName.Timeout);

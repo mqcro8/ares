@@ -19,6 +19,11 @@ public partial class ElectricalBox : Interactable
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
 		_solved = MissionState.Instance?.WireBoxRepaired ?? false;
 		_sprite.Play(_solved ? "open" : "closed");
+		if (_solved)
+		{
+			Enabled = false;
+			HidePrompt();
+		}
 	}
 
 	protected override void Interact()
@@ -39,10 +44,15 @@ public partial class ElectricalBox : Interactable
 			if (solved)
 			{
 				_solved = true;
+				Enabled = false;
 				_sprite.Play("open");
+				HidePrompt();
 				MissionState.Instance?.MarkWireBoxRepaired();
 			}
-			ShowPrompt();
+			else
+			{
+				ShowPrompt();
+			}
 		};
 	}
 }
