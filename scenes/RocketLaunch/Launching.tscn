@@ -9,6 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://k1b8une8tjst" path="res://art/rocket/fire/frame2.png" id="6_1hwdt"]
 [ext_resource type="Texture2D" uid="uid://0qqd2bp0q4s7" path="res://art/rocket/fire/succes.png" id="7_8e4j1"]
 [ext_resource type="Texture2D" uid="uid://dcu2huyiae0sk" path="res://art/rocket/fire/failed.png" id="8_2faei"]
+[ext_resource type="Texture2D" uid="uid://gqrdc5erqu3t" path="res://art/rocket/result/sucessful_launch.jpeg" id="11_1hwdt"]
+[ext_resource type="Texture2D" uid="uid://dkmlmrewvid2y" path="res://art/rocket/result/unsuccesful_launch.jpeg" id="12_8e4j1"]
 [ext_resource type="FontFile" uid="uid://cga8bbfxvpscc" path="res://art/fonts/PressStart2P-Regular.ttf" id="16_wg3qb"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_y8fwy"]
@@ -119,6 +121,28 @@ theme_override_font_sizes/font_size = 28
 theme_override_styles/background = SubResource("StyleBoxFlat_umb18")
 theme_override_styles/fill = SubResource("StyleBoxFlat_1hwdt")
 
+[node name="ResultScreen" type="Control" parent="HUD" unique_id=1364159948]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SuccessImage" type="TextureRect" parent="HUD/ResultScreen" unique_id=1026078956]
+layout_mode = 0
+offset_left = 1214.0
+offset_top = -1162.0
+offset_right = 2589.0
+offset_bottom = -394.0
+texture = ExtResource("11_1hwdt")
+
+[node name="FailedImage" type="TextureRect" parent="HUD/ResultScreen" unique_id=173844934]
+layout_mode = 0
+offset_left = 65.0
+offset_top = -2197.0
+offset_right = 1440.0
+offset_bottom = -1429.0
+texture = ExtResource("12_8e4j1")
+
 [node name="IntroUI" type="CanvasLayer" parent="." unique_id=1708342987]
 layer = 10
 
@@ -128,10 +152,10 @@ anchor_left = 0.003
 anchor_top = 1.0
 anchor_right = 0.365
 anchor_bottom = 1.0
-offset_left = -1.4560001
-offset_top = -216.0
-offset_right = -1.480011
-offset_bottom = -8.0
+offset_left = 1161.544
+offset_top = -247.0
+offset_right = 1161.52
+offset_bottom = -39.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
