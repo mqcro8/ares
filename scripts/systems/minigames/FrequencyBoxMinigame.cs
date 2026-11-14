@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 using ares.scripts.training;
+using ares.scripts.mission;
 using Ares.Systems.Controllers;
 
 public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -57,6 +58,8 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	public override void _Ready()
 	{
+		if (MissionState.Instance?.HasEquipped("frequency_analyzer") == true)
+			MatchThreshold = 0.85f;
 		_screen = GetNode<Panel>("Box/Screen");
 		_effects = GetNode<Node2D>("Effects");
 		_targetWave = GetNode<Line2D>("Box/Screen/TargetWave");

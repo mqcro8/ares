@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.training;
+using ares.scripts.mission;
 using Ares.Systems.Controllers;
 
 public partial class HullRepairMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -121,6 +122,8 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	public override void _Ready()
 	{
+		if (MissionState.Instance?.HasEquipped("precision_welder") == true)
+			WeldTolerance = 18f;
 		_frame = GetNode<Panel>("Frame");
 		_world = GetNode<Node2D>("Frame/World");
 		_hole = GetNode<Polygon2D>("Frame/World/Hole");

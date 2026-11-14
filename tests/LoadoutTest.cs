@@ -31,6 +31,32 @@ public partial class LoadoutTest : Node
         if (!condition) throw new InvalidOperationException(message);
     }
 
+    private void CheckRepairEffects(bool equipped)
+    {
+        var fuse = GD.Load<PackedScene>("res://scenes/minigames/FuseBoxMinigame.tscn").Instantiate<FuseBoxMinigame>();
+        AddChild(fuse);
+        Check(fuse.GetNode<HBoxContainer>("Box/Lights").GetChildCount() == (equipped ? 5 : 4),
+            "Fuse box shows one extra press/light only when spare fuses are carried");
+        RemoveChild(fuse);
+        fuse.Free();
+
+        var frequency = GD.Load<PackedScene>("res://scenes/minigames/FrequencyBoxMinigame.tscn").Instantiate<FrequencyBoxMinigame>();
+        AddChild(frequency);
+        Check(Mathf.IsEqualApprox(frequency.MatchThreshold, equipped ? 0.85f : 0.9f) &&
+            Mathf.IsEqualApprox(frequency.HoldSeconds, 0.35f),
+            "Frequency analyzer changes only the match threshold");
+        RemoveChild(frequency);
+        frequency.Free();
+
+        var hull = GD.Load<PackedScene>("res://scenes/minigames/HullRepairMinigame.tscn").Instantiate<HullRepairMinigame>();
+        AddChild(hull);
+        Check(Mathf.IsEqualApprox(hull.WeldTolerance, equipped ? 18f : 14f) &&
+            Mathf.IsEqualApprox(hull.PlaceTolerance, 14f),
+            "Precision welder changes only weld tolerance");
+        RemoveChild(hull);
+        hull.Free();
+    }
+
     private void Run()
     {
         var mission = MissionState.Instance;
@@ -154,6 +180,9 @@ public partial class LoadoutTest : Node
 
         var equipmentPanel = new EquipmentPanel { Player = astronaut, Locker = supply };
         AddChild(equipmentPanel);
+        var panelSize = equipmentPanel.GetNode<PanelContainer>("Panel");
+        Check(panelSize.GetCombinedMinimumSize().Y <= panelSize.Size.Y + 1f,
+            $"Equipment rows fit the panel: {panelSize.GetCombinedMinimumSize().Y}/{panelSize.Size.Y}");
         Check(!equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,
             "Zero-tank warning stays hidden while carrying oxygen");
         Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/spare_fusesRow/spare_fusesButton").Text == "STORE",
@@ -168,5 +197,11 @@ public partial class LoadoutTest : Node
             "Confirmed loadout locks the new tool actions");
         equipmentPanel.Close();
         mission.ResetEquipment();
+        CheckRepairEffects(false);
+        var chosen = mission.GetOrCreatePlayerInventory(5, out _);
+        foreach (var tool in supply.Tools) chosen.AddItem(tool);
+        CheckRepairEffects(true);
+        mission.ResetEquipment();
+        CheckRepairEffects(false);
     }
 }
