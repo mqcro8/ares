@@ -1,8 +1,10 @@
 using Godot;
 using System;
 using ares.scripts.mission;
+using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.systems.items;
+using ares.scripts.training;
 
 public partial class LoadoutTest : Node
 {
@@ -121,5 +123,50 @@ public partial class LoadoutTest : Node
         Check(mission.PlayerInventory == null && mission.LockerInventory == null && mission.CargoUsed == 0 &&
             mission.OxygenTankCount == 0,
             "New mission reset clears equipment references");
+
+        var astronaut = new Player();
+        AddChild(astronaut);
+        var supply = new EquipmentLocker { StarterKit = kit };
+        AddChild(supply);
+        Check(supply.Contents.SlotCount == 4 && supply.Tools.Length == 3 &&
+            supply.Tools[0].Id == "spare_fuses" && supply.Tools[1].Id == "frequency_analyzer" &&
+            supply.Tools[2].Id == "precision_welder", "Locker stocks the three distinct tools once");
+        foreach (var tool in supply.Tools)
+            Check(tool.Icon == null && tool.CargoCost == 1 && tool.MaxStackSize == 1,
+                "New tools are one-cargo, single items with blank placeholder icons");
+
+        Check(supply.Toggle(astronaut).Contains("ACQUIRED") && mission.CargoUsed == 3,
+            "Taking the existing kit still costs three cargo");
+        Check(mission.TrySetOxygenTankCount(2, out tankError) && mission.CargoUsed == 5 &&
+            mission.Oxygen.CapacitySeconds == 360, "Two tanks leave one cargo for a tool");
+        Check(supply.ToggleTool(astronaut, supply.Tools[0]).Contains("ACQUIRED") &&
+            mission.HasEquipped("spare_fuses") && mission.CargoUsed == 6,
+            "Tool possession is stored in MissionState's inventory");
+        Check(supply.ToggleTool(astronaut, supply.Tools[1]).Contains("Cargo limit") &&
+            !mission.HasEquipped("frequency_analyzer") && supply.Contents.Contains(supply.Tools[1]),
+            "Over-capacity selection leaves both inventories unchanged");
+        Check(mission.GetOrCreateLocker(4, kit, supply.Tools).CountOf(supply.Tools[0]) == 0,
+            "Revisiting the locker does not duplicate a tool already taken");
+        Check(mission.TrySetOxygenTankCount(1, out tankError) &&
+            supply.ToggleTool(astronaut, supply.Tools[1]).Contains("ACQUIRED") &&
+            mission.CargoUsed == 6 && mission.Oxygen.CapacitySeconds == 180,
+            "Choosing two tools trades six oxygen minutes for repair advantages");
+
+        var equipmentPanel = new EquipmentPanel { Player = astronaut, Locker = supply };
+        AddChild(equipmentPanel);
+        Check(!equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,
+            "Zero-tank warning stays hidden while carrying oxygen");
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/spare_fusesRow/spare_fusesButton").Text == "STORE",
+            "Equipment screen shows carried tool and provides a store action");
+        Check(mission.TrySetOxygenTankCount(0, out tankError), "Zero tanks remain an allowed choice");
+        equipmentPanel.Refresh();
+        Check(equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,
+            "Zero tanks produce an explicit warning without blocking the choice");
+        mission.LoadoutConfirmed = true;
+        equipmentPanel.Refresh();
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/spare_fusesRow/spare_fusesButton").Disabled,
+            "Confirmed loadout locks the new tool actions");
+        equipmentPanel.Close();
+        mission.ResetEquipment();
     }
 }

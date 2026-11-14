@@ -1,13 +1,14 @@
 namespace ares.scripts.training;
 
 using System;
+using System.Collections.Generic;
 using Godot;
 using ares.scripts.mission;
 using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.systems.items;
 
-/// <summary>Loadout view opened from the supply locker. It holds the kit and the oxygen tanks.</summary>
+/// <summary>Loadout view opened from the supply locker for the kit, oxygen and repair tools.</summary>
 public partial class EquipmentPanel : CanvasLayer
 {
 	[Export] public Texture2D TankIcon { get; set; }
@@ -21,7 +22,8 @@ public partial class EquipmentPanel : CanvasLayer
 	public static EquipmentPanel Active { get; private set; }
 
 	private readonly TrainingPlayerLock _physicsLock = new();
-	private Label _kitStatus, _tankCount, _tankCapacity, _cargoStatus, _feedback;
+	private readonly List<(ItemData Item, Button Button, Action Handler)> _tools = new();
+	private Label _kitStatus, _tankCount, _tankCapacity, _cargoStatus, _oxygenWarning, _feedback;
 	private Button _kitButton, _minus, _plus, _close;
 
 	public override void _Ready()
@@ -46,11 +48,12 @@ public partial class EquipmentPanel : CanvasLayer
 
 		var panel = new PanelContainer { Name = "Panel" };
 		panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-		float halfWidth = Mathf.Min(190, (GetViewport().GetVisibleRect().Size.X - 32) / 2);
+		float halfWidth = Mathf.Min(210, (GetViewport().GetVisibleRect().Size.X - 32) / 2);
+		float halfHeight = Mathf.Min(250, (GetViewport().GetVisibleRect().Size.Y - 32) / 2);
 		panel.OffsetLeft = -halfWidth;
 		panel.OffsetRight = halfWidth;
-		panel.OffsetTop = -150;
-		panel.OffsetBottom = 150;
+		panel.OffsetTop = -halfHeight;
+		panel.OffsetBottom = halfHeight;
 		panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
 		{
 			BgColor = new Color("152535"),
@@ -66,7 +69,7 @@ public partial class EquipmentPanel : CanvasLayer
 			margin.AddThemeConstantOverride("margin_" + side, 14);
 		panel.AddChild(margin);
 		var column = new VBoxContainer { Name = "VBox", Alignment = BoxContainer.AlignmentMode.Center };
-		column.AddThemeConstantOverride("separation", 8);
+		column.AddThemeConstantOverride("separation", 6);
 		margin.AddChild(column);
 
 		var title = MakeLabel("SUPPLY LOCKER", new Color("75e4ff"), 12);
@@ -84,8 +87,9 @@ public partial class EquipmentPanel : CanvasLayer
 		kitRow.AddChild(_kitStatus);		_kitButton = new Button { Name = "KitButton", Text = "TAKE", CustomMinimumSize = new Vector2(84, 26) };
 		_kitButton.Pressed += ToggleKit;
 		kitRow.AddChild(_kitButton);
+		column.AddChild(MakeLabel("KIT: 3 CARGO", new Color(0.65f, 0.77f, 0.82f), 7));
 
-		column.AddChild(MakeLabel("OXYGEN TANKS", new Color(0.75f, 0.82f, 0.86f), 8));
+		column.AddChild(MakeLabel("OXYGEN TANKS (1 CARGO EACH)", new Color(0.75f, 0.82f, 0.86f), 8));
 		var tankRow = new HBoxContainer { Name = "TankRow" };
 		tankRow.AddThemeConstantOverride("separation", 8);
 		column.AddChild(tankRow);
@@ -105,8 +109,34 @@ public partial class EquipmentPanel : CanvasLayer
 		column.AddChild(_tankCapacity);
 		_cargoStatus = MakeLabel("", new Color(0.65f, 0.77f, 0.82f), 7);
 		column.AddChild(_cargoStatus);
+
+		column.AddChild(MakeLabel("REPAIR TOOLS (1 CARGO EACH)", new Color(0.75f, 0.82f, 0.86f), 8));
+		foreach (ItemData tool in Locker?.Tools ?? Array.Empty<ItemData>())
+		{
+			if (tool == null) continue;
+			var row = new HBoxContainer { Name = tool.Id + "Row" };
+			row.AddThemeConstantOverride("separation", 8);
+			column.AddChild(row);
+			row.AddChild(MakeIcon(null, tool.Id + "Icon"));
+			var name = MakeLabel(tool.DisplayName.ToUpperInvariant(), Colors.White, 8);
+			name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			name.VerticalAlignment = VerticalAlignment.Center;
+			row.AddChild(name);
+			var button = new Button { Name = tool.Id + "Button", Text = "TAKE", CustomMinimumSize = new Vector2(84, 26) };
+			Action handler = () => ToggleTool(tool);
+			button.Pressed += handler;
+			row.AddChild(button);
+			_tools.Add((tool, button, handler));
+			column.AddChild(MakeLabel(ToolEffect(tool.Id), new Color(0.65f, 0.77f, 0.82f), 7));
+		}
+
+		_oxygenWarning = MakeLabel("0 TANKS: MARS STARTS WITHOUT OXYGEN.", new Color(1f, 0.72f, 0.24f), 7);
+		_oxygenWarning.Name = "OxygenWarning";
+		column.AddChild(_oxygenWarning);
 		_feedback = MakeLabel("", new Color(1f, 0.45f, 0.38f), 7);
 		_feedback.HorizontalAlignment = HorizontalAlignment.Center;
+		_feedback.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		_feedback.ClipText = false;
 		column.AddChild(_feedback);
 
 		_close = new Button { Name = "Close", Text = "CLOSE", CustomMinimumSize = new Vector2(0, 30) };
@@ -164,6 +194,21 @@ public partial class EquipmentPanel : CanvasLayer
 		Refresh();
 	}
 
+	private static string ToolEffect(string id) => id switch
+	{
+		"spare_fuses" => "FUSES: 4 -> 5 PRESSES PER ATTEMPT",
+		"frequency_analyzer" => "FREQUENCY: 0.90 -> 0.85 MATCH",
+		"precision_welder" => "HULL WELD: 14 -> 18 PX TOLERANCE",
+		_ => "",
+	};
+
+	private void ToggleTool(ItemData tool)
+	{
+		if (Locker == null || Player == null) return;
+		_feedback.Text = Locker.ToggleTool(Player, tool);
+		Refresh();
+	}
+
 	private void AddTank() => AdjustTanks(1);
 
 	private void RemoveTank() => AdjustTanks(-1);
@@ -197,6 +242,13 @@ public partial class EquipmentPanel : CanvasLayer
 		var capacity = TimeSpan.FromSeconds(mission.Oxygen.CapacitySeconds);
 		_tankCapacity.Text = $"CAPACITY {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({mission.OxygenCargoUsed} CARGO)";
 		_cargoStatus.Text = $"CARGO {mission.CargoUsed}/{mission.CargoCapacity}";
+		_oxygenWarning.Visible = mission.OxygenTankCount == 0;
+		foreach (var (tool, button, _) in _tools)
+		{
+			bool carried = Player?.Inventory?.Contains(tool) == true;
+			button.Text = carried ? "STORE" : "TAKE";
+			button.Disabled = locked || (!carried && Locker?.Contents?.Contains(tool) != true);
+		}
 		_minus.Disabled = locked || mission.OxygenTankCount <= 0;
 		_plus.Disabled = locked || mission.OxygenTankCount >= OxygenSupply.MaxTanks ||
 			mission.CargoUsed + MissionState.OxygenTankCargoCost > mission.CargoCapacity;
@@ -229,6 +281,8 @@ public partial class EquipmentPanel : CanvasLayer
 		if (GodotObject.IsInstanceValid(_minus)) _minus.Pressed -= RemoveTank;
 		if (GodotObject.IsInstanceValid(_plus)) _plus.Pressed -= AddTank;
 		if (GodotObject.IsInstanceValid(_close)) _close.Pressed -= Close;
+		foreach (var (_, button, handler) in _tools)
+			if (GodotObject.IsInstanceValid(button)) button.Pressed -= handler;
 		_physicsLock.Release();
 	}
 }

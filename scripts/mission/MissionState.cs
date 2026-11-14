@@ -57,12 +57,22 @@ public partial class MissionState : Node
 		if (created) PlayerInventory = new Inventory { Size = size };
 		return PlayerInventory;
 	}
-	public Inventory GetOrCreateLocker(int size, ItemData starterItem)
+	public bool HasEquipped(string itemId)
+	{
+		if (string.IsNullOrEmpty(itemId) || PlayerInventory == null) return false;
+		for (int i = 0; i < PlayerInventory.SlotCount; i++)
+			if (PlayerInventory.GetStack(i)?.Item.Id == itemId) return true;
+		return false;
+	}
+	public Inventory GetOrCreateLocker(int size, ItemData starterItem, ItemData[] extraItems = null)
 	{
 		if (LockerInventory == null)
 		{
 			LockerInventory = new Inventory { Size = size };
 			if (starterItem != null) LockerInventory.AddItem(starterItem);
+			if (extraItems != null)
+				foreach (ItemData item in extraItems)
+					if (item != null) LockerInventory.AddItem(item);
 		}
 		return LockerInventory;
 	}
