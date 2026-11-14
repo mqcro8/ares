@@ -1,20 +1,22 @@
-[gd_resource type="Resource" script_class="SoundBank" format=3]
+[gd_resource type="Resource" script_class="SoundBank" format=3 uid="uid://c013h5fa7trb6"]
 
-[ext_resource type="Script" path="res://scripts/systems/audio/SoundBank.cs" id="1_bank"]
-[ext_resource type="Script" path="res://scripts/systems/audio/SoundDef.cs" id="2_def"]
-[ext_resource type="AudioStreamMP3" path="res://audio/music/menu_test_music.mp3" id="3_menu"]
-[ext_resource type="AudioStreamMP3" path="res://audio/music/rover_scene_ambient_wind.mp3" id="4_wind"]
-[ext_resource type="AudioStreamMP3" path="res://audio/sfx/rover_moving.mp3" id="5_moving"]
-[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_collision.wav" id="6_collision"]
-[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_explode.wav" id="7_explode"]
-[ext_resource type="AudioStreamWAV" path="res://audio/sfx/rover_victory.wav" id="8_victory"]
+[ext_resource type="Script" uid="uid://bb0q4lwymctsp" path="res://scripts/systems/audio/SoundBank.cs" id="1_bank"]
+[ext_resource type="Script" uid="uid://ckubyvcmxog1f" path="res://scripts/systems/audio/SoundDef.cs" id="2_def"]
+[ext_resource type="AudioStream" uid="uid://bx5mih3ujqlaq" path="res://audio/music/menu_test_music.mp3" id="3_menu"]
+[ext_resource type="AudioStream" uid="uid://c2x5iaha6fu7u" path="res://audio/music/adventure.mp3" id="4_7ahkm"]
+[ext_resource type="AudioStream" uid="uid://ddeder15rh70f" path="res://audio/music/rover_scene_ambient_wind.mp3" id="4_wind"]
+[ext_resource type="AudioStream" uid="uid://ndgjtxh8e8ur" path="res://audio/sfx/rover_moving.mp3" id="5_moving"]
+[ext_resource type="AudioStream" uid="uid://i5r77ma0x6nw" path="res://audio/sfx/rover_collision.wav" id="6_collision"]
+[ext_resource type="AudioStream" uid="uid://gr3nhid3ynsa" path="res://audio/sfx/rover_explode.wav" id="7_explode"]
+[ext_resource type="AudioStream" uid="uid://5rs4vv65mgmd" path="res://audio/sfx/rover_victory.wav" id="8_victory"]
+[ext_resource type="AudioStream" uid="uid://qgg50n2elqjb" path="res://audio/sfx/whoosh.mp3" id="9_7xwmv"]
+[ext_resource type="AudioStream" uid="uid://c2yhmev8navt4" path="res://audio/sfx/rover_power_up.wav" id="10_ar03j"]
+[ext_resource type="AudioStream" uid="uid://q62yvd7wp44k" path="res://audio/sfx/open_door.mp3" id="11_7hx3i"]
 
 [sub_resource type="Resource" id="SoundDef_menu"]
 script = ExtResource("2_def")
 Id = "menu_music"
 Stream = ExtResource("3_menu")
-VolumeDb = 0.0
-PitchVariation = 0.0
 Loop = true
 
 [sub_resource type="Resource" id="SoundDef_wind"]
@@ -22,15 +24,21 @@ script = ExtResource("2_def")
 Id = "rover_ambient_wind"
 Stream = ExtResource("4_wind")
 VolumeDb = -4.0
-PitchVariation = 0.0
 Loop = true
+
+[sub_resource type="Resource" id="Resource_o1k5s"]
+script = ExtResource("2_def")
+Id = "rover_adventure"
+Stream = ExtResource("4_7ahkm")
+VolumeDb = -12.0
+Loop = true
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
 [sub_resource type="Resource" id="SoundDef_moving"]
 script = ExtResource("2_def")
 Id = "rover_moving"
 Stream = ExtResource("5_moving")
 VolumeDb = -6.0
-PitchVariation = 0.0
 Loop = true
 
 [sub_resource type="Resource" id="SoundDef_collision"]
@@ -39,25 +47,38 @@ Id = "rover_collision"
 Stream = ExtResource("6_collision")
 VolumeDb = -2.0
 PitchVariation = 0.05
-Loop = false
 
 [sub_resource type="Resource" id="SoundDef_explode"]
 script = ExtResource("2_def")
 Id = "rover_explode"
 Stream = ExtResource("7_explode")
-VolumeDb = 0.0
-PitchVariation = 0.0
-Loop = false
 
 [sub_resource type="Resource" id="SoundDef_victory"]
 script = ExtResource("2_def")
 Id = "rover_victory"
 Stream = ExtResource("8_victory")
 VolumeDb = -2.0
-PitchVariation = 0.0
-Loop = false
+
+[sub_resource type="Resource" id="Resource_j1i2t"]
+script = ExtResource("2_def")
+Id = "whoosh"
+Stream = ExtResource("9_7xwmv")
+VolumeDb = -4.0
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
+
+[sub_resource type="Resource" id="Resource_aywkm"]
+script = ExtResource("2_def")
+Id = "rover_power_up"
+Stream = ExtResource("10_ar03j")
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
+
+[sub_resource type="Resource" id="Resource_besv5"]
+script = ExtResource("2_def")
+Id = "open_door"
+Stream = ExtResource("11_7hx3i")
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
 [resource]
 script = ExtResource("1_bank")
-Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind")])
-Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory")])
+Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind"), SubResource("Resource_o1k5s")])
+Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5")])

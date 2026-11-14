@@ -89,6 +89,7 @@ public partial class Rover : CharacterBody2D
 	{
 		if (Input.IsActionJustPressed("move_left"))
 		{
+			AudioManager.PlaySfx2D(SoundIds.Whoosh, GlobalPosition);
 			if (_currentLane == Lane.Left)
 			{
 				RegisterCollision();
@@ -101,6 +102,7 @@ public partial class Rover : CharacterBody2D
 
 		if (Input.IsActionJustPressed("move_right"))
 		{
+			AudioManager.PlaySfx2D(SoundIds.Whoosh, GlobalPosition);
 			if (_currentLane == Lane.Right)
 			{
 				RegisterCollision();
@@ -160,6 +162,8 @@ public partial class Rover : CharacterBody2D
 		_gameOver = true;
 		CanMove = false;
 		_roverAnimation.Play("rover_lost");
+		AudioManager.PlaySfx2D(SoundIds.RoverExplode, GlobalPosition);
+
 		GD.Print("COMMUNICATION LOST. ROVER DESTROYED.");
 
 		// Trigger game over sequence here.

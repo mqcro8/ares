@@ -12,4 +12,8 @@ public static class SoundIds
 	public const string RoverCollision = "rover_collision";
 	public const string RoverExplode = "rover_explode";
 	public const string RoverVictory = "rover_victory";
+	public const string RoverAdventure = "rover_adventure";
+	public const string Whoosh = "whoosh";
+	public const string RoverPowerUp = "rover_power_up";
+	public const string OpenDoor = "open_door";
 }

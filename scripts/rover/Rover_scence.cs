@@ -84,8 +84,6 @@ public partial class Rover_scence : Node2D
 			return;
 		}
 
-		AudioManager.PlayMusic(SoundIds.RoverAmbientWind, 1.5);
-
 		_ = ShowPanel();
 
 		_rover.CollisionRegistered += OnCollisionRegistered;
@@ -140,7 +138,11 @@ public partial class Rover_scence : Node2D
 	private async Task ShowPanel()
 	{
 		_roverAnimation.Play("wakeup");
+		await WaitSeconds(0.5);
+		AudioManager.PlaySfx2D(SoundIds.RoverPowerUp, GlobalPosition);
 		if (!await WaitUntil(() => !_roverAnimation.IsPlaying())) return;
+		AudioManager.PlayMusic(SoundIds.RoverAmbientWind, 1.5);
+		AudioManager.PlayMusic(SoundIds.RoverAdventure, 1.5);
 		_roverAnimation.Play("idle");
 		_panel.Visible = true;
 	}
@@ -337,7 +339,7 @@ public partial class Rover_scence : Node2D
 
 		if (@event is InputEventKey inputKey && inputKey.Pressed)
 		{
-			if (inputKey.Keycode == Key.Enter || inputKey.Keycode == Key.KpEnter)
+			if (_line == 4 && (inputKey.Keycode == Key.Enter || inputKey.Keycode == Key.KpEnter))
 			{
 				_tutorialActive = true;
 				_ = BeginTutorial();
@@ -386,7 +388,7 @@ public partial class Rover_scence : Node2D
 		if (!await WaitUntil(() => _rover.CurrentLaneIndex != TutorialLane)) return;
 		if (!await WaitUntil(() => !_rover.IsChangingLane)) return;
 		
-
+		_rover.CanMove = false;
 		_tutorialPaused = false;
 		if (GodotObject.IsInstanceValid(_tutorialObstacle))
 			_tutorialObstacle.SetPhysicsProcess(true);
