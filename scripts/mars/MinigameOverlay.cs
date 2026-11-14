@@ -2,12 +2,14 @@ namespace ares.scripts.mars;
 
 using Godot;
 using System;
+using ares.scripts.training;
+using Ares.Systems.Controllers;
 
 /// <summary>
 /// Reusable full-screen mini-game overlay. Freezes the player, runs the mini-game,
 /// then releases the player in the exact same spot without unloading the building.
 /// </summary>
-public partial class MinigameOverlay : CanvasLayer
+public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 {
 	/// <summary>True when the player solved the mini-game, false when they backed out.</summary>
 	public event Action<bool> Finished;
@@ -40,22 +42,31 @@ public partial class MinigameOverlay : CanvasLayer
 		_player?.SetPhysicsProcess(false);
 
 		_game = packed.Instantiate<Control>();
-		if (_game is WireMinigame wire)
-		{
-			wire.AttachPracticeUi = false;
-			wire.Completed += OnCompleted;
-		}
-		else if (_game is FuseBoxMinigame fuse)
-		{
-			fuse.AttachPracticeUi = false;
-			fuse.Completed += OnCompleted;
-		}
-
 		AddChild(_game);
 		_game.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 
-		if (_game is WireMinigame && _game.GetNodeOrNull<Panel>("background") is { } background)
-			background.Visible = true;
+		// Mini-game scenes now always attach the training PracticeReturn wrapper.
+		// An in-world overlay runs the board directly instead: drop that wrapper,
+		// re-enable the board, and republish the controller context it cleared.
+		StripTrainingWrapper();
+		SetGameActive(true);
+		BeginControllerContext();
+
+		switch (_game)
+		{
+			case WireMinigame wire:
+				wire.Completed += OnCompleted;
+				break;
+			case FuseBoxMinigame fuse:
+				fuse.Completed += OnCompleted;
+				break;
+			case FrequencyBoxMinigame frequency:
+				frequency.Completed += OnCompleted;
+				break;
+			case HullRepairMinigame hull:
+				hull.Completed += OnCompleted;
+				break;
+		}
 
 		_title = new Label
 		{
@@ -94,11 +105,49 @@ public partial class MinigameOverlay : CanvasLayer
 		AddChild(back);
 		back.Position = new Vector2(16, 16);
 
+		ControllerCommandRouter.Register(this, this);
 		GetViewport().SizeChanged += FitLayout;
 		FitLayout();
 	}
 
-	// Keep both mini-games usable on smaller windows.
+	/// <summary>Removes the automatically attached training instructions layer.</summary>
+	private void StripTrainingWrapper()
+	{
+		var practice = _game.GetNodeOrNull<PracticeReturn>("PracticeReturn");
+		if (practice == null)
+			return;
+
+		// RemoveChild runs PracticeReturn._ExitTree, which disables the board again.
+		_game.RemoveChild(practice);
+		practice.QueueFree();
+	}
+
+	private void SetGameActive(bool active)
+	{
+		if (!IsInstanceValid(_game))
+			return;
+
+		_game.SetProcess(active);
+		_game.SetPhysicsProcess(active);
+		_game.SetProcessInput(active);
+	}
+
+	private void BeginControllerContext()
+	{
+		ControllerContextMode mode = _game switch
+		{
+			WireMinigame => ControllerContextMode.Wires,
+			FuseBoxMinigame => ControllerContextMode.Fuses,
+			FrequencyBoxMinigame => ControllerContextMode.Frequency,
+			HullRepairMinigame => ControllerContextMode.Hull,
+			_ => ControllerContextMode.None
+		};
+
+		ControllerContext.Begin(_game, mode);
+		(_game as IControllerContextSource)?.PublishControllerContext();
+	}
+
+	// Keep every board usable on smaller windows, mirroring PracticeReturn's layout.
 	private void FitLayout()
 	{
 		if (!IsInstanceValid(_game))
@@ -109,10 +158,15 @@ public partial class MinigameOverlay : CanvasLayer
 		{
 			var left = wire.GetNode<Control>("LeftTerminals");
 			var right = wire.GetNode<Control>("RightTerminals");
-			left.OffsetLeft = size.X * 0.15f;
-			left.OffsetRight = left.OffsetLeft + 125;
-			right.OffsetRight = size.X * 0.85f;
-			right.OffsetLeft = right.OffsetRight - 125;
+			float half = Mathf.Max(80f, Mathf.Min(300f, size.X * 0.5f - 24f));
+			left.OffsetLeft = -half + 20;
+			left.OffsetRight = -half + 80;
+			right.OffsetLeft = half - 80;
+			right.OffsetRight = half - 20;
+			var leftPlate = wire.GetNodeOrNull<Control>("LeftPlate");
+			if (leftPlate != null) { leftPlate.OffsetLeft = -half; leftPlate.OffsetRight = -half + 100; }
+			var rightPlate = wire.GetNodeOrNull<Control>("RightPlate");
+			if (rightPlate != null) { rightPlate.OffsetLeft = half - 100; rightPlate.OffsetRight = half; }
 			wire.RefreshWireLayout();
 		}
 		else if (_game is FuseBoxMinigame)
@@ -122,6 +176,22 @@ public partial class MinigameOverlay : CanvasLayer
 			board.Scale = Vector2.One * scale;
 			board.Position = new Vector2((size.X - 360 * scale) / 2, 120 + (size.Y - 140 - 500 * scale) / 2);
 		}
+		else if (_game is FrequencyBoxMinigame)
+		{
+			FitCentered(_game.GetNode<Control>("Box"), new Vector2(320, 520), size, 32);
+		}
+		else if (_game is HullRepairMinigame)
+		{
+			FitCentered(_game.GetNode<Control>("Frame"), new Vector2(720, 460), size, 32);
+		}
+	}
+
+	private static void FitCentered(Control control, Vector2 nativeSize, Vector2 viewport, float padding)
+	{
+		float scale = Mathf.Min(1f,
+			Mathf.Min((viewport.X - padding) / nativeSize.X, (viewport.Y - padding) / nativeSize.Y));
+		control.PivotOffset = nativeSize / 2;
+		control.Scale = Vector2.One * Mathf.Max(0.35f, scale);
 	}
 
 	private async void OnCompleted()
@@ -130,8 +200,7 @@ public partial class MinigameOverlay : CanvasLayer
 			return;
 
 		_solved = true;
-		if (IsInstanceValid(_game))
-			_game.SetProcessInput(false);
+		SetGameActive(false);
 		if (_title != null)
 			_title.Text = "Repaired!";
 
@@ -149,14 +218,28 @@ public partial class MinigameOverlay : CanvasLayer
 		_closed = true;
 		_session++;
 		GetViewport().SizeChanged -= FitLayout;
+		ControllerCommandRouter.Unregister(this);
 
 		if (IsInstanceValid(_game))
 		{
-			if (_game is WireMinigame wire)
-				wire.Completed -= OnCompleted;
-			else if (_game is FuseBoxMinigame fuse)
-				fuse.Completed -= OnCompleted;
-			_game.SetProcessInput(false);
+			switch (_game)
+			{
+				case WireMinigame wire:
+					wire.Completed -= OnCompleted;
+					break;
+				case FuseBoxMinigame fuse:
+					fuse.Completed -= OnCompleted;
+					break;
+				case FrequencyBoxMinigame frequency:
+					frequency.Completed -= OnCompleted;
+					break;
+				case HullRepairMinigame hull:
+					hull.Completed -= OnCompleted;
+					break;
+			}
+
+			SetGameActive(false);
+			ControllerContext.End(_game);
 			_game = null;
 		}
 
@@ -166,6 +249,21 @@ public partial class MinigameOverlay : CanvasLayer
 
 		Finished?.Invoke(solved);
 		QueueFree();
+	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameCancel:
+				Close(false);
+				return true;
+			case ControllerCommands.MinigameStart:
+				// The in-world board is already running.
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -182,8 +280,15 @@ public partial class MinigameOverlay : CanvasLayer
 
 	public override void _ExitTree()
 	{
+		ControllerCommandRouter.Unregister(this);
+
 		// Scene left while the overlay was open: do not leave the player frozen.
-		if (!_closed && IsInstanceValid(_player))
-			_player.SetPhysicsProcess(true);
+		if (!_closed)
+		{
+			if (IsInstanceValid(_player))
+				_player.SetPhysicsProcess(true);
+			if (IsInstanceValid(_game))
+				ControllerContext.End(_game);
+		}
 	}
 }

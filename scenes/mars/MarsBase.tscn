@@ -14,12 +14,12 @@
 [ext_resource type="Texture2D" uid="uid://c7hnx8kisgo7w" path="res://art/player/walking/walking_back_frame_2.png" id="12_s60nr"]
 [ext_resource type="Script" uid="uid://dbo4eteeood0r" path="res://scripts/player/PlayerAnimation.cs" id="13_w3nv0"]
 [ext_resource type="Script" uid="uid://dvpwfus68hw2o" path="res://scripts/player/HandEquip.cs" id="14_pwwc4"]
+[ext_resource type="Texture2D" uid="uid://bmdn5y4dlsbut" path="res://art/mars/8_buildings/bld_electrical_storage_f0.png" id="15_fie2a"]
 [ext_resource type="TileSet" uid="uid://dpsoyixcdb0wa" path="res://art/mars/sand_ground_16.tres" id="15_p1fap"]
 [ext_resource type="TileSet" uid="uid://cvryp8jax0rlh" path="res://art/mars/sand_path_16.tres" id="16_haskr"]
 [ext_resource type="TileSet" uid="uid://d1gprx0wk4mtm" path="res://art/mars/rock_autotile_16.tres" id="16_ppt0s"]
-[ext_resource type="Texture2D" uid="uid://bpl4c4okxrp5u" path="res://art/mars/building_3.png" id="17_haskr"]
-[ext_resource type="Texture2D" uid="uid://dvc71c1ybdxqc" path="res://art/mars/building_2.png" id="18_ppt0s"]
-[ext_resource type="Texture2D" uid="uid://d1jory538vnn3" path="res://art/mars/building_1.png" id="19_ebtrr"]
+[ext_resource type="Texture2D" uid="uid://c3gd6cgavrdir" path="res://art/mars/8_buildings/bld_greenhouse_f0.png" id="17_s60nr"]
+[ext_resource type="Texture2D" uid="uid://beu4lpklcbnfu" path="res://art/mars/8_buildings/bld_signals_comms_f0.png" id="18_w3nv0"]
 [ext_resource type="Script" uid="uid://cqylqv1lyy4d6" path="res://scripts/mars/SceneTrigger.cs" id="19_mi6nt"]
 [ext_resource type="Texture2D" uid="uid://clm05wrb0faos" path="res://art/mars/mars_base_assets/7_decor_outdoor/out_beacon_off_16x32.png" id="22_80dij"]
 [ext_resource type="Texture2D" uid="uid://can8qb2b1dlf3" path="res://art/mars/mars_base_assets/7_decor_outdoor/out_beacon_on_16x32.png" id="23_fie2a"]
@@ -89,8 +89,23 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_15e4b"]
 size = Vector2(16, 24)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_niqr4"]
+size = Vector2(124, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pwwc4"]
+size = Vector2(30.931274, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_owj5i"]
+size = Vector2(188, 31)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_p1fap"]
+size = Vector2(62.465637, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uvuqn"]
+size = Vector2(161.5, 26)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oco33"]
-size = Vector2(107.7251, 41.1875)
+size = Vector2(40.465637, 14)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_oco33"]
 animations = [{
@@ -148,19 +163,18 @@ shape = SubResource("RectangleShape2D_15e4b")
 script = ExtResource("14_pwwc4")
 
 [node name="Building 1" type="StaticBody2D" parent="." unique_id=1971836360]
-position = Vector2(9, 59)
+position = Vector2(78, 110)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Building 1" unique_id=1439535395]
-position = Vector2(-224, 188)
-polygon = PackedVector2Array(-45, 44, -24, 58, -19, 61, -9, 64, 5, 63, 6, 55, 17, 49, 26, 54, 37, 57, 49, 50, 66, 44, 75, 36, 76, 25, 63, 20, 50, 18, 37, 19, 22, 21, 20, 24, 15, 24, 6, 22, -8, 23, -23, 25, -35, 27, -40, 31)
+[node name="CollisionPolygon2D" type="CollisionShape2D" parent="Building 1" unique_id=1157464533]
+position = Vector2(-241, 107)
+shape = SubResource("RectangleShape2D_niqr4")
 
 [node name="TextureRect3" type="TextureRect" parent="Building 1" unique_id=2005160201]
 z_index = 3
 offset_left = -305.0
 offset_right = -213.0
 offset_bottom = 125.0
-scale = Vector2(2, 2)
-texture = ExtResource("19_ebtrr")
+texture = ExtResource("15_fie2a")
 
 [node name="Area2D" type="Area2D" parent="Building 1" unique_id=1317089073]
 script = ExtResource("19_mi6nt")
@@ -168,15 +182,15 @@ TargetScene = "uid://6qkv6jow4l8x"
 ReturnOffset = Vector2(-107, 220)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Building 1/Area2D" unique_id=885711149]
-position = Vector2(-196, 214)
-shape = SubResource("RectangleShape2D_oco33")
+position = Vector2(-224.53436, 121)
+shape = SubResource("RectangleShape2D_pwwc4")
 
 [node name="Building 2" type="StaticBody2D" parent="." unique_id=75866275]
-position = Vector2(-18, 25)
+position = Vector2(-44, 103)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Building 2" unique_id=1279414464]
-position = Vector2(205, 53)
-polygon = PackedVector2Array(-50, 24, -33, 37, -21, 41, 1, 45, 25, 40, 49, 32, 55, 18, 50, 10, 30, 4, 12, 5, -4, 6, -18, 7, -32, 10, -45, 14)
+[node name="CollisionPolygon2D" type="CollisionShape2D" parent="Building 2" unique_id=612312831]
+position = Vector2(229, -45.5)
+shape = SubResource("RectangleShape2D_owj5i")
 
 [node name="TextureRect" type="TextureRect" parent="Building 2" unique_id=118992640]
 z_index = 3
@@ -184,8 +198,7 @@ offset_left = 133.0
 offset_top = -156.0
 offset_right = 209.0
 offset_bottom = -31.0
-scale = Vector2(2, 2)
-texture = ExtResource("17_haskr")
+texture = ExtResource("17_s60nr")
 
 [node name="Area2D" type="Area2D" parent="Building 2" unique_id=12492899]
 position = Vector2(298, -143)
@@ -194,40 +207,23 @@ TargetScene = "uid://dw4a04acmbe3m"
 ReturnOffset = Vector2(-180, 220)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Building 2/Area2D" unique_id=1079843397]
-position = Vector2(-106, 212)
-shape = SubResource("RectangleShape2D_oco33")
+position = Vector2(-69.23282, 111)
+shape = SubResource("RectangleShape2D_p1fap")
 
 [node name="Building 3" type="StaticBody2D" parent="." unique_id=179484282]
 position = Vector2(1, 95)
 
 [node name="TextureRect2" type="TextureRect" parent="Building 3" unique_id=1700980940]
 z_index = 3
-offset_left = -162.0
-offset_top = -472.0
-offset_right = 4.0
-offset_bottom = -317.0
-scale = Vector2(2, 2)
-texture = ExtResource("18_ppt0s")
+offset_left = -107.0
+offset_top = -340.0
+offset_right = 59.0
+offset_bottom = -185.0
+texture = ExtResource("18_w3nv0")
 
-[node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="Building 3" unique_id=725977512]
-position = Vector2(-6, -340)
-scale = Vector2(2, 2)
-polygon = PackedVector2Array(-33, 72.5, 0.5, 92, 37, 73.5, 2, 67)
-
-[node name="CollisionPolygon2D3" type="CollisionPolygon2D" parent="Building 3" unique_id=804639622]
-position = Vector2(-6, -340)
-scale = Vector2(2, 2)
-polygon = PackedVector2Array(34, 57, 58.5, 52, 71, 46, 78.5, 37.5, 77.5, 23, 67.5, 22, 50.5, 18.5, 28, 18, 9, 20, -8.5, 24.5, -9, 31, -3, 37, 9.5, 47, 23, 51)
-
-[node name="CollisionPolygon2D4" type="CollisionPolygon2D" parent="Building 3" unique_id=708295656]
-position = Vector2(-6, -340)
-scale = Vector2(2, 2)
-polygon = PackedVector2Array(-20, 4.5, 71.5, 3.5, 70, -22.5, 36.5, -24, 2, -25.5, -32, -22, -24.5, 1, -19, 5.5)
-
-[node name="CollisionPolygon2D5" type="CollisionPolygon2D" parent="Building 3" unique_id=237118034]
-position = Vector2(-6, -340)
-scale = Vector2(2, 2)
-polygon = PackedVector2Array(-64, 11.5, -71, 17.5, -71, 33, -51.5, 44, -36, 45, -20, 33.5, -20, 17, -28.5, 9.5)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Building 3/TextureRect2" unique_id=889195260]
+position = Vector2(82.75, 139)
+shape = SubResource("RectangleShape2D_uvuqn")
 
 [node name="Area2D" type="Area2D" parent="Building 3" unique_id=1904561237]
 position = Vector2(101, -385)
@@ -236,7 +232,7 @@ TargetScene = "uid://ctu4t2jsso1bx"
 ReturnOffset = Vector2(-100, 275)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Building 3/Area2D" unique_id=166806675]
-position = Vector2(-105, 209)
+position = Vector2(-104.23282, 198)
 shape = SubResource("RectangleShape2D_oco33")
 
 [node name="Terrains" type="Node" parent="." unique_id=224083562]
@@ -251,7 +247,7 @@ tile_set = ExtResource("16_ppt0s")
 
 [node name="FloorTilemap" type="TileMapLayer" parent="Terrains" unique_id=1854002267]
 z_index = 1
-tile_map_data = PackedByteArray("AAD//w4AAQACAAAAAAAAAA4AAQADAAAAAAAAAB0AAQADAAAAAAAAABwAAQADAAAAAAAAABsAAQABAAAAAAAAABoAAQAAAAAAAAAAABkAAQAAAAAAAAAAABgAAQADAAAAAAAAABcAAQACAAAAAAAAABYAAQAAAAAAAAAAABUAAQAAAAAAAAAAABQAAQAAAAAAAAAAABMAAQADAAAAAAAAABIAAQABAAAAAAAAABEAAQAAAAAAAAAAABAAAQACAAAAAAAAAA8AAQADAAAAAAD//x0AAQACAAAAAAD//xwAAQABAAAAAAD//xsAAQACAAAAAAD//xoAAQADAAAAAAD//xkAAQACAAAAAAD//xgAAQACAAAAAAD//xcAAQACAAAAAAD//xYAAQACAAAAAAD//xUAAQACAAAAAAD//xQAAQADAAAAAAD//xMAAQACAAAAAAD//xIAAQABAAAAAAD//xEAAQACAAAAAAD//xAAAQACAAAAAAD//w8AAQABAAAAAAD+/x0AAQACAAAAAAD+/xwAAQADAAAAAAD+/xsAAQAAAAAAAAABABsAAQACAAAAAAABABwAAQABAAAAAAABAB0AAQADAAAAAAD//w0AAQABAAAAAAAAAA0AAQAAAAAAAAD+/xEAAQACAAAAAAD+/xAAAQADAAAAAAD9/xAAAQACAAAAAAD8/xAAAQADAAAAAAD8/xEAAQADAAAAAAD9/xEAAQADAAAAAAD//wwAAQABAAAAAAAAAAwAAQAAAAAAAAAAAAsAAQADAAAAAAD//wsAAQADAAAAAAD//woAAQAAAAAAAAAAAAoAAQABAAAAAAD//wkAAQAAAAAAAAD//wgAAQAAAAAAAAD//wcAAQABAAAAAAAAAAcAAQACAAAAAAAAAAgAAQABAAAAAAAAAAkAAQACAAAAAAD//wUAAQACAAAAAAAAAAUAAQAAAAAAAAABAAUAAQABAAAAAAACAAUAAQACAAAAAAADAAUAAQAAAAAAAAADAAYAAQABAAAAAAACAAYAAQABAAAAAAABAAYAAQABAAAAAAAAAAYAAQADAAAAAAD//wYAAQADAAAAAAAEAAUAAQACAAAAAAAFAAUAAQABAAAAAAAFAAYAAQACAAAAAAAEAAYAAQABAAAAAAAGAAYAAQABAAAAAAAGAAUAAQACAAAAAAD7/xEAAQABAAAAAAD6/xEAAQADAAAAAAD5/xEAAQACAAAAAAD5/xAAAQACAAAAAAD6/xAAAQADAAAAAAD7/xAAAQACAAAAAAD//wQAAQAAAAAAAAD//wMAAQADAAAAAAD//wIAAQAAAAAAAAD//wEAAQABAAAAAAD//wAAAQABAAAAAAD/////AQADAAAAAAAAAP//AQABAAAAAAAAAAAAAQABAAAAAAAAAAEAAQABAAAAAAAAAAIAAQAAAAAAAAAAAAMAAQAAAAAAAAAAAAQAAQABAAAAAAD///z/AQADAAAAAAD///3/AQAAAAAAAAAAAP3/AQABAAAAAAAAAPz/AQAAAAAAAAD///7/AQADAAAAAAAAAP7/AQACAAAAAAD+//v/AQABAAAAAAD///v/AQADAAAAAAAAAPv/AQADAAAAAAABAPv/AQAAAAAAAAACAPv/AQAAAAAAAAACAPr/AQACAAAAAAABAPr/AQABAAAAAAAAAPr/AQACAAAAAAD///r/AQADAAAAAAD+//r/AQADAAAAAAD9//r/AQADAAAAAAD9//v/AQAAAAAAAAD2/xAAAQAAAAAAAAD3/xAAAQADAAAAAAD4/xAAAQAAAAAAAAD2/xEAAQABAAAAAAD3/xEAAQAAAAAAAAD4/xEAAQABAAAAAAAHAAUAAQAAAAAAAAAIAAUAAQAAAAAAAAAJAAUAAQAAAAAAAAAJAAYAAQABAAAAAAAIAAYAAQAAAAAAAAAHAAYAAQACAAAAAAA=")
+tile_map_data = PackedByteArray("AAD//w4AAQACAAAAAAAAAA4AAQADAAAAAAAAAB0AAQADAAAAAAAAABwAAQADAAAAAAAAABsAAQABAAAAAAAAABoAAQAAAAAAAAAAABkAAQAAAAAAAAAAABgAAQADAAAAAAAAABcAAQACAAAAAAAAABYAAQAAAAAAAAAAABUAAQAAAAAAAAAAABQAAQAAAAAAAAAAABMAAQADAAAAAAAAABIAAQABAAAAAAAAABEAAQAAAAAAAAAAABAAAQACAAAAAAAAAA8AAQADAAAAAAD//x0AAQACAAAAAAD//xwAAQABAAAAAAD//xsAAQACAAAAAAD//xoAAQADAAAAAAD//xkAAQACAAAAAAD//xgAAQACAAAAAAD//xcAAQACAAAAAAD//xYAAQACAAAAAAD//xUAAQACAAAAAAD//xQAAQADAAAAAAD//xMAAQACAAAAAAD//xIAAQABAAAAAAD//xEAAQACAAAAAAD//xAAAQACAAAAAAD//w8AAQABAAAAAAD+/x0AAQACAAAAAAD+/xwAAQADAAAAAAD+/xsAAQAAAAAAAAABABsAAQACAAAAAAABABwAAQABAAAAAAABAB0AAQADAAAAAAD//w0AAQABAAAAAAAAAA0AAQAAAAAAAAD+/xEAAQACAAAAAAD+/xAAAQADAAAAAAD9/xAAAQACAAAAAAD8/xAAAQADAAAAAAD8/xEAAQADAAAAAAD9/xEAAQADAAAAAAD//wwAAQABAAAAAAAAAAwAAQAAAAAAAAAAAAsAAQADAAAAAAD//wsAAQADAAAAAAD//woAAQAAAAAAAAAAAAoAAQABAAAAAAD//wkAAQAAAAAAAAD//wgAAQAAAAAAAAD//wcAAQABAAAAAAAAAAcAAQACAAAAAAAAAAgAAQABAAAAAAAAAAkAAQACAAAAAAD//wUAAQACAAAAAAAAAAUAAQAAAAAAAAABAAUAAQABAAAAAAACAAUAAQACAAAAAAADAAUAAQAAAAAAAAADAAYAAQABAAAAAAACAAYAAQABAAAAAAABAAYAAQABAAAAAAAAAAYAAQADAAAAAAD//wYAAQADAAAAAAAEAAUAAQACAAAAAAAFAAUAAQABAAAAAAAFAAYAAQACAAAAAAAEAAYAAQABAAAAAAAGAAYAAQABAAAAAAAGAAUAAQACAAAAAAD7/xEAAQABAAAAAAD6/xEAAQADAAAAAAD5/xEAAQACAAAAAAD5/xAAAQACAAAAAAD6/xAAAQADAAAAAAD7/xAAAQACAAAAAAD//wQAAQAAAAAAAAD//wMAAQADAAAAAAD//wIAAQAAAAAAAAD//wEAAQABAAAAAAD//wAAAQABAAAAAAD/////AQADAAAAAAAAAP//AQABAAAAAAAAAAAAAQABAAAAAAAAAAEAAQABAAAAAAAAAAIAAQAAAAAAAAAAAAMAAQAAAAAAAAAAAAQAAQABAAAAAAD///z/AQADAAAAAAD///3/AQAAAAAAAAAAAP3/AQABAAAAAAAAAPz/AQAAAAAAAAD///7/AQADAAAAAAAAAP7/AQACAAAAAAD+//v/AQABAAAAAAD///v/AQADAAAAAAAAAPv/AQADAAAAAAABAPv/AQAAAAAAAAACAPv/AQAAAAAAAAACAPr/AQACAAAAAAABAPr/AQABAAAAAAAAAPr/AQACAAAAAAD///r/AQADAAAAAAD+//r/AQADAAAAAAD9//r/AQADAAAAAAD9//v/AQAAAAAAAAD2/xAAAQAAAAAAAAD3/xAAAQADAAAAAAD4/xAAAQAAAAAAAAD2/xEAAQABAAAAAAD3/xEAAQAAAAAAAAD4/xEAAQABAAAAAAAHAAUAAQAAAAAAAAAIAAUAAQAAAAAAAAAJAAUAAQAAAAAAAAAJAAYAAQABAAAAAAAIAAYAAQAAAAAAAAAHAAYAAQACAAAAAAD2/w8AAQAAAAAAAAD3/w8AAQADAAAAAAD3/w4AAQAAAAAAAAD2/w4AAQACAAAAAAAKAAUAAQACAAAAAAAKAAYAAQADAAAAAAALAAYAAQABAAAAAAAMAAYAAQACAAAAAAAMAAUAAQACAAAAAAAMAAQAAQAAAAAAAAALAAQAAQAAAAAAAAALAAUAAQAAAAAAAAAKAAQAAQADAAAAAAA=")
 tile_set = ExtResource("16_haskr")
 
 [node name="Decoration" type="TileMapLayer" parent="Terrains" unique_id=1714686618]
