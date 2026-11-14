@@ -10,7 +10,7 @@ using ares.scripts.systems.items;
 public partial class TrainingStations : Node
 {
     public sealed record Target(string Name, Control Zone, string Scene, string Marker,
-        PracticeSession.Exercise? Exercise = null, PracticeSession.LaunchMode? Launch = null, string Locked = null,
+        PracticeSession.Exercise? Exercise = null, PracticeSession.LaunchMode? Launch = null, Func<string> Locked = null,
         ItemCapability? RequiredCapability = null, Func<string> Interact = null, Func<string> Prompt = null)
     {
         public Vector2 Center => Zone.GetGlobalTransform() * (Zone.Size / 2);
@@ -19,6 +19,7 @@ public partial class TrainingStations : Node
             Vector2 localPosition = Zone.GetGlobalTransform().AffineInverse() * globalPosition;
             return new Rect2(Vector2.Zero, Zone.Size).HasPoint(localPosition);
         }
+        public string LockedText => Locked?.Invoke();
     }
     public readonly List<Target> Targets = new();
     public Player Player;
@@ -46,13 +47,15 @@ public partial class TrainingStations : Node
     public override void _Process(double delta)
     {
         if (!Input.IsPhysicalKeyPressed(Key.E)) _released = true;
-        _near = Usable ? Targets.Where(t => t.Contains(Player.GlobalPosition)).OrderBy(t => t.Center.DistanceSquaredTo(Player.GlobalPosition)).FirstOrDefault() : null;
+        bool panelOpen = EquipmentPanel.Active != null;
+        _near = !panelOpen && Usable ? Targets.Where(t => t.Contains(Player.GlobalPosition)).OrderBy(t => t.Center.DistanceSquaredTo(Player.GlobalPosition)).FirstOrDefault() : null;
         if (_error != "" && _near?.Name != _errorTarget) { _error = ""; _errorTarget = ""; }
         string requirement = Requirement(_near);
         string prompt = "";
         if (_near != null)
         {
-            if (_near.Locked != null) prompt = _near.Locked;
+            string locked = _near.LockedText;
+            if (locked != null) prompt = locked;
             else if (requirement != "") prompt = requirement;
             else if (_near.Interact != null) prompt = _near.Prompt?.Invoke() ?? $"E — {_near.Name}";
             else prompt = $"E — {_near.Name}";
@@ -66,7 +69,8 @@ public partial class TrainingStations : Node
         if (ev is not InputEventKey { Pressed: true, Echo: false } key || (key.PhysicalKeycode != Key.E && key.Keycode != Key.E) || !_released || _near == null || !Usable || !_near.Contains(Player.GlobalPosition)) return;
         _error = ""; _errorTarget = "";
         _released = false; _changing = true; GetViewport().SetInputAsHandled();
-        if (_near.Locked != null) { _changing = false; _error = _near.Locked; _errorTarget = _near.Name; return; }
+        string locked = _near.LockedText;
+        if (locked != null) { _changing = false; _error = locked; _errorTarget = _near.Name; return; }
         string requirement = Requirement(_near);
         if (requirement != "") { _changing = false; _error = requirement; _errorTarget = _near.Name; return; }
         if (_near.Interact != null) { _error = _near.Interact(); _errorTarget = _near.Name; _changing = false; return; }

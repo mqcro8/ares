@@ -101,8 +101,25 @@ public partial class LoadoutTest : Node
             "Unchanged size does not emit another notification");
         hotbar.QueueFree();
 
+        Check(mission.TrySetOxygenTankCount(4, out string tankError),
+            "Four oxygen tanks fit the available cargo: " + tankError);
+        Check(mission.CargoUsed == 4 && mission.OxygenTankCount == 4,
+            "Each oxygen tank reserves one cargo unit");
+        Check(!InventoryTransferService.TryTransfer(locker, player, kit, 1, mission.CargoCapacity,
+                out string reservedError, mission.OxygenCargoUsed) && reservedError.Contains("Cargo limit"),
+            "Reserved oxygen cargo prevents an over-capacity kit transfer");
+        string kitError = "";
+        bool selectedThreeTanks = mission.TrySetOxygenTankCount(3, out tankError);
+        bool transferredKit = selectedThreeTanks && InventoryTransferService.TryTransfer(locker, player, kit, 1,
+            mission.CargoCapacity, out kitError, mission.OxygenCargoUsed);
+        Check(transferredKit,
+            "Three tanks leave enough cargo for the maintenance kit: " + tankError + kitError);
+        Check(mission.CargoUsed == 6 && !mission.TrySetOxygenTankCount(4, out _),
+            "Tank selection cannot exceed cargo after acquiring the maintenance kit");
+
         mission.ResetEquipment();
-        Check(mission.PlayerInventory == null && mission.LockerInventory == null && mission.CargoUsed == 0,
+        Check(mission.PlayerInventory == null && mission.LockerInventory == null && mission.CargoUsed == 0 &&
+            mission.OxygenTankCount == 0,
             "New mission reset clears equipment references");
     }
 }

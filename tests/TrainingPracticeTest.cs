@@ -39,7 +39,8 @@ public partial class TrainingPracticeTest : Node
     {
         if (!Visual) return;
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-        Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/corrected-{name}.png") == Error.Ok, "Screenshot saved");
+        Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/corrected-{name}.png") == Error.Ok,
+            "Screenshot saved: " + name);
     }
     private void EnglishUi(Node node)
     {
@@ -77,7 +78,7 @@ public partial class TrainingPracticeTest : Node
         bool held = false;
         for (int i = 0; i < 4000 && !launch.Model.Complete; i++)
         {
-            bool want = launch.Model.Heat < 50;
+            bool want = launch.Model.Heat < launch.Model.TargetCenter;
             if (want != held) { KeyState(Key.Space, want); held = want; }
             now += .01;
             launch._Process(.01);
@@ -312,6 +313,9 @@ public partial class TrainingPracticeTest : Node
         }
         // Verify cabinet bases with actual collision queries, not only visual rectangles.
         var labScene = (TrainingLab)Scene;
+        Check(Find<Button>(labScene, button => button.Name == "AddTank") == null &&
+            Find<Button>(labScene, button => button.Name == "RemoveTank") == null,
+            "The lab no longer keeps a fixed oxygen panel in the corner");
         var workbenchBase = labScene.GetNode<StaticBody2D>("WiringWorkbench/Base");
         var fuseBase = labScene.GetNode<StaticBody2D>("FuseCabinet/Base");
         Check(Player.TestMove(new Transform2D(0, workbenchBase.GlobalPosition + new Vector2(0, 56)), new Vector2(0, -70)), "Workbench base is solid");
@@ -325,17 +329,46 @@ public partial class TrainingPracticeTest : Node
         var lockerZone = labScene.Locker.FrontZone;
         await WalkTo(lockerZone.GetGlobalTransform() * (lockerZone.Size / 2) + Vector2.Up * 24); await Frames();
         Check(labScene.ControlsGuide.CurrentHint == "INTERACT" && labScene.ControlsGuide.CurrentKeys == "E" &&
-            labScene.ControlsGuide.CurrentMessage.Contains("Take maintenance kit"),
+            labScene.ControlsGuide.CurrentMessage.Contains("Open supply locker"),
             "Supply locker shows its interaction key beside the object");
         KeyPress(Key.E); await Frames();
+        var lockerPanel = Find<EquipmentPanel>(Scene, panel => true);
+        Check(lockerPanel != null, "Pressing E opens the supply locker panel");
+        var addTank = Find<Button>(lockerPanel, button => button.Name == "AddTank");
+        var removeTank = Find<Button>(lockerPanel, button => button.Name == "RemoveTank");
+        var tankIcon = Find<TextureRect>(lockerPanel, icon => icon.Texture != null &&
+            icon.Texture.ResourcePath.EndsWith("tanque_oxigeno.png"));
+        Check(tankIcon != null,
+            "The locker panel reuses the existing oxygen tank sprite");
+        var kitIcon = Find<TextureRect>(lockerPanel, icon => icon.Texture != null &&
+            icon.Texture.ResourcePath.EndsWith("kit_mantenimiento.png"));
+        Check(kitIcon != null, "The locker panel shows the maintenance kit sprite in its slot");
+        await Capture("locker-panel");
+        for (int i = 0; i < ares.scripts.mission.OxygenSupply.MaxTanks; i++)
+            addTank.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(ares.scripts.mission.MissionState.Instance.OxygenTankCount == 4 &&
+            ares.scripts.mission.MissionState.Instance.CargoUsed == 4 && addTank.Disabled,
+            "Locker loadout carries at most four tanks and charges one cargo unit each");
+        for (int i = 0; i < ares.scripts.mission.OxygenSupply.MaxTanks; i++)
+            removeTank.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(ares.scripts.mission.MissionState.Instance.OxygenTankCount == 0 &&
+            ares.scripts.mission.MissionState.Instance.CargoUsed == 0,
+            "Locker loadout can remove its oxygen cargo before launch");
+        var kitButton = Find<Button>(lockerPanel, button => button.Name == "KitButton");
+        kitButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames();
         Check(Player.Inventory.Contains(labScene.Locker.StarterKit), "Supply locker transfers the maintenance kit");
         Check(Player.SelectedStack?.Item == labScene.Locker.StarterKit, "Maintenance kit is selected in the hotbar");
         var kitSlot = Player.Hotbar.GetChild<HotbarSlot>(0);
-        var kitIcon = kitSlot.GetNode<TextureRect>("Icon");
-        Check(kitIcon.Texture == labScene.Locker.StarterKit.Icon && kitIcon.Size == new Vector2(12, 12),
+        var hotbarIcon = kitSlot.GetNode<TextureRect>("Icon");
+        Check(hotbarIcon.Texture == labScene.Locker.StarterKit.Icon && hotbarIcon.Size == new Vector2(12, 12),
             "Hotbar centers the kit icon inside its inset slot bounds");
         Check(ares.scripts.mission.MissionState.Instance.CargoUsed == labScene.Locker.StarterKit.CargoCost,
             "Kit consumes cargo capacity, not an extra hotbar slot");
+        Find<Button>(lockerPanel, button => button.Name == "Close").EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames();
+        Check(Find<EquipmentPanel>(Scene, panel => true) == null,
+            "Closing the locker panel returns control to the lab");
         Player.GlobalPosition = labScene.WiresZone.GetGlobalTransform() * (labScene.WiresZone.Size / 2); await Frames();
         KeyPress(Key.Key2); await Frames(); KeyPress(Key.E); await Frames();
         Check(Scene is TrainingLab, "Repair station rejects an unselected maintenance kit");

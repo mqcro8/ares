@@ -6,7 +6,7 @@ using items;
 public static class InventoryTransferService
 {
     public static bool TryTransfer(Inventory from, Inventory to, ItemData item, int amount,
-        int cargoCapacity, out string error)
+        int cargoCapacity, out string error, int reservedCargo = 0)
     {
         error = "";
         if (from == null || to == null || item == null || amount <= 0)
@@ -27,7 +27,7 @@ public static class InventoryTransferService
             return false;
         }
 
-        if (!CargoCapacity.TryReserve(to, item, amount, cargoCapacity, out error))
+        if (!CargoCapacity.TryReserve(to, item, amount, cargoCapacity, out error, reservedCargo))
             return false;
 
         int removed = from.RemoveItem(item, amount);

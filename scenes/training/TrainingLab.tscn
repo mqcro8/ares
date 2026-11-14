@@ -25,6 +25,8 @@
 [ext_resource type="Texture2D" uid="uid://clqnvqpq83oyx" path="res://art/player/walking/walking_side_frame_1.png" id="side1"]
 [ext_resource type="Texture2D" uid="uid://bphqxv6s1c2f7" path="res://art/player/walking/walking_side_frame_2.png" id="side2"]
 [ext_resource type="Texture2D" uid="uid://876o8nk67cjw" path="res://art/training/stations/wiring_workbench.png" id="workbench"]
+[ext_resource type="Texture2D" uid="uid://dhxqfbuyf3i7v" path="res://art/training/equipment/tanque_oxigeno.png" id="tank_icon"]
+[ext_resource type="Texture2D" uid="uid://iyjqmso4oy1f" path="res://art/training/equipment/kit_mantenimiento.png" id="kit_icon"]
 
 [sub_resource type="RectangleShape2D" id="NorthShape"]
 size = Vector2(768, 32)
@@ -373,6 +375,8 @@ ClosedTexture = ExtResource("locker_closed")
 OpenTexture = ExtResource("locker_open")
 StarterKit = ExtResource("maintenance_kit")
 FrontZone = NodePath("FrontZone")
+TankIcon = ExtResource("tank_icon")
+KitIcon = ExtResource("kit_icon")
 
 [node name="Sprite2D" type="Sprite2D" parent="SupplyLocker" unique_id=200000002]
 texture_filter = 1

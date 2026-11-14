@@ -28,6 +28,7 @@ public partial class RocketLaunchTest : Node
             LaunchIgnitionModelTest.Run(Check);
             LaunchHoldModelTest.Run(Check);
             await Run();
+            await PartialIgnitionLaunch();
             GD.Print($"LAUNCH PASS ({assertions} assertions)");
             GetTree().Quit();
         }
@@ -91,7 +92,13 @@ public partial class RocketLaunchTest : Node
                 ? launch.GetNode<Control>("IntroUI/Briefing") : launch.GetNode<Control>("IntroUI/Panel");
             Check(GetViewport().GetVisibleRect().Encloses(overlay.GetGlobalRect()), "Overlay fits " + size);
             if (launch.State == RocketLaunch.Phase.Active)
+            {
                 Check(overlay.Size.Y < size.Y * .32f, "Active slider HUD with progress and pause stays compact at " + size);
+                var targetBand = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
+                Check(targetBand.AnchorLeft >= 0 && targetBand.AnchorRight <= 1 &&
+                    targetBand.AnchorLeft < targetBand.AnchorRight,
+                    "Moving target stays within the gauge at " + size);
+            }
             await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
             Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/launch-{name}-{size.X}x{size.Y}.png") == Error.Ok, "Capture");
         }
@@ -137,7 +144,7 @@ public partial class RocketLaunchTest : Node
     {
         while (!launch.Model.Complete && now < 50)
         {
-            Hold(launch.Model.Heat < 50);
+            Hold(launch.Model.Heat < launch.Model.TargetCenter);
             Advance(.01);
         }
         Hold(false);
@@ -191,7 +198,7 @@ public partial class RocketLaunchTest : Node
 
         if (Visual)
         {
-            for (int i = 0; i < 40 && launch.Ignition.Clicks < 24; i++)
+            for (int i = 0; i < 40 && launch.Ignition.Clicks < 21; i++)
             {
                 SendKey(Key.Space, true);
                 SendKey(Key.Space, false);
@@ -200,15 +207,17 @@ public partial class RocketLaunchTest : Node
         else
         {
             SendMouse(true); SendMouse(false);
-            for (int i = 0; i < 23; i++)
+            for (int i = 0; i < 20; i++)
             {
                 SendKey(Key.Space, true);
                 SendKey(Key.Space, false);
             }
         }
-        Check(launch.State == RocketLaunch.Phase.Ignition && launch.Ignition.Clicks == 24 &&
-            ignitionProgress.Value == 24,
+        Check(launch.State == RocketLaunch.Phase.Ignition && launch.Ignition.Clicks == 21 &&
+            ignitionProgress.Value == 21,
             $"Ignition bar tracks each tap and waits for the final tap ({launch.State}, {launch.Ignition.Clicks}, {ignitionProgress.Value})");
+        Check(launch.Ignition.Config.MinimumClicks == 22 && !launch.Ignition.MeetsMinimum,
+            "Ignition exposes the eighty-five percent minimum and reports it is not reached yet");
         await Capture("ignition-filled");
 
         launch.Notification((int)Node.NotificationApplicationFocusOut);
@@ -228,12 +237,12 @@ public partial class RocketLaunchTest : Node
         Advance(5);
         Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Failed &&
             launch.GetNode<AnimatedSprite2D>("Rocket/Fire").Animation == "failed",
-            "Ignition timeout shows its failure animation");
+            "Ignition timeout below the minimum shows its failure animation");
         Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Retry") == null &&
             launch.GetNode<Button>(Ui + "Actions/Back").Visible,
             "Failed ignition offers a way out but no direct retry");
         SendKey(Key.Space, true); SendKey(Key.Space, false);
-        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Clicks == 24,
+        Check(launch.State == RocketLaunch.Phase.Result && launch.Ignition.Clicks == 21,
             "Space cannot restart a failed ignition");
         launch.QueueFree(); launch = null; await Frames();
         await Load();
@@ -241,6 +250,7 @@ public partial class RocketLaunchTest : Node
             "A new simulator entry remains available after leaving a failed attempt");
         ignitionProgress = launch.GetNode<ProgressBar>("HUD/ProgressBar");
         centeredProgress = launch.GetNode<ProgressBar>(Ui + "CenteredProgress");
+        band = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
         pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
         Start();
         CompleteIgnition();
@@ -250,6 +260,12 @@ public partial class RocketLaunchTest : Node
         Check(pauseButton.Visible && pauseButton.Text == "Pause",
             "Active hold phase keeps the pause button available");
         await Capture("active");
+        double initialBandLeft = band.AnchorLeft;
+        Advance(.1);
+        Check(launch.Model.TargetCenter != 50 && band.AnchorLeft != initialBandLeft,
+            "The rendered target band moves along the gauge during the active hold");
+        Check(launch.Model.TargetConfig.RandomDestinations && launch.Model.TargetConfig.Seed != 0,
+            "The active hold uses a random seeded target path");
 
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
         Check(GetTree().Paused && launch.Paused && !AudioManager.IsMusicPaused &&
@@ -257,10 +273,12 @@ public partial class RocketLaunchTest : Node
             "Escape pauses launch but keeps music playing through the global pause manager");
         double pausedProgressTime = launch.Model.CenteredTime;
         double pausedMarker = launch.Model.Heat;
+        double pausedTargetCenter = launch.Model.TargetCenter;
         now += 12;
         SendKey(Key.Escape, true); SendKey(Key.Escape, false);
-        Check(!launch.Paused && launch.Model.CenteredTime == pausedProgressTime && launch.Model.Heat == pausedMarker,
-            "Resume rebases the hold clock without applying time spent in the menu");
+        Check(!launch.Paused && launch.Model.CenteredTime == pausedProgressTime &&
+            launch.Model.Heat == pausedMarker && launch.Model.TargetCenter == pausedTargetCenter,
+            "Resume rebases the hold clock without advancing heat or target during the menu");
         Check(!GetTree().Paused && !AudioManager.IsMusicPaused && AudioManager.Instance?.CurrentMusicId == null,
             "Closing pause removes music through the global pause manager");
 
@@ -278,12 +296,18 @@ public partial class RocketLaunchTest : Node
             "Closing button-opened pause removes music");
 
         SendKey(Key.Space, true); Advance(.2);
-        Check(launch.Model.Heat > 50, "Holding SPACE raises the marker");
+        double raisedHeat = launch.Model.Heat;
+        Check(raisedHeat > 50, "Holding SPACE raises the marker");
         SendKey(Key.Space, false); Advance(.6);
-        Check(!launch.Model.InBand, "Released marker leaves the center band");
+        Check(launch.Model.Heat < raisedHeat, "Releasing lowers the marker");
+        Check(launch.Model.InBand ==
+            (launch.Model.Heat >= launch.Model.TargetLow && launch.Model.Heat <= launch.Model.TargetHigh),
+            "Band membership follows the moving target instead of a fixed center");
         double frozenProgress = launch.Model.CenteredTime;
+        bool wasInBand = launch.Model.InBand;
         Advance(1);
-        Check(launch.Model.CenteredTime == frozenProgress, "Progress pauses outside the center band");
+        Check(wasInBand || launch.Model.CenteredTime == frozenProgress,
+            "Progress pauses outside the moving center band");
         SendMouse(true); Advance(.2); double mouseHeat = launch.Model.Heat;
         SendMouse(false); Advance(.2);
         Check(mouseHeat > launch.Model.Heat, "Holding and releasing mouse controls the marker");
@@ -291,9 +315,11 @@ public partial class RocketLaunchTest : Node
         SendMouse(true); Advance(.1);
         launch.Notification((int)Node.NotificationApplicationFocusOut);
         double pausedHeat = launch.Model.Heat, pausedProgress = launch.Model.CenteredTime;
+        double pausedTarget = launch.Model.TargetCenter;
         Advance(2);
-        Check(launch.Paused && launch.Model.Heat == pausedHeat && launch.Model.CenteredTime == pausedProgress,
-            "Pause freezes marker and progress");
+        Check(launch.Paused && launch.Model.Heat == pausedHeat &&
+            launch.Model.CenteredTime == pausedProgress && launch.Model.TargetCenter == pausedTarget,
+            "Pause freezes marker, target, and progress");
         Check(launch.GetNode<AnimatedSprite2D>("Rocket/Fire").SpeedScale == 0, "Pause freezes thrust animation");
         launch.GetNode<Button>(Ui + "Actions/Pause").EmitSignal(BaseButton.SignalName.Pressed);
         Check(!launch.Paused, "Resume clears pause");
@@ -304,8 +330,14 @@ public partial class RocketLaunchTest : Node
 
         DriveToComplete();
         Check(centeredProgress.Value == 100, "Progress bar fills at the ten-second hold goal");
+        Check(Math.Abs((band.AnchorRight - band.AnchorLeft) - .08) < .001,
+            "The target band narrows slightly by completion");
+        Check(Math.Abs(launch.Model.TargetCenter - 50) > 1,
+            "The completed launch target has travelled away from its starting center");
         Check(launch.Model.Result.CenteredSeconds == 10 && mission.LaunchRecord?.CenteredSeconds == 10,
             "Real launch records completion without a score");
+        Check(mission.LaunchRecord?.PerfectIgnition == true && mission.PendingLaunchFaults == 0,
+            "A perfect ignition records no faults");
         Check(mission.Energy == 50 && mission.TrainingLaunchPracticeComplete,
             "Real launch has no energy penalty and keeps prior practice completion");
         var successFire = launch.GetNode<AnimatedSprite2D>("Rocket/Fire"); successFire.SpeedScale = 0;
@@ -329,9 +361,14 @@ public partial class RocketLaunchTest : Node
             "Simulator keeps visual launch instructions");
         Check(!mission.LaunchPadUnlocked, "Practice remains the final pad-unlock requirement");
         Check(launch.Practice && launch.Model.Config == new LaunchHoldConfig(), "Practice uses the exact launch requirement");
+        Check(launch.Model.TargetConfig.StartSpeed == 3 && launch.Model.TargetConfig.MaxSpeed == 8 &&
+            launch.Model.TargetConfig.EndWidth == 8,
+            "Practice shares the moving, gradually narrowing target profile");
         Start(); CompleteIgnition(); DriveToComplete();
         Check(launch.GetNode<ProgressBar>(Ui + "CenteredProgress").Value == 100,
             "Simulator progress bar also completes at its hold goal");
+        Check(Math.Abs(launch.Model.TargetWidth - 8) < .01,
+            "Simulator target also narrows by the end of the hold");
         Check(mission.TrainingLaunchPracticeComplete && mission.LaunchPadUnlocked,
             "Completing practice fulfills the final training requirement");
         Check(mission.LaunchRecord == null && mission.Energy == 50 && launch.State == RocketLaunch.Phase.Result,
@@ -377,5 +414,37 @@ public partial class RocketLaunchTest : Node
         Check(!launch.Practice && launch.State == RocketLaunch.Phase.Result &&
             launch.GetNode<Label>(Ui + "Text").Text.Contains("LAUNCH PAD LOCKED"),
             "Launch request from an old mission is rejected");
+    }
+
+    private async Task PartialIgnitionLaunch()
+    {
+        var mission = MissionState.Instance;
+        mission.BeginLaunchSequence();
+        CompleteAllTraining(mission);
+        await Load();
+        Start();
+        int minimum = launch.Ignition.Config.MinimumClicks;
+        for (int i = 0; i < minimum; i++)
+        {
+            SendKey(Key.Space, true);
+            SendKey(Key.Space, false);
+        }
+        Check(launch.Ignition.MeetsMinimum && !launch.Ignition.Complete,
+            "The eighty-five percent minimum is reached without a perfect ignition");
+        Advance(5);
+        Check(launch.State == RocketLaunch.Phase.Active,
+            "A partial ignition still lifts the rocket into the hold phase");
+        Check(launch.GetNode<AnimatedSprite2D>("Rocket/Fire").Animation != "failed",
+            "A partial ignition does not play the failure animation");
+        DriveToComplete();
+        Check(launch.RunResult != null && launch.RunResult.IgnitionFaults == 3 &&
+            Math.Abs(launch.RunResult.IgnitionRatio - .88) < .0001,
+            $"A partial launch records the missing taps as faults ({launch.RunResult?.IgnitionFaults})");
+        Check(mission.LaunchRecord?.IgnitionFaults == 3 && mission.PendingLaunchFaults == 3,
+            "The mission keeps the pending faults for later repair work");
+        Check(launch.GetNode<Label>(Ui + "Stats").Text.Contains("IGNITION FAULTS"),
+            "The launch summary shows the ignition faults");
+        launch.QueueFree(); launch = null; await Frames();
+        mission.ResetEquipment();
     }
 }

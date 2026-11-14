@@ -29,7 +29,20 @@ Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is do
 
 `Hotbar.cs` also checks `hotbar_next` / `hotbar_prev`, but those actions are not in the input map yet.
 
-In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab.
+In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab. The supply locker is the single loadout point: press `E` to open it, take or store the maintenance kit, and pick up to four oxygen tanks at one cargo unit each. Mars-surface scenes use `OxygenHud.tscn`: oxygen drains only outside the lander, canisters are collected with `E`, the lander refills the suit, the screen flashes red at 15%, a return warning appears when the reserve can no longer cover the walk back, and running out forces an emergency return.
+
+Launching needs 25 taps within five seconds, but 22 taps (85%) still lift the rocket with ignition faults that become repair work after landing. The green hold band now moves to random positions along the gauge and narrows slightly as the hold progresses.
+
+## Developer shortcuts
+
+The `DevCheats` autoload listens for secret codes typed with **Shift** held, so they never collide with the movement, interaction or hotbar keys:
+
+| Code | Effect |
+| --- | --- |
+| `Shift+A R E S` | Completes every training exercise and unlocks the launch pad. |
+| `Shift+E R A S E` | Clears the training progress again. |
+
+Both codes work in any scene and confirm themselves with an on-screen message.
 
 ## Architecture
 
@@ -47,17 +60,19 @@ ares/
 │   ├── training/                  Training.tscn, TrainingLab.tscn, ControlCabinet.tscn, TrainingBlock.tscn
 │   ├── RocketLaunch/              Launching.tscn + launch scene controllers
 │   ├── rover/                     rover.tscn (top-down rover prototype)
-│   ├── ui/                         MissionMonitor.tscn (shared training monitor)
+│   ├── ui/                         MissionMonitor.tscn, OxygenHud.tscn
 │   ├── mission_planning/ spacecraft/ transit_failure/
 │   ├── minigames/                  wire/fuse, Frequency Box and Hull Repair scenes
-│   ├── mars/ gateway/ ending/ credits/ (planned, empty)
+│   ├── mars/                      OxygenCanister.tscn, OxygenStation.tscn (surface pickups)
+│   ├── gateway/ ending/ credits/ (planned, empty)
 │
 ├── scripts/                      C# (.cs); .cs.uid sidecars are Godot-generated
 │   ├── rocket_launch/             LaunchHoldModel.cs, LaunchIgnitionModel.cs
 │   ├── player/                   Player.cs, PlayerAnimation.cs, HandEquip.cs
 │   ├── rover/                    Rover.cs, Rover_scence.cs, RoverAnimation.cs
-│   ├── training/                 training flow, repair practice, supply locker and room interaction
-│   ├── mission/                  MissionState.cs (autoload), MissionStage.cs
+│   ├── training/                 training flow, repair practice, supply locker, loadout panel and room interaction
+│   ├── mission/                  MissionState.cs (autoload), MissionStage.cs, OxygenSupply.cs,
+│   │                             OxygenPickup.cs
 │   ├── dialogue/                 DialogueLine.cs, DialogueSequence.cs, DialogueView.cs
 │   ├── resource_manager/         future route consequences; loadout state lives in MissionState
 │   ├── stages/                   IntroSequence.cs; one controller script per stage scene
