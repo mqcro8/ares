@@ -1,0 +1,84 @@
+namespace ares.scripts.gateway;
+
+using Godot;
+using ares.scripts.mission;
+using ares.scripts.player;
+using ares.scripts.systems.items;
+using ares.scripts.training;
+using ares.scripts.ui.mission_monitor;
+
+/// <summary>
+/// Gateway hub and four-room repair annex. Each annex room owns one of the
+/// training exercises, while the interaction and inventory rules stay shared
+/// with the Training Lab.
+/// </summary>
+public partial class Gateway : Node2D
+{
+    public const string ScenePath = "res://scenes/gateway/Gateway.tscn";
+    [Export] public Player Player { get; set; }
+    [Export] public Camera2D Camera { get; set; }
+    [Export] public Control WiresZone { get; set; }
+    [Export] public Control FusesZone { get; set; }
+    [Export] public Control FrequencyZone { get; set; }
+    [Export] public Control HullRepairZone { get; set; }
+    [Export] public EquipmentLocker Locker { get; set; }
+    [Export] public MissionMonitorView Monitor { get; set; }
+
+    private TrainingStations _stations;
+    private Label _status;
+
+    public override void _Ready()
+    {
+        var arrival = PracticeSession.Arrive(ScenePath);
+        if (arrival != null)
+        {
+            Player.GlobalPosition = arrival.ReturnPosition;
+            PracticeSession.RestoreFacing(ScenePath, Player);
+        }
+        else
+            PracticeSession.Clear();
+
+        _stations = new TrainingStations { Name = "GatewayStations", Player = Player };
+        AddChild(_stations);
+        AddStation("Wiring Room", WiresZone, PracticeSession.Exercise.Wires, "gateway.wires.return");
+        AddStation("Fuse Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
+        AddStation("Frequency Room", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
+        AddStation("Hull Room", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
+        if (Locker != null)
+            _stations.Targets.Add(new("Supply locker", Locker.FrontZone, null, null,
+                Interact: () => Locker.Open(Player), Prompt: () => Locker.InteractionPrompt(Player)));
+
+        FitCamera();
+        GetViewport().SizeChanged += FitCamera;
+    }
+
+    private void AddStation(string name, Control zone, PracticeSession.Exercise exercise, string marker)
+        => _stations.Targets.Add(new(name, zone, PracticeSession.SceneFor(exercise), marker,
+            exercise, RequiredCapability: ItemCapability.Repair));
+
+    public override void _Process(double delta)
+    {
+        if (Monitor != null)
+        {
+            var mission = MissionState.Instance;
+            Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission, inLab: true,
+                stamina: null, circuitProgress: 0, circuitComplete: false,
+                hasRepairKit: Player.Inventory?.HasCapability(ItemCapability.Repair) == true,
+                prompt: _stations?.MonitorPrompt, feedback: _stations?.MonitorFeedback,
+                visible: true));
+        }
+        if (Camera != null && Player != null)
+            Camera.GlobalPosition = Player.GlobalPosition;
+        if (_status != null)
+            _status.Text = $"GATEWAY ANNEX  //  {_stations?.CurrentTargetName ?? "READY"}";
+    }
+
+    private void FitCamera()
+    {
+        if (Camera == null || Player == null) return;
+        Camera.Zoom = Vector2.One * 1.5f;
+        Camera.GlobalPosition = Player.GlobalPosition;
+    }
+
+    public override void _ExitTree() => GetViewport().SizeChanged -= FitCamera;
+}

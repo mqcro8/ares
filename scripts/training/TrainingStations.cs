@@ -78,7 +78,8 @@ public partial class TrainingStations : Node
         PracticeSession.ClearFeedback();
         PracticeSession.Capture(root.SceneFilePath, Player);
         if (Intro != null) PracticeSession.Saved = new(Intro.Course.Capture(), Player.TrainingMovement.Capture(), Intro.CompletionShown);
-        if (_near.Exercise.HasValue) PracticeSession.Begin(_near.Exercise.Value, Player.GlobalPosition);
+        if (_near.Exercise.HasValue)
+            PracticeSession.Begin(_near.Exercise.Value, root.SceneFilePath, _near.Marker, Player.GlobalPosition);
         else if (_near.Launch.HasValue)
             PracticeSession.RequestLaunch(_near.Launch.Value, Player.GlobalPosition);
         else

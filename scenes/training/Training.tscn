@@ -19,9 +19,9 @@
 [ext_resource type="Script" uid="uid://80fyjbwnoscg" path="res://scripts/training/TrainingCamera.cs" id="17_training_camera"]
 [ext_resource type="PackedScene" uid="uid://c16gdj6jtud" path="res://scenes/training/TrainingBlock.tscn" id="block"]
 [ext_resource type="PackedScene" uid="uid://ch84tnr8tvq" path="res://scenes/training/ControlCabinet.tscn" id="cabinet"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="mission_monitor"]
 [ext_resource type="Script" uid="uid://bpm1p1nse5ycm" path="res://scripts/training/PhysicalTraining.cs" id="physical_training"]
 [ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="training_movement"]
-[ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="mission_monitor"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5x7l7"]
 texture = ExtResource("13_whebk")
@@ -1770,7 +1770,7 @@ Monitor = NodePath("MissionMonitor")
 LabReturnMarker = NodePath("gym_from_lab")
 LabDoorZone = NodePath("LabDoor/FrontZone")
 
-[node name="MissionMonitor" parent="." instance=ExtResource("mission_monitor")]
+[node name="MissionMonitor" parent="." unique_id=343634997 instance=ExtResource("mission_monitor")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1259519819]
 process_physics_priority = 10
