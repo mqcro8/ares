@@ -3,3 +3,8 @@
 /android/
 .idea/
 .DS_Store
+
+# Local editor tooling
+.addons/
+addons/
+.mcp.json
