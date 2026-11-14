@@ -14,7 +14,7 @@ Built with **Godot 4.7 (.NET)** and **C# (`net8.0`)**.
 4. Press **F5**.
 
 Main scene: `scenes/main_menu/main_menu_take3.tscn`.
-Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is documented in [`docs/audio.md`](docs/audio.md).
+Autoloads: `AudioManager`, `MissionState`, `PauseManager`, and `ControllerRelay`. Audio usage is documented in [`docs/audio.md`](docs/audio.md); the optional phone controller is documented in [`controlers/README.md`](controlers/README.md).
 
 ## Controls
 
@@ -28,6 +28,8 @@ Autoloads: `AudioManager`, `MissionState`, and `PauseManager`. Audio usage is do
 | Skip intro | `Esc` `E` `Space` `Enter` |
 
 `Hotbar.cs` also checks `hotbar_next` / `hotbar_prev`, but those actions are not in the input map yet.
+
+The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction. While a minigame is open the phone switches to a matching touch panel (wiring, fuse box, frequency, hull repair, launch), with a start/restart overlay for practice modes; the previous page returns when the mode ends. See [`controlers/README.md`](controlers/README.md) for the relay setup and message protocol.
 
 In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab. The supply locker is the single loadout point: press `E` to open it, take or store the maintenance kit, and pick up to four oxygen tanks at one cargo unit each. Mars-surface scenes use `OxygenHud.tscn`: oxygen drains only outside the lander, canisters are collected with `E`, the lander refills the suit, the screen flashes red at 15%, a return warning appears when the reserve can no longer cover the walk back, and running out forces an emergency return.
 
@@ -84,7 +86,9 @@ ares/
 │   │   │                         CargoCapacity.cs, InventoryTransferService.cs
 │   │   ├── items/                Item.cs, ItemData.cs ([GlobalClass] Resource),
 │   │   │                         ItemCapability.cs, ItemStack.cs, EquipableItem.cs
-│   │   ├── input/                keyboard now, Arduino later, same interface  (planned, empty)
+│   │   ├── input/                ControllerRelay.cs (autoload), ControllerInputBridge.cs,
+│   │   │                         ControllerMessage.cs, ControllerCommand.cs,
+│   │   │                         ControllerContext.cs, ControllerQr.cs
 │   │   └── minigames/            WireMinigame, FuseBoxMinigame, FrequencyBoxMinigame,
 │   │                             HullRepairMinigame, MinigameEffects
 │   ├── ui/
@@ -123,6 +127,7 @@ ares/
 │   ├── music/                    menu_test_music.mp3, rover_scene_ambient_wind.mp3
 │   └── sfx/                      rover_collision.wav, rover_explode.wav,
 │                                 rover_moving.mp3, rover_victory.wav
+├── controlers/                   phone controller page + Node relay (`npm start`)
 └── hardware/                     optional Arduino firmware, .gdignore + README.md
 ```
 
@@ -139,4 +144,4 @@ ares/
 
 ## Credits
 
-Third-party assets and licenses are tracked in [`credits.md`](credits.md). The optional Arduino controller notes live in [`hardware/README.md`](hardware/README.md).
+Third-party assets and licenses are tracked in [`credits.md`](credits.md). The optional phone-controller setup lives in [`controlers/README.md`](controlers/README.md).

@@ -1,7 +1,9 @@
 using Godot;
 using System.Collections.Generic;
+using ares.scripts.training;
+using Ares.Systems.Controllers;
 
-public partial class FrequencyBoxMinigame : Control
+public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
 
@@ -49,6 +51,7 @@ public partial class FrequencyBoxMinigame : Control
 	private float _hold;
 	private float _time;
 	private bool _done;
+	private float _contextTimer;
 	public int SelectedKnob => _selectedKnob;
 	public float SelectedValue => _targetValue[_selectedKnob];
 
@@ -82,7 +85,10 @@ public partial class FrequencyBoxMinigame : Control
 		DrawWave(_targetWave, _target);
 		Refresh();
 		UpdateKnobHighlight();
-		ares.scripts.training.PracticeReturn.Attach(this);
+		ControllerCommandRouter.Register(this, this);
+		ControllerContext.Begin(this, ControllerContextMode.Frequency);
+		PublishControllerContext();
+		PracticeReturn.Attach(this);
 	}
 
 	// Semilla propia de esta instancia: nunca sale la misma onda dos veces
@@ -206,6 +212,7 @@ public partial class FrequencyBoxMinigame : Control
 		{
 			_selectedKnob = (int)k.Keycode - (int)Key.Key1;
 			UpdateKnobHighlight();
+			PublishControllerContext();
 			GetViewport().SetInputAsHandled();
 		}
 		else if (k.Keycode is Key.Left or Key.Right)
@@ -245,6 +252,13 @@ public partial class FrequencyBoxMinigame : Control
 			_targetValue[_selectedKnob] = Mathf.Clamp(
 				_targetValue[_selectedKnob] + dir * KeyAdjustSpeed * FineFactor() * dt, 0f, 1f);
 
+		_contextTimer += dt;
+		if (dir != 0f || _contextTimer >= 0.2f)
+		{
+			_contextTimer = 0f;
+			PublishControllerContext();
+		}
+
 		AnimateValues(dt);
 
 		bool matched = Similarity() >= MatchThreshold;
@@ -265,8 +279,70 @@ public partial class FrequencyBoxMinigame : Control
 		_led.Color = LedOn;
 		_wordLabel.Text = RevealWord;
 		Sparks(_screen.GetGlobalRect().GetCenter(), TargetColor);
+		PublishControllerContext();
 		MinigameEffects.CompleteAfter(this, .8, () => EmitSignal(SignalName.Completed));
 	}
+
+	public override void _ExitTree()
+	{
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
+	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameStart:
+			case ControllerCommands.MinigameCancel:
+				return false;
+
+			case ControllerCommands.FrequencySelect:
+				if (GameplayBlocked || _done) return true;
+				if (command.Index >= 0 && command.Index < 3)
+				{
+					_selectedKnob = command.Index;
+					UpdateKnobHighlight();
+					PublishControllerContext();
+				}
+				return true;
+
+			case ControllerCommands.FrequencySet:
+				if (GameplayBlocked || _done) return true;
+				if (command.Index >= 0 && command.Index < 3 && command.HasValue)
+				{
+					_targetValue[command.Index] = Mathf.Clamp(command.Value, 0f, 1f);
+					_selectedKnob = command.Index;
+					UpdateKnobHighlight();
+					PublishControllerContext();
+				}
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	public void PublishControllerContext()
+	{
+		var values = new Godot.Collections.Array();
+		for (int i = 0; i < 3; i++) values.Add(Mathf.Snapped(_targetValue[i], 0.001f));
+
+		ControllerContext.Update(this, new Godot.Collections.Dictionary
+		{
+			["values"] = values,
+			["selected"] = _selectedKnob,
+			["similarity"] = Mathf.Snapped(Similarity(), 0.001f),
+			["hold"] = Mathf.Snapped(Mathf.Clamp(_hold / HoldSeconds, 0f, 1f), 0.01f),
+			["done"] = _done,
+			["overlay"] = OverlayState,
+		});
+	}
+
+	private bool GameplayBlocked => GetNodeOrNull<PracticeReturn>("PracticeReturn")?.BlocksGameplay ?? false;
+
+	private string OverlayState =>
+		GetNodeOrNull<PracticeReturn>("PracticeReturn")?.ControllerOverlay ?? "active";
 
 	private void Sparks(Vector2 globalPos, Color color)
 	{

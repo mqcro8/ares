@@ -3,9 +3,10 @@ using System;
 using ares.scripts.mission;
 using ares.scripts.training;
 using ares.scripts.systems;
+using Ares.Systems.Controllers;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
-public partial class RocketLaunch : Node2D
+public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource
 {
 	public enum Phase { Ready, Ignition, Active, Result, Ascending, Complete }
 	public Phase State { get; private set; }
@@ -48,6 +49,7 @@ public partial class RocketLaunch : Node2D
 	private double ascentProgress;
 	private long sequence;
 	private string backError;
+	private float _contextTimer;
 	public Func<double> Clock { get; set; } = () => Time.GetTicksUsec() / 1_000_000.0;
 	private double lastTimestamp;
 	private const string Ui = "IntroUI/Panel/Margin/VBox/";
@@ -100,6 +102,9 @@ public partial class RocketLaunch : Node2D
 		SetGaugeBand();
 		LayoutRocket();
 		Refresh();
+		ControllerCommandRouter.Register(this, this);
+		ControllerContext.Begin(this, ControllerContextMode.Launch);
+		PublishControllerContext();
 	}
 
 	private void SetGaugeBand()
@@ -138,6 +143,8 @@ public partial class RocketLaunch : Node2D
 		fire.AnimationFinished -= OnAnimationFinished;
 		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
 		pause.Pressed -= TogglePause; back.Pressed -= Back;
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
 	}
 
 	private void Back()
@@ -169,6 +176,12 @@ public partial class RocketLaunch : Node2D
 		{
 			accessDenied = true; State = Phase.Result; Refresh(); return;
 		}
+		BeginIgnition();
+	}
+
+	private void RetryIgnition()
+	{
+		if (!launchAllowed || State != Phase.Result || !ignitionFailed) return;
 		BeginIgnition();
 	}
 
@@ -322,6 +335,13 @@ public partial class RocketLaunch : Node2D
 
 	public override void _Process(double delta)
 	{
+		bool phoneHold = Input.IsActionPressed(ControllerActions.LaunchHold);
+		if (State == Phase.Active && !Paused)
+		{
+			if (phoneHold && !inputBlocked) holding = true;
+			else if (!phoneHold && !spaceHeld && !mouseHeld) holding = false;
+		}
+
 		Synchronize();
 		if (State == Phase.Ascending)
 		{
@@ -342,7 +362,76 @@ public partial class RocketLaunch : Node2D
 		LayoutRocket();
 		if (State == Phase.Active && !Paused) rocket.SetThrust(Model.Heat);
 		Refresh();
+
+		_contextTimer += (float)Math.Max(0, delta);
+		if (_contextTimer >= 0.1f)
+		{
+			_contextTimer = 0f;
+			PublishControllerContext();
+		}
 	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameStart:
+			case ControllerCommands.MinigameCancel:
+				return false;
+
+			case ControllerCommands.LaunchStart:
+				if (!Paused) BeginIgnitionFromReady();
+				return true;
+
+			case ControllerCommands.LaunchTap:
+				if (!Paused && !inputBlocked) RegisterIgnitionClick();
+				return true;
+
+			case ControllerCommands.LaunchRetry:
+				if (!Paused) RetryIgnition();
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	public void PublishControllerContext()
+	{
+		var config = Model.Config;
+		ControllerContext.Update(this, new Godot.Collections.Dictionary
+		{
+			["phase"] = PhaseId,
+			["practice"] = Practice,
+			["allowed"] = launchAllowed,
+			["accessDenied"] = accessDenied,
+			["paused"] = Paused,
+			["clicks"] = Ignition.Clicks,
+			["targetClicks"] = Ignition.Config.TargetClicks,
+			["ignitionRemaining"] = Mathf.Snapped((float)Ignition.Remaining, 0.01f),
+			["ignitionFailed"] = ignitionFailed,
+			["heat"] = Mathf.Snapped((float)(Model.Heat / 100.0), 0.001f),
+			["low"] = Mathf.Snapped((float)(config.Low / 100.0), 0.001f),
+			["high"] = Mathf.Snapped((float)(config.High / 100.0), 0.001f),
+			["inBand"] = Model.InBand,
+			["centered"] = Mathf.Snapped((float)Model.Progress, 0.001f),
+			["canStart"] = launchAllowed && State == Phase.Ready && !Paused,
+			["canRetry"] = launchAllowed && State == Phase.Result && ignitionFailed && !Paused,
+		});
+	}
+
+	private string PhaseId => accessDenied && State == Phase.Result
+		? "locked"
+		: State switch
+		{
+			Phase.Ready => "ready",
+			Phase.Ignition => "ignition",
+			Phase.Active => "active",
+			Phase.Result => "result",
+			Phase.Ascending => "ascending",
+			Phase.Complete => "complete",
+			_ => "ready",
+		};
 
 	private void Synchronize()
 	{

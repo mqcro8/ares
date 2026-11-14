@@ -1,8 +1,10 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using ares.scripts.training;
+using Ares.Systems.Controllers;
 
-public partial class FuseBoxMinigame : Control
+public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
 
@@ -46,7 +48,10 @@ public partial class FuseBoxMinigame : Control
 		AddChild(_status);
 		GeneratePuzzle();
 		Refresh();
-		ares.scripts.training.PracticeReturn.Attach(this);
+		ControllerCommandRouter.Register(this, this);
+		ControllerContext.Begin(this, ControllerContextMode.Fuses);
+		PublishControllerContext();
+		PracticeReturn.Attach(this);
 	}
 
 	// Duplica el estilo de cada interruptor/luz para poder cambiar su color por separado
@@ -102,6 +107,7 @@ public partial class FuseBoxMinigame : Control
 		for (int i = 0; i < _lights.Count; i++)
 			SetPanelColor(_lights[i], i < _pressesLeft ? LightOn : LightOff);
 		_status.Text = $"Presses: {_pressesLeft}/{_maxPresses}\nDOUBLE: {_double + 1} → also toggles {_partner + 1}";
+		PublishControllerContext();
 	}
 
 	private void SetPanelColor(Panel p, Color color)
@@ -140,6 +146,8 @@ public partial class FuseBoxMinigame : Control
 
 	private void Press(int i)
 	{
+		if (_busy || i < 0 || i >= _switches.Count) return;
+
 		Toggle(i);
 
 		// Bloque 5: gastar un intento
@@ -174,6 +182,7 @@ public partial class FuseBoxMinigame : Control
 		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
 		if (_state.All(s => s)) EmitSignal(SignalName.Completed);
 		else ResetBox();
+		PublishControllerContext();
 	}
 
 	public void StopPending() { _pending.Stop(); }
@@ -181,7 +190,49 @@ public partial class FuseBoxMinigame : Control
 	{
 		_pending.Stop();
 		_pending.Timeout -= ResolvePending;
+		ControllerCommandRouter.Unregister(this);
+		ControllerContext.End(this);
 	}
+
+	public bool HandleControllerCommand(ControllerCommand command)
+	{
+		switch (command.Name)
+		{
+			case ControllerCommands.MinigameStart:
+			case ControllerCommands.MinigameCancel:
+				return false;
+
+			case ControllerCommands.FusePress:
+				if (GameplayBlocked) return true;
+				Press(command.Index);
+				return true;
+
+			default:
+				return false;
+		}
+	}
+
+	public void PublishControllerContext()
+	{
+		var switches = new Godot.Collections.Array();
+		foreach (bool on in _state) switches.Add(on);
+
+		ControllerContext.Update(this, new Godot.Collections.Dictionary
+		{
+			["switches"] = switches,
+			["presses"] = _pressesLeft,
+			["maxPresses"] = _maxPresses,
+			["double"] = _double,
+			["partner"] = _partner,
+			["busy"] = _busy,
+			["overlay"] = OverlayState,
+		});
+	}
+
+	private bool GameplayBlocked => GetNodeOrNull<PracticeReturn>("PracticeReturn")?.BlocksGameplay ?? false;
+
+	private string OverlayState =>
+		GetNodeOrNull<PracticeReturn>("PracticeReturn")?.ControllerOverlay ?? "active";
 
 	private void ResetBox()
 	{
