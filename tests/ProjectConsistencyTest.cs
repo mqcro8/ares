@@ -69,13 +69,16 @@ public partial class ProjectConsistencyTest : Node
 		{
 			"res://scripts/Hotbar.tscn", "res://scripts/hotbar_scene.tscn",
 			"res://scripts/ui/button_1.tscn", "res://scenes/rover/GameOver.tscn",
-			"res://scenes/main_menu/Control_menu.tscn"
+			"res://scenes/main_menu/Control_menu.tscn", "res://scenes/training/Training.tscn"
 		})
 		{
 			var node = GD.Load<PackedScene>(path).Instantiate();
 			AddChild(node);
 			await Frames();
 			Check(node.IsInsideTree(), "Retained scene loads: " + path);
+			if (path == "res://scenes/training/Training.tscn")
+				Check(node.GetNodeOrNull<ColorRect>("Background/Fill") != null,
+					"Training scene covers transparent atlas gaps with its non-black background fill");
 			if (node is GameOver)
 			{
 				var dialoguePanel = Find<PanelContainer>(node,
@@ -255,8 +258,13 @@ public partial class ProjectConsistencyTest : Node
 		Check(rover.IsGameOver && mission.Ending == ares.scripts.mission.MissionEnding.None &&
 			mission.RoverStageResolved && !mission.RoverStageCompleted,
 			$"Losing rover hearts resolves the stage as a failure without ending the campaign (gameover={rover.IsGameOver}, resolved={mission.RoverStageResolved}, success={mission.RoverStageCompleted}, seq={mission.LaunchSequence}, stage={mission.Stage})");
-		Check(mission.Oxygen.IsEmergencyReserve && mission.Oxygen.CapacitySeconds > 0,
-			"Rover loss provides a small rescue reserve when no tanks were equipped");
+		Check(mission.Oxygen.IsEmergencyReserve && mission.Oxygen.CapacitySeconds > 0 &&
+			Math.Abs(mission.Oxygen.RemainingSeconds - mission.Oxygen.CapacitySeconds * 0.9) < 0.001,
+			"Rover loss provides emergency oxygen then spends ten percent reaching Gateway");
+		double oxygenAfterLoss = mission.Oxygen.RemainingSeconds;
+		Check(!mission.FailRoverStage(mission.LaunchSequence) &&
+			Math.Abs(mission.Oxygen.RemainingSeconds - oxygenAfterLoss) < 0.001,
+			"A resolved rover stage cannot charge the oxygen penalty twice");
 		Check(mission.SpareParts == 17 && mission.TrainingWiresComplete,
 			"Rover failure preserves unrelated mission resources and training");
 		await Wait(4.1);

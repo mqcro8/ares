@@ -7,6 +7,7 @@ public partial class Credits : Control
 {
 	private const string MainMenuScene = "res://scenes/main_menu/main_menu_take3.tscn";
 	private const float ScrollSpeed = 38f;
+	private static readonly Font CreditsFont = GD.Load<FontFile>("res://art/fonts/Aerospace.ttf");
 	private VBoxContainer _roll;
 	private Button _pauseButton;
 	private Button _skipButton;
@@ -49,7 +50,7 @@ public partial class Credits : Control
 		var shade = new ColorRect
 		{
 			Name = "TextShade",
-			Color = new Color(0.025f, 0.015f, 0.07f, 0.28f),
+			Color = new Color(0.025f, 0.015f, 0.07f, 0.68f),
 			MouseFilter = MouseFilterEnum.Ignore,
 		};
 		shade.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -67,32 +68,32 @@ public partial class Credits : Control
 		_roll.AddThemeConstantOverride("separation", 0);
 		AddChild(_roll);
 
-		AddCreditLabel("MISSION: ARES", 38, new Color(0.46f, 0.88f, 0.94f), 36);
-		AddCreditLabel("C R E D I T S", 20, new Color(0.96f, 0.72f, 0.42f), 76);
-		AddCreditLabel("PROJECT TEAM", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("Jose Miguel Ramirez", 14, Colors.White, 8);
-		AddCreditLabel("Creative Director · Developer", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("Miguel Ceballos", 14, Colors.White, 12);
-		AddCreditLabel("Developer · Architecture", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("Nikita Serna", 14, Colors.White, 12);
-		AddCreditLabel("Digital Art · Developer · History Helper", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("Diego Alberto Pasaye", 14, Colors.White, 12);
-		AddCreditLabel("Developer · Digital Art", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("Luis Fernando Nieto", 14, Colors.White, 12);
-		AddCreditLabel("Developer · Writer", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("MUSIC & AUDIO", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("Sergio Alfredo Gutierrez · Music", 12, Colors.White, 8);
-		AddCreditLabel("BigSoundBank — Joseph SARDIN", 12, Colors.White, 0);
-		AddCreditLabel("Switches and electrical effects · CC0 1.0", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("bigsoundbank.com · CC0 1.0", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("ART & THIRD-PARTY RESOURCES", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("Digital Art · Nikita Serna · Diego Alberto Pasaye", 10, Colors.White, 8);
-		AddCreditLabel("Free art assets from itch.io", 12, Colors.White, 8);
-		AddCreditLabel("Generated placeholder icons · OpenAI · 2026", 10, Colors.White, 0);
-		AddCreditLabel("Net.Codecrete.QrCodeGenerator", 12, Colors.White, 0);
-		AddCreditLabel("Manuel Bleichenbacher · MIT License", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("THANK YOU FOR PLAYING", 20, new Color(0.96f, 0.72f, 0.42f), 36);
-		AddCreditLabel("MISSION CONTROL OUT", 12, new Color(0.82f, 0.84f, 0.91f), 0);
+		AddCreditLabel("MISSION: ARES", 48, new Color(0.46f, 0.88f, 0.94f), 40);
+		AddCreditLabel("C R E D I T S", 28, new Color(0.96f, 0.72f, 0.42f), 56);
+		AddCreditLabel("PROJECT TEAM", 24, new Color(0.46f, 0.88f, 0.94f), 52);
+		AddCreditLabel("Jose Miguel Ramirez", 20, Colors.White, 12);
+		AddCreditLabel("Creative Director · Developer", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("Miguel Ceballos", 20, Colors.White, 18);
+		AddCreditLabel("Developer · Architecture", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("Nikita Serna", 20, Colors.White, 18);
+		AddCreditLabel("Digital Art · Developer · History Helper", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("Diego Alberto Pasaye", 20, Colors.White, 18);
+		AddCreditLabel("Developer · Digital Art", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("Luis Fernando Nieto", 20, Colors.White, 18);
+		AddCreditLabel("Developer · Writer", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("MUSIC & AUDIO", 24, new Color(0.46f, 0.88f, 0.94f), 52);
+		AddCreditLabel("Sergio Alfredo Gutierrez · Music", 18, Colors.White, 12);
+		AddCreditLabel("BigSoundBank — Joseph SARDIN", 18, Colors.White, 4);
+		AddCreditLabel("Switches and electrical effects · CC0 1.0", 15, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("bigsoundbank.com · CC0 1.0", 15, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("ART & THIRD-PARTY RESOURCES", 24, new Color(0.46f, 0.88f, 0.94f), 52);
+		AddCreditLabel("Digital Art · Nikita Serna · Diego Alberto Pasaye", 16, Colors.White, 12);
+		AddCreditLabel("Free art assets from itch.io", 18, Colors.White, 10);
+		AddCreditLabel("Generated placeholder icons · OpenAI · 2026", 16, Colors.White, 4);
+		AddCreditLabel("Net.Codecrete.QrCodeGenerator", 18, Colors.White, 4);
+		AddCreditLabel("Manuel Bleichenbacher · MIT License", 16, new Color(0.82f, 0.84f, 0.91f), 2);
+		AddCreditLabel("THANK YOU FOR PLAYING", 28, new Color(0.96f, 0.72f, 0.42f), 52);
+		AddCreditLabel("MISSION CONTROL OUT", 18, new Color(0.82f, 0.84f, 0.91f), 4);
 	}
 
 	private void AddCreditLabel(string text, int fontSize, Color color, int topSpacing)
@@ -110,6 +111,7 @@ public partial class Credits : Control
 			MouseFilter = MouseFilterEnum.Ignore,
 		};
 		label.AddThemeFontSizeOverride("font_size", fontSize);
+		label.AddThemeFontOverride("font", CreditsFont);
 		label.AddThemeColorOverride("font_color", color);
 		label.AddThemeColorOverride("font_outline_color", new Color(0.025f, 0.015f, 0.07f, 1));
 		label.AddThemeConstantOverride("outline_size", 5);
@@ -144,7 +146,8 @@ public partial class Credits : Control
 	private static Button MakeButton(string text, float width)
 	{
 		var button = new Button { Text = text, CustomMinimumSize = new Vector2(width, 40), FocusMode = FocusModeEnum.All };
-		button.AddThemeFontSizeOverride("font_size", 11);
+		button.AddThemeFontOverride("font", CreditsFont);
+		button.AddThemeFontSizeOverride("font_size", 16);
 		return button;
 	}
 

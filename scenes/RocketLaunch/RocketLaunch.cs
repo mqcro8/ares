@@ -37,7 +37,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private AnimatedSprite2D fire;
 	private Label text, stats, briefingText, briefingSpeaker;
 	private TextureRect briefingTutorial;
-	private Button briefingStart, briefingBack, pause, back;
+	private Button briefingStart, briefingBack, back;
 	private Control gauge, actions, hud, briefing;
 	private ProgressBar ignitionProgress, centeredProgress;
 	private TextureRect rail, band, handle;
@@ -71,7 +71,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		fire = rocket.GetNode<AnimatedSprite2D>("Fire");
 		fire.AnimationFinished += OnAnimationFinished;
 		text = GetNode<Label>(Ui + "Text"); stats = GetNode<Label>(Ui + "Stats");
-		pause = GetNode<Button>(Ui + "Actions/Pause"); back = GetNode<Button>(Ui + "Actions/Back");
+		back = GetNode<Button>(Ui + "Actions/Back");
 		actions = GetNode<Control>(Ui + "Actions");
 		hud = GetNode<Control>("IntroUI/Panel"); briefing = GetNode<Control>("IntroUI/Briefing");
 		briefingText = GetNode<Label>(BriefingUi + "Text");
@@ -94,7 +94,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		rail = gauge.GetNode<TextureRect>("Rail"); band = gauge.GetNode<TextureRect>("Band");
 		handle = gauge.GetNode<TextureRect>("Handle");
 		briefingStart.Pressed += BeginIgnitionFromReady; briefingBack.Pressed += Back;
-		pause.Pressed += TogglePause; back.Pressed += Back;
+		back.Pressed += Back;
 		var request = PracticeSession.ConsumeLaunch();
 		if (request != null)
 		{
@@ -159,7 +159,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (GodotObject.IsInstanceValid(pauseManager)) pauseManager.PauseChanged -= OnPauseChanged;
 		fire.AnimationFinished -= OnAnimationFinished;
 		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
-		pause.Pressed -= TogglePause; back.Pressed -= Back;
+		back.Pressed -= Back;
 		ControllerCommandRouter.Unregister(this);
 		ControllerContext.End(this);
 	}
@@ -676,12 +676,10 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		actions.Visible = State == Phase.Ignition || State == Phase.Active || Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		hud.OffsetBottom = actions.Visible ? 140 : 100;
-		pause.Visible = State == Phase.Ignition || State == Phase.Active || (Paused && State == Phase.Ascending);
 		back.Visible = Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		if (!Practice && MissionState.Instance?.Ending == ares.scripts.mission.MissionEnding.Bad && !scoreTransitionFailed)
 			back.Visible = false;
-		pause.Text = Paused ? "Resume" : "Pause";
 		back.Text = scoreTransitionFailed ? "Retry score transfer" :
 			malfunctionTransitionFailed ? "Retry launch cinematic" :
 			fromTraining ? "Return to lab" : "Back to main menu";

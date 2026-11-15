@@ -9,6 +9,7 @@ public sealed class OxygenSupply
 	public const int MaxTanks = 4;
 	public const double DefaultSecondsPerTank = ToolEffects.OxygenBaseSecondsPerTank;
 	public const double CriticalFraction = 0.15;
+	public const double RoverLossPenaltyFraction = 0.10;
 	/// <summary>Reserve below which the astronaut must head back to the lander.</summary>
 	public const double ReturnReserveFraction = 0.25;
 
@@ -114,6 +115,16 @@ public sealed class OxygenSupply
 		IsDepleted = false;
 		EmergencyReturnRequired = false;
 		Changed?.Invoke();
+	}
+
+	/// <summary>Loss of Opportunity costs ten percent of the remaining reserve, without stranding the astronaut.</summary>
+	public double ApplyRoverLossPenalty()
+	{
+		if (CapacitySeconds <= 0 || RemainingSeconds <= 0 || IsDepleted) return 0;
+		double penalty = RemainingSeconds * RoverLossPenaltyFraction;
+		RemainingSeconds = Math.Max(double.Epsilon, RemainingSeconds - penalty);
+		Changed?.Invoke();
+		return penalty;
 	}
 
 	public void Advance(double delta)

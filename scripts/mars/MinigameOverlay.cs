@@ -3,6 +3,7 @@ namespace ares.scripts.mars;
 using Godot;
 using System;
 using ares.scripts.dialogue;
+using ares.scripts.mission;
 using ares.scripts.training;
 using Ares.Systems.Controllers;
 using Ares.Systems.Audio;
@@ -37,6 +38,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 	private bool _solved;
 	private bool _exiting;
 	private int _session;
+	private MissionState _mission;
 	public bool CanSkipWithDevCode => IsInsideTree() && !_closed;
 
 	/// <summary>Called after a successful run. Returning a plan restarts the board instead of completing.</summary>
@@ -74,6 +76,8 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 		_titleText = title;
 		_hintText = hint;
 		_completedTitle = completedTitle;
+		_mission = MissionState.Instance;
+		if (_mission != null) _mission.MissionEnded += OnMissionEnded;
 		_player?.SetPhysicsProcess(false);
 
 		SpawnBoard();
@@ -196,6 +200,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 		_game.SetProcess(active);
 		_game.SetPhysicsProcess(active);
 		_game.SetProcessInput(active);
+		_game.SetProcessUnhandledInput(active);
 	}
 
 	private void BeginControllerContext()
@@ -262,7 +267,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 
 	private async void OnCompleted()
 	{
-		if (_closed || _exiting || _solved)
+		if (_closed || _exiting || _solved || _mission?.IsRunOver == true)
 			return;
 
 		_solved = true;
@@ -277,7 +282,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 			ShowRetryDialogue(retry.Dialogue);
 			await ToSignal(GetTree().CreateTimer(Mathf.Max(0.05f, RetryMessageSeconds)),
 				SceneTreeTimer.SignalName.Timeout);
-			if (retrySession == _session && !_closed && !_exiting)
+			if (retrySession == _session && !_closed && !_exiting && _mission?.IsRunOver != true)
 				RestartGame();
 			return;
 		}
@@ -287,14 +292,14 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 
 		int session = _session;
 		await ToSignal(GetTree().CreateTimer(0.9f), SceneTreeTimer.SignalName.Timeout);
-		if (session == _session && !_closed && !_exiting)
+		if (session == _session && !_closed && !_exiting && _mission?.IsRunOver != true)
 			Close(true);
 	}
 
 	/// <summary>Replaces the finished board with a fresh randomized one.</summary>
 	private void RestartGame()
 	{
-		if (_closed || _exiting)
+		if (_closed || _exiting || _mission?.IsRunOver == true)
 			return;
 
 		HideRetryDialogue(true);
@@ -373,21 +378,28 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 	{
 		if (_closed)
 			return;
+		solved &= _mission?.IsRunOver != true;
 
 		_closed = true;
 		if (!solved && (_game is WireMinigame or FuseBoxMinigame)) AudioManager.PlaySfx(SoundIds.PanelClose);
 		_session++;
 		GetViewport().SizeChanged -= FitLayout;
 		ControllerCommandRouter.Unregister(this);
+		if (_mission != null) _mission.MissionEnded -= OnMissionEnded;
 		HideRetryDialogue(false);
 		DetachGame();
 
-		if (IsInstanceValid(_player))
+		if (_mission?.IsRunOver != true && IsInstanceValid(_player))
 			_player.SetPhysicsProcess(true);
 		_player = null;
 
 		Finished?.Invoke(solved);
 		QueueFree();
+	}
+
+	private void OnMissionEnded(MissionEnding _)
+	{
+		if (!_closed) Close(false);
 	}
 
 	public bool SkipWithDevCode()
@@ -445,10 +457,11 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 		// Scene left while the overlay was open: do not leave the player frozen.
 		if (!_closed)
 		{
-			if (IsInstanceValid(_player))
+			if (_mission?.IsRunOver != true && IsInstanceValid(_player))
 				_player.SetPhysicsProcess(true);
 			if (IsInstanceValid(_game))
 				ControllerContext.End(_game);
 		}
+		if (_mission != null) _mission.MissionEnded -= OnMissionEnded;
 	}
 }

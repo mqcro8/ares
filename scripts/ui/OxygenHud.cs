@@ -243,6 +243,9 @@ public partial class OxygenHud : CanvasLayer, ares.scripts.systems.IDevSceneSkip
 		if (_failed) return;
 		_failed = true;
 		_mission.FailMissionImmediately();
+		Layer = 100;
+		if (GetTree().GetFirstNodeInGroup("player") is Node player)
+			player.SetPhysicsProcess(false);
 		AudioManager.StopMusic(0.6);
 		AudioManager.PlaySfx(SoundIds.SystemMalfunction);
 		_criticalFlash.Color = new Color(1, 0, 0, 0);

@@ -17,8 +17,15 @@ public partial class SceneManager : Node
     // Go into a new scene, remembering where to come back to.
     public void Enter(string targetScene, Vector2 returnPosition)
     {
-        _returnStack.Push((GetTree().CurrentScene.SceneFilePath, returnPosition));
-        ChangeScene(targetScene, null);
+        var currentScene = GetTree().CurrentScene;
+        if (currentScene == null)
+        {
+            GD.PushWarning("SceneManager: cannot enter a scene when there is no current scene.");
+            return;
+        }
+
+        if (ChangeScene(targetScene, null) == Error.Ok)
+            _returnStack.Push((currentScene.SceneFilePath, returnPosition));
     }
 
     // Go back to the previous scene and place the player at the saved position.
@@ -30,25 +37,37 @@ public partial class SceneManager : Node
             return;
         }
 
-        var (scene, position) = _returnStack.Pop();
-        ChangeScene(scene, position);
+        var (scene, position) = _returnStack.Peek();
+        if (ChangeScene(scene, position) == Error.Ok)
+            _returnStack.Pop();
     }
 
-    private async void ChangeScene(string path, Vector2? spawnPosition)
+    private Error ChangeScene(string path, Vector2? spawnPosition)
     {
-        GetTree().ChangeSceneToFile(path);
+        Error error = GetTree().ChangeSceneToFile(path);
+        if (error != Error.Ok)
+        {
+            GD.PushWarning($"SceneManager: unable to load {path}: {error}");
+            return error;
+        }
 
-        if (spawnPosition is null)
-            return;
+        if (spawnPosition.HasValue)
+            _ = PlacePlayer(path, spawnPosition.Value);
+        return Error.Ok;
+    }
 
+    private async System.Threading.Tasks.Task PlacePlayer(string scenePath, Vector2 spawnPosition)
+    {
         // Wait for the new scene to be loaded and in the tree.
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        if (GetTree().CurrentScene?.SceneFilePath != scenePath)
+            return;
 
         foreach (Node node in GetTree().GetNodesInGroup("player"))
         {
             if (node is Node2D player)
-                player.GlobalPosition = spawnPosition.Value;
+                player.GlobalPosition = spawnPosition;
         }
     }
 }

@@ -49,6 +49,20 @@ public partial class GatewayDiscoveryTest : Node
 				"Skipping the reveal records acknowledgement without undoing repairs");
 			resumed.QueueFree();
 			await Frames();
+
+			mission.BeginLaunchSequence();
+			mission.MarkSignalTableRepaired();
+			var duringReveal = new GatewayDiscovery();
+			AddChild(duringReveal);
+			await Frames();
+			Check(duringReveal.IsOpen && mission.GatewayDiscoveryPending,
+				"A live mission opens its pending discovery reveal");
+			mission.FailMissionImmediately();
+			Check(!duringReveal.IsOpen && !mission.GatewayDiscoveryPending &&
+				!mission.AcknowledgeGatewayDiscovery(),
+				"Mission death aborts an active reveal and permanently blocks acknowledgement");
+			duringReveal.QueueFree();
+			await Frames();
 			GD.Print($"GATEWAY DISCOVERY PASS ({_assertions} assertions)");
 			GetTree().Quit();
 		}

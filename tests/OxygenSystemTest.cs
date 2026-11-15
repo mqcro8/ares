@@ -103,6 +103,19 @@ public partial class OxygenSystemTest : Node
 		Check(rescue.IsEmergencyReserve && rescue.TankCount == 0 && rescue.CapacitySeconds == 120 &&
 			!rescue.IsDepleted,
 			"Rover rescue oxygen lets a no-tank run continue without changing the selected loadout");
+		double lossPenalty = rescue.ApplyRoverLossPenalty();
+		Check(Math.Abs(lossPenalty - 12) < .001 && Math.Abs(rescue.RemainingSeconds - 108) < .001 &&
+			!rescue.IsDepleted && rescue.IsEmergencyReserve,
+			"Rover loss costs ten percent of rescue oxygen without consuming the rescue or depleting it");
+
+		var lowReserve = new OxygenSupply(secondsPerTank: 100);
+		lowReserve.TrySetTankCount(1, out _);
+		lowReserve.BeginMarsSurface();
+		lowReserve.Advance(99);
+		double lowPenalty = lowReserve.ApplyRoverLossPenalty();
+		Check(lowReserve.RemainingSeconds > 0 && lowReserve.RemainingSeconds < 1 &&
+			!lowReserve.IsDepleted && Math.Abs(lowPenalty - 0.1) < .001,
+			"Rover loss applies its penalty to a small reserve without depleting it");
 	}
 
 	private void TestCanisterCollection()
@@ -204,18 +217,27 @@ public partial class OxygenSystemTest : Node
 			Shape = new CircleShape2D { Radius = 8 },
 		});
 		var generator = GD.Load<PackedScene>("res://scenes/mars/Generator.tscn").Instantiate<Generator>();
+		var electrical = GD.Load<PackedScene>("res://scenes/mars/ElectricalBox.tscn").Instantiate<ElectricalBox>();
+		electrical.Position = new Vector2(32, 0);
 		AddChild(generator);
+		AddChild(electrical);
 		AddChild(player);
-		player.GlobalPosition = generator.GlobalPosition + new Vector2(0, -32);
+		player.GlobalPosition = generator.GlobalPosition;
 		await Frames(6);
-		var prompt = generator.GetNode<PanelContainer>("InteractionPromptLayer/InteractionPrompt");
-		Check(prompt.Visible &&
+		var promptLayer = GetTree().Root.FindChild("InteractionPromptLayer", true, false) as CanvasLayer;
+		var prompt = promptLayer?.GetNode<PanelContainer>("InteractionPrompt");
+		Check(prompt?.Visible == true &&
 			prompt.GetNode<Label>("Margin/Row/Keycap/Key").Text == "E" &&
-			prompt.GetNode<Label>("Margin/Row/Message").Text == "RESTORE GENERATOR",
-			"Mars repair device shows a contextual E prompt near the machine");
+			Interactable.ActivePromptText == "RESTORE GENERATOR",
+			"Only the nearest Mars repair device shows the shared contextual E prompt");
 		var rect = prompt.GetGlobalRect();
 		Check(GetViewport().GetVisibleRect().Encloses(rect), "World interaction prompt stays inside the viewport");
+		player.GlobalPosition = electrical.GlobalPosition;
+		await Frames(6);
+		Check(Interactable.ActivePromptText == "REPAIR CIRCUIT" && prompt.Visible,
+			"The single shared prompt follows the nearest repair target when the player moves");
 		generator.QueueFree();
+		electrical.QueueFree();
 		player.QueueFree();
 		await Frames();
 	}
@@ -263,6 +285,8 @@ public partial class OxygenSystemTest : Node
 		mission.Oxygen.Advance(mission.Oxygen.RemainingSeconds + 1);
 		Check(hud.IsEmergencyVisible && mission.Oxygen.IsDepleted,
 			"Running out of oxygen shows the emergency return screen");
+		Check(hud.Layer > 50,
+			"Oxygen failure overlay renders above and covers active repair minigames");
 		Check(mission.Ending == MissionEnding.Bad && mission.ShowScoreImmediately,
 			"Oxygen depletion records a failed run for score results");
 		Check(mission.Ending == MissionEnding.Bad && mission.ShowScoreImmediately,

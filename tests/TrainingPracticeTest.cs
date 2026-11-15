@@ -473,7 +473,7 @@ public partial class TrainingPracticeTest : Node
         await WalkTo(Gym.LabReturnMarker.GlobalPosition); await Frames();
         Cross(1); Check(Gym.Course.ClearedCount == 2, "Reverse direction survives travel");
         Cross(0); await Frames(); Check(Gym.CompletionShown && Gym.Course.Congratulated, "Final crossing congratulates once");
-        Check(Gym.GetNode<Label>(Gym.TextPath).Text.Contains("All training is complete"),
+        Check(Gym.GetNode<Label>(Gym.TextPath).Text.Contains("Mandatory training is complete"),
             "Mission Control completion notice waits for the final requirement");
         await Capture("gym-all-training-complete");
         Gym.GetNode<Button>(Gym.ContinuePath).EmitSignal(BaseButton.SignalName.Pressed); await Frames(8);

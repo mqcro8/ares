@@ -37,6 +37,7 @@ public partial class MarsRepairRetryTest : Node
 			TestMarsAudioWiring();
 			await TestNoToolRetryForEachStation();
 			await TestToolCompletesInOneRun();
+			await TestOxygenFailureCancelsSignalDiscovery();
 			await TestCancelKeepsPendingRetry();
 			GD.Print($"MARS REPAIR RETRY PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -335,6 +336,44 @@ public partial class MarsRepairRetryTest : Node
 
 		secondOwner.QueueFree();
 		await Frames();
+	}
+
+	private async Task TestOxygenFailureCancelsSignalDiscovery()
+	{
+		var mission = MissionState.Instance;
+		mission.BeginLaunchSequence();
+		mission.ResetEquipment();
+		mission.GetOrCreatePlayerInventory(7, out _).AddItem(
+			GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.FrequencyAnalyzer}.tres"));
+		var owner = new Node2D { Name = "Owner_DeathDuringSignalRepair" };
+		AddChild(owner);
+		var player = new Node2D { Name = "Player" };
+		owner.AddChild(player);
+		var table = GD.Load<PackedScene>("res://scenes/mars/SignalTable.tscn").Instantiate<SignalTable>();
+		owner.AddChild(table);
+		var discovery = new GatewayDiscovery { Name = "GatewayDiscovery" };
+		owner.AddChild(discovery);
+		await Frames();
+
+		table.BeginRepair(player);
+		var overlay = table.GetNodeOrNull<MinigameOverlay>("MinigameOverlay");
+		Check(overlay != null, "Signal repair opens before oxygen failure");
+		if (overlay != null)
+		{
+			Solve(overlay.CurrentGame);
+			Check(!mission.SignalTableRepaired, "Signal result is still in its completion delay");
+			mission.FailMissionImmediately();
+			await Wait(1.1);
+			Check(mission.Ending == MissionEnding.Bad && !mission.SignalTableRepaired &&
+				!mission.GatewayDiscoveryPending && !discovery.IsOpen,
+				"Mission death during the completion delay cancels repair and microbial discovery");
+			mission.MarkSignalTableRepaired();
+			Check(!mission.SignalTableRepaired && !mission.GatewayDiscoveryPending,
+				"A failed mission cannot mark Gateway communications repaired afterward");
+		}
+		owner.QueueFree();
+		await Frames();
+		mission.BeginLaunchSequence();
 	}
 
 	private static ControllerCommand Cancel() =>

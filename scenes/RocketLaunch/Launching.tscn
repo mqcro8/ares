@@ -114,6 +114,18 @@ corner_radius_bottom_left = 4
 [node name="RocketLaunch" type="Node2D" unique_id=1721182763]
 script = ExtResource("1_umb18")
 
+[node name="Backdrop" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="Fill" type="ColorRect" parent="Backdrop"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.015, 0.025, 0.07, 1)
+
 [node name="Background" type="Sprite2D" parent="." unique_id=844633509]
 position = Vector2(575.00006, -537)
 scale = Vector2(2.0482144, 1.9608052)
@@ -245,13 +257,6 @@ expand_mode = 1
 [node name="Actions" type="HBoxContainer" parent="IntroUI/Panel/Margin/VBox" unique_id=2122803649]
 layout_mode = 2
 theme_override_constants/separation = 6
-
-[node name="Pause" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions" unique_id=2119322928]
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Pause"
 
 [node name="Back" type="Button" parent="IntroUI/Panel/Margin/VBox/Actions" unique_id=1931077119]
 custom_minimum_size = Vector2(0, 26)

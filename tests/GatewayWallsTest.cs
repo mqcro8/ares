@@ -40,7 +40,19 @@ public partial class GatewayWallsTest : Node
 
         var walls = gateway.GetNode<TileMapLayer>("Tilemaps_layers/Walls");
         var solid = new HashSet<Vector2I>(walls.GetUsedCells());
-            Check(solid.Count == 192, "All scene-authored wall cells are painted");
+            Check(solid.Count == 188, "All scene-authored wall cells are painted");
+
+        // The map's static perimeter walls are not part of the TileMapLayer.
+        for (int x = 0; x <= 40; x++)
+        {
+            solid.Add(new Vector2I(x, 3));
+            solid.Add(new Vector2I(x, 28));
+        }
+        for (int y = 3; y <= 28; y++)
+        {
+            solid.Add(new Vector2I(0, y));
+            solid.Add(new Vector2I(40, y));
+        }
 
         void Crossing(Vector2 from, Vector2 to, bool blocked, string message)
         {
@@ -49,7 +61,7 @@ public partial class GatewayWallsTest : Node
         }
 
         Crossing(new(120, 176), new(200, 176), true, "Start room wall blocks passage above the corridor");
-        Crossing(new(120, 232), new(200, 232), false, "Start room opens into the corridor");
+        Crossing(new(120, 256), new(200, 256), false, "Start room opens into the corridor");
         Crossing(new(392, 128), new(408, 128), true, "Top rooms have a solid divider");
         Crossing(new(392, 368), new(408, 368), true, "Bottom rooms have a solid divider");
         Crossing(new(48, 232), new(-16, 232), true, "Outer boundary blocks escape");
@@ -96,7 +108,7 @@ public partial class GatewayWallsTest : Node
             foreach (var step in new[] { Vector2I.Left, Vector2I.Right, Vector2I.Up, Vector2I.Down })
             {
                 var next = cell + step;
-                if (next.X < 0 || next.X >= 94 || next.Y < 0 || next.Y >= 53 ||
+                if (next.X < 0 || next.X >= 41 || next.Y < 3 || next.Y >= 29 ||
                     solid.Contains(next) || !visited.Add(next)) continue;
                 queue.Enqueue(next);
             }

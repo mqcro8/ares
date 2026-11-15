@@ -165,10 +165,10 @@ public partial class GatewayMissionTest : Node
 
         var rooms = new[]
         {
-            (new Vector2(980, 300), PracticeSession.Exercise.Wires),
-            (new Vector2(1330, 300), PracticeSession.Exercise.Frequency),
-            (new Vector2(980, 550), PracticeSession.Exercise.Fuses),
-            (new Vector2(1330, 550), PracticeSession.Exercise.HullRepair)
+            (new Vector2(280, 128), PracticeSession.Exercise.Wires),
+            (new Vector2(520, 368), PracticeSession.Exercise.Frequency),
+            (new Vector2(280, 368), PracticeSession.Exercise.Fuses),
+            (new Vector2(520, 128), PracticeSession.Exercise.HullRepair)
         };
         foreach (var (position, exercise) in rooms)
         {

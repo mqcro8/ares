@@ -47,6 +47,9 @@ public partial class RocketLaunchTest : Node
 		launch = GD.Load<PackedScene>("res://scenes/RocketLaunch/Launching.tscn").Instantiate<RocketLaunch>();
 		now = 0; holding = false; launch.Clock = () => now;
 		launch.SceneLoader = _ => Error.Ok;
+		Check(launch.GetNodeOrNull<ColorRect>("Backdrop/Fill") != null &&
+			launch.GetNode<Background>("Background").Texture != null,
+			"Launch scene retains its artwork over an explicit non-black fallback background");
 		AddChild(launch); launch.SetProcess(false); await Frames();
 	}
 
@@ -87,7 +90,7 @@ public partial class RocketLaunchTest : Node
 			await Frames();
 			if (launch.Paused)
 			{
-				launch.GetNode<Button>(Ui + "Actions/Pause").EmitSignal(BaseButton.SignalName.Pressed);
+				SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 			}
 			launch._Process(0);
 			Control overlay = launch.State == RocketLaunch.Phase.Ready
@@ -95,7 +98,7 @@ public partial class RocketLaunchTest : Node
 			Check(GetViewport().GetVisibleRect().Encloses(overlay.GetGlobalRect()), "Overlay fits " + size);
 			if (launch.State == RocketLaunch.Phase.Active)
 			{
-				Check(overlay.Size.Y < size.Y * .32f, "Active slider HUD with progress and pause stays compact at " + size);
+				Check(overlay.Size.Y < size.Y * .32f, "Active slider HUD with progress stays compact at " + size);
 				var targetBand = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
 				Check(targetBand.AnchorLeft >= 0 && targetBand.AnchorRight <= 1 &&
 					targetBand.AnchorLeft < targetBand.AnchorRight,
@@ -214,9 +217,9 @@ public partial class RocketLaunchTest : Node
 			"Slider target is centered");
 
 		Start();
-		var pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
-		Check(launch.GetNode<Control>(Ui + "Actions").Visible && pauseButton.Visible && pauseButton.Text == "Pause",
-			"Ignition exposes a working pause button");
+		Check(launch.GetNode<Control>(Ui + "Actions").Visible &&
+			launch.GetNodeOrNull<Button>(Ui + "Actions/Pause") == null,
+			"Ignition has no visible pause button");
 		await Capture("ignition");
 
 		if (Visual)
@@ -248,7 +251,7 @@ public partial class RocketLaunchTest : Node
 		Advance(2);
 		Check(launch.Paused && launch.Ignition.Elapsed == ignitionElapsed,
 			"Focus pause freezes the ignition timer");
-		pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
+		SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 		Check(!launch.Paused, "Ignition can resume after focus pause");
 		SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 		double beforeGlobalPause = launch.Ignition.Elapsed;
@@ -284,14 +287,15 @@ public partial class RocketLaunchTest : Node
 		ignitionProgress = launch.GetNode<ProgressBar>("HUD/ProgressBar");
 		centeredProgress = launch.GetNode<ProgressBar>(Ui + "CenteredProgress");
 		band = launch.GetNode<TextureRect>(Ui + "Gauge/Band");
-		pauseButton = launch.GetNode<Button>(Ui + "Actions/Pause");
+		Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Pause") == null,
+			"Simulator scene does not recreate the pause button");
 		Start();
 		CompleteIgnition();
 		AudioManager.PlayMusic(SoundIds.MenuMusic, 0, true);
 		Check(ignitionProgress.Value == 25 && centeredProgress.Value == 0,
 			"Ignition completes before centered hold progress begins");
-		Check(pauseButton.Visible && pauseButton.Text == "Pause",
-			"Active hold phase keeps the pause button available");
+		Check(launch.GetNodeOrNull<Button>(Ui + "Actions/Pause") == null,
+			"Active hold phase keeps the HUD free of a pause button");
 		await Capture("active");
 		double initialBandLeft = band.AnchorLeft;
 		Advance(.1);
@@ -316,17 +320,17 @@ public partial class RocketLaunchTest : Node
 			"Closing pause removes music through the global pause manager");
 
 		AudioManager.PlayMusic(SoundIds.MenuMusic, 0, true);
-		pauseButton.EmitSignal(BaseButton.SignalName.Pressed);
+		SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 		Check(GetTree().Paused && ((PauseManager)GetNode("/root/PauseManager")).IsOpen &&
 			!AudioManager.IsMusicPaused && !AudioManager.IsActiveMusicStreamPaused &&
 			AudioManager.Instance?.CurrentMusicId == SoundIds.MenuMusic,
-			"Pause button opens the real pause menu and keeps music playing");
+			"Escape opens the real pause menu and keeps music playing");
 		double menuPausedHeat = launch.Model.Heat;
 		Check(launch.Model.Heat == menuPausedHeat && launch.State == RocketLaunch.Phase.Active,
-			"Pause button freezes launch state until resumed");
+			"Escape freezes launch state until resumed");
 		SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 		Check(!GetTree().Paused && !AudioManager.IsMusicPaused && AudioManager.Instance?.CurrentMusicId == null,
-			"Closing button-opened pause removes music");
+			"Closing Escape-opened pause removes music");
 
 		SendKey(Key.Space, true); Advance(.2);
 		double raisedHeat = launch.Model.Heat;
@@ -354,7 +358,7 @@ public partial class RocketLaunchTest : Node
 			launch.Model.CenteredTime == pausedProgress && launch.Model.TargetCenter == pausedTarget,
 			"Pause freezes marker, target, and progress");
 		Check(launch.GetNode<AnimatedSprite2D>("Rocket/Fire").SpeedScale == 0, "Pause freezes thrust animation");
-		launch.GetNode<Button>(Ui + "Actions/Pause").EmitSignal(BaseButton.SignalName.Pressed);
+		SendKey(Key.Escape, true); SendKey(Key.Escape, false);
 		Check(!launch.Paused, "Resume clears pause");
 		SendMouse(false); Advance(.1);
 		double releasedHeat = launch.Model.Heat;

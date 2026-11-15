@@ -3,21 +3,24 @@ namespace ares.scripts.mars;
 using System.Collections.Generic;
 using Godot;
 using Ares.Systems.Audio;
+using ares.scripts.mission;
 
 /// <summary>World interaction with one nearest, camera-aware E prompt at a time.</summary>
 public abstract partial class Interactable : Area2D
 {
 	private static readonly HashSet<Interactable> Nearby = new();
 	private static Interactable _activePrompt;
+	private static CanvasLayer _promptLayer;
+	private static PanelContainer _prompt;
+	private static Label _message;
 
 	[Export] public string PromptText { get; set; } = "INTERACT";
 	[Export] public bool Enabled { get; set; } = true;
 
 	protected Node2D NearbyPlayer { get; private set; }
 	protected bool PlayerInRange { get; private set; }
-	private CanvasLayer _promptLayer;
-	private PanelContainer _prompt;
-	private Label _message;
+	public static string ActivePromptText => GodotObject.IsInstanceValid(_prompt) && _prompt.Visible &&
+		GodotObject.IsInstanceValid(_message) ? _message.Text : "";
 
 	public override void _Ready()
 	{
@@ -28,8 +31,11 @@ public abstract partial class Interactable : Area2D
 
 	private void CreatePrompt()
 	{
+		if (GodotObject.IsInstanceValid(_promptLayer) && _promptLayer.IsInsideTree()) return;
+
+		Node parent = GetTree().CurrentScene ?? (Node)GetTree().Root;
 		_promptLayer = new CanvasLayer { Name = "InteractionPromptLayer", Layer = 9 };
-		AddChild(_promptLayer);
+		parent.AddChild(_promptLayer);
 		_prompt = new PanelContainer
 		{
 			Name = "InteractionPrompt",
@@ -121,7 +127,7 @@ public abstract partial class Interactable : Area2D
 	private static void RefreshActivePrompt()
 	{
 		Nearby.RemoveWhere(item => !GodotObject.IsInstanceValid(item) || !item.IsInsideTree() ||
-			!item.PlayerInRange || !item.Enabled);
+			!item.PlayerInRange || !item.Enabled || MissionState.Instance?.IsRunOver == true);
 		Interactable selected = null;
 		float nearest = float.MaxValue;
 		foreach (var item in Nearby)
@@ -133,9 +139,13 @@ public abstract partial class Interactable : Area2D
 			selected = item;
 		}
 		_activePrompt = selected;
-		foreach (var item in Nearby)
-			if (GodotObject.IsInstanceValid(item._prompt)) item._prompt.Visible = item == selected;
-		selected?.PositionPrompt();
+		if (!GodotObject.IsInstanceValid(_prompt))
+		{
+			if (selected != null) selected.CreatePrompt();
+			if (!GodotObject.IsInstanceValid(_prompt)) return;
+		}
+		_prompt.Visible = selected != null;
+		if (selected != null) selected.PositionPrompt();
 	}
 
 	private void PositionPrompt()
@@ -156,7 +166,7 @@ public abstract partial class Interactable : Area2D
 
 	protected void ShowPrompt()
 	{
-		if (!PlayerInRange || !Enabled) return;
+		if (!PlayerInRange || !Enabled || MissionState.Instance?.IsRunOver == true) return;
 		Nearby.Add(this);
 		RefreshActivePrompt();
 	}
@@ -165,12 +175,12 @@ public abstract partial class Interactable : Area2D
 	{
 		Nearby.Remove(this);
 		if (_activePrompt == this) RefreshActivePrompt();
-		else if (GodotObject.IsInstanceValid(_prompt)) _prompt.Hide();
+		else if (_activePrompt == null && GodotObject.IsInstanceValid(_prompt)) _prompt.Hide();
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (_activePrompt != this || !PlayerInRange || !Enabled) return;
+		if (_activePrompt != this || !PlayerInRange || !Enabled || MissionState.Instance?.IsRunOver == true) return;
 		if (@event is not InputEventKey { Pressed: true, Echo: false } || !@event.IsActionPressed("interact")) return;
 		GetViewport().SetInputAsHandled();
 		AudioManager.PlaySfx(SoundIds.Enter);

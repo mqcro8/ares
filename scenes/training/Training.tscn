@@ -1772,6 +1772,18 @@ LabDoorZone = NodePath("LabDoor/FrontZone")
 
 [node name="MissionMonitor" parent="." unique_id=343634997 instance=ExtResource("mission_monitor")]
 
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="Fill" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.301961, 0.301961, 0.301961, 1)
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1259519819]
 process_physics_priority = 10
 position = Vector2(400, 300)

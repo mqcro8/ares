@@ -100,13 +100,14 @@ public partial class MissionState : Node
 	[Signal] public delegate void SignalTableRepairedChangedEventHandler(bool repaired);
 	[Signal] public delegate void DoorAccessChangedEventHandler(int index, bool on);
 	[Signal] public delegate void AllDoorAccessCompletedEventHandler();
+	public event Action<MissionEnding> MissionEnded;
 
 	public bool IsDoorAccessOn(int index)
 		=> index >= 0 && index < DoorAccessCount && _doorAccess[index];
 
 	public void SetDoorAccess(int index, bool on)
 	{
-		if (index < 0 || index >= DoorAccessCount || _doorAccess[index] == on)
+		if (IsRunOver || index < 0 || index >= DoorAccessCount || _doorAccess[index] == on)
 			return;
 
 		_doorAccess[index] = on;
@@ -117,7 +118,7 @@ public partial class MissionState : Node
 
 	public void MarkGeneratorRepaired()
 	{
-		if (GeneratorRepaired)
+		if (IsRunOver || GeneratorRepaired)
 			return;
 
 		GeneratorRepaired = true;
@@ -126,7 +127,7 @@ public partial class MissionState : Node
 
 	public void MarkWireBoxRepaired()
 	{
-		if (WireBoxRepaired)
+		if (IsRunOver || WireBoxRepaired)
 			return;
 
 		WireBoxRepaired = true;
@@ -135,7 +136,7 @@ public partial class MissionState : Node
 
 	public void MarkSignalTableRepaired()
 	{
-		if (SignalTableRepaired)
+		if (IsRunOver || SignalTableRepaired)
 			return;
 
 		SignalTableRepaired = true;
@@ -146,7 +147,7 @@ public partial class MissionState : Node
 
 	public bool AcknowledgeGatewayDiscovery()
 	{
-		if (!GatewayDiscoveryPending) return false;
+		if (IsRunOver || !GatewayDiscoveryPending) return false;
 		GatewayDiscoveryPending = false;
 		GatewayDiscoveryAcknowledged = true;
 		return true;
@@ -409,7 +410,13 @@ public partial class MissionState : Node
 		if (!succeeded && (Oxygen.CapacitySeconds <= 0 || Oxygen.IsDepleted))
 		{
 			Oxygen.ProvideEmergencyReserve(ToolEffects.OxygenBaseSecondsPerTank);
-			SetOxygenMessage("ROVER LOST — emergency oxygen reserve deployed.");
+		}
+		if (!succeeded)
+		{
+			Oxygen.ApplyRoverLossPenalty();
+			SetOxygenMessage(Oxygen.IsEmergencyReserve
+				? "OPPORTUNITY LOST — rescue reserve spent on the return to Gateway."
+				: "OPPORTUNITY LOST — 10% oxygen spent on the return to Gateway.");
 		}
 		return true;
 	}
@@ -425,12 +432,15 @@ public partial class MissionState : Node
 		if (GatewayDiscoveryPending) return false;
 		if (!Outcome.TryComplete(LaunchSequence)) return false;
 		Scoring.RecordRun(this);
+		MissionEnded?.Invoke(MissionEnding.Good);
 		return true;
 	}
 	public bool TryFailMission()
 	{
 		if (!Outcome.TryFail(LaunchSequence)) return false;
+		GatewayDiscoveryPending = false;
 		Scoring.RecordRun(this);
+		MissionEnded?.Invoke(MissionEnding.Bad);
 		return true;
 	}
 	public bool FailMissionImmediately()

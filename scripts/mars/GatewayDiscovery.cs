@@ -43,7 +43,8 @@ public partial class GatewayDiscovery : CanvasLayer, ares.scripts.systems.IDevSc
 			return;
 		}
 		_mission.SignalTableRepairedChanged += OnSignalTableRepaired;
-		if (_mission.GatewayDiscoveryPending) ShowPendingDiscovery();
+		_mission.MissionEnded += OnMissionEnded;
+		if (_mission.GatewayDiscoveryPending && !_mission.IsRunOver) ShowPendingDiscovery();
 	}
 
 	private void BuildUi()
@@ -105,12 +106,14 @@ public partial class GatewayDiscovery : CanvasLayer, ares.scripts.systems.IDevSc
 
 	private void OnSignalTableRepaired(bool repaired)
 	{
-		if (repaired && _mission?.GatewayDiscoveryPending == true) ShowPendingDiscovery();
+		if (repaired && _mission?.GatewayDiscoveryPending == true && _mission.IsRunOver == false)
+			ShowPendingDiscovery();
 	}
 
 	public void ShowPendingDiscovery()
 	{
-		if (_open || _mission?.GatewayDiscoveryPending != true || _sequence?.Lines.Count == 0) return;
+		if (_open || _mission?.GatewayDiscoveryPending != true || _mission.IsRunOver ||
+			_sequence?.Lines.Count == 0) return;
 		_player = GetTree().GetFirstNodeInGroup("player") as Player;
 		_staminaBefore = _mission.Stamina;
 		_staminaRestBefore = _mission.StaminaRestSeconds;
@@ -149,6 +152,11 @@ public partial class GatewayDiscovery : CanvasLayer, ares.scripts.systems.IDevSc
 	private void FinishReveal()
 	{
 		if (!_open) return;
+		if (_mission?.IsRunOver == true)
+		{
+			AbortAfterMissionFailure();
+			return;
+		}
 		_open = false;
 		_mission?.AcknowledgeGatewayDiscovery();
 		_dialogue.Clear();
@@ -156,6 +164,21 @@ public partial class GatewayDiscovery : CanvasLayer, ares.scripts.systems.IDevSc
 		_playerLock.Release();
 		RestoreStamina();
 		GetParent()?.GetNodeOrNull<ObjectiveDialogue>("ObjectiveDialogue")?.ResumeAfterGatewayDiscovery();
+	}
+
+	private void OnMissionEnded(MissionEnding _)
+	{
+		if (_mission?.IsRunOver == true) AbortAfterMissionFailure();
+	}
+
+	private void AbortAfterMissionFailure()
+	{
+		if (!_open) return;
+		_open = false;
+		_dialogue.Clear();
+		_overlay.Hide();
+		_playerLock.Release();
+		RestoreStamina();
 	}
 
 	public bool SkipWithDevCode()
@@ -177,6 +200,7 @@ public partial class GatewayDiscovery : CanvasLayer, ares.scripts.systems.IDevSc
 	public override void _ExitTree()
 	{
 		if (_mission != null) _mission.SignalTableRepairedChanged -= OnSignalTableRepaired;
+		if (_mission != null) _mission.MissionEnded -= OnMissionEnded;
 		_playerLock?.Release();
 		RestoreStamina();
 	}

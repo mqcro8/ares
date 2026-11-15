@@ -27,6 +27,11 @@ public static class MarsRepairFlow
 		Action onClosed)
 	{
 		var mission = MissionState.Instance;
+		if (mission?.IsRunOver == true)
+		{
+			onClosed?.Invoke();
+			return null;
+		}
 		var overlay = MinigameOverlay.Open(owner, player, minigameScene, title, hint, completedTitle);
 		if (overlay == null)
 		{
@@ -51,6 +56,11 @@ public static class MarsRepairFlow
 
 		overlay.Finished += solved =>
 		{
+			if (mission?.IsRunOver == true)
+			{
+				onClosed?.Invoke();
+				return;
+			}
 			if (solved)
 				onSolved?.Invoke();
 			else

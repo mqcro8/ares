@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "Opportunity is lost. I'm down at Gateway. A rescue oxygen reserve is active; the base still needs repairs."
+Text = "Opportunity is lost. The rescue reserve got me to Gateway, but the return cost another 10%. I need the base systems online before I run out."
 
 [resource]
 script = ExtResource("1_sequence")

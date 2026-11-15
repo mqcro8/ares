@@ -59,7 +59,7 @@ public partial class IntroSequenceTest : Node
 
         var completion = GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
         Check(completion != null && completion.Lines.Count == 1, "Training completion has one line");
-        Check(completion.Lines[0].Text.Contains("All training is complete"), "Completion keeps the test substring");
+        Check(completion.Lines[0].Text.Contains("Mandatory training is complete"), "Completion announces training authorization");
 
         var sequence = await OpenIntro();
         Check(sequence.GetNodeOrNull<DialogueView>("Dialogue") != null, "Intro exposes its dialogue view");

@@ -47,9 +47,6 @@ public partial class Hotbar : HBoxContainer
 	{
 		if (Inventory == null) return;
 
-		if (Pressed(@event, "hotbar_next")) { Cycle(1); return; }
-		if (Pressed(@event, "hotbar_prev")) { Cycle(-1); return; }
-
 		for (int i = 0; i < Inventory.SlotCount; i++)
 		{
 			if (Pressed(@event, $"hotbar_{i + 1}"))
@@ -67,11 +64,6 @@ public partial class Hotbar : HBoxContainer
 		SelectedIndex = index;
 		Refresh();
 		EmitSignal(SignalName.SelectionChanged, SelectedIndex);
-	}
-
-	public void Cycle(int direction)
-	{
-		if (Inventory != null) Select(Mathf.PosMod(SelectedIndex + direction, Inventory.SlotCount));
 	}
 
 	private void Refresh()
