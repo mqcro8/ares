@@ -13,7 +13,7 @@ public static class GatewayMission
     private static bool _started, _finished;
 
     public const string Start = "[MISSION CONTROL — INCOMING TRANSMISSION]\nWARNING: Multiple spacecraft systems have reported critical failures.\nElectrical circuits, power distribution, hull integrity, and communications require immediate attention.\nMISSION OBJECTIVE: REPAIR ALL CRITICAL SYSTEMS.";
-    public const string Complete = "MISSION STATUS: SUCCESS\nAll critical spacecraft systems restored.\nExcellent work, crew member. The spacecraft is operational and ready to continue its mission.";
+    public const string Complete = "MISSION ACCOMPLISHED.\nExcellent work, crew member. The spacecraft is operational and ready to continue its mission.";
     public const string ConnectionRecovered = "CONNECTION RECOVERED: OPPORTUNITY-ROVER\nWe received a connection request, Our last lost Rover has recovered the connection to the spaceship, take the control and drive it to the mars settlemnent.";
 
     public static string Alert(PracticeSession.Exercise exercise) => exercise switch

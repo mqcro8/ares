@@ -63,7 +63,7 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private void AddStation(string name, Control zone, PracticeSession.Exercise exercise, string marker)
 		=> _stations.Targets.Add(new(name, zone, PracticeSession.SceneFor(exercise), marker,
-			exercise, RequiredCapability: ItemCapability.Repair));
+			exercise));
 
 	public override void _Process(double delta)
 	{
@@ -72,10 +72,10 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 			Vector2 position = Player.GlobalPosition;
 			PracticeSession.Exercise? room = position switch
 			{
-				{ X: > 816 and < 1152, Y: > 16 and < 384 } => PracticeSession.Exercise.Wires,
-				{ X: > 1152 and < 1488, Y: > 16 and < 384 } => PracticeSession.Exercise.Frequency,
-				{ X: > 816 and < 1152, Y: > 480 and < 832 } => PracticeSession.Exercise.Fuses,
-				{ X: > 1152 and < 1488, Y: > 480 and < 832 } => PracticeSession.Exercise.HullRepair,
+				{ X: > 160 and < 400, Y: > 48 and < 208 } => PracticeSession.Exercise.Wires,
+				{ X: > 400 and < 640, Y: > 48 and < 208 } => PracticeSession.Exercise.HullRepair,
+				{ X: > 160 and < 400, Y: > 288 and < 448 } => PracticeSession.Exercise.Fuses,
+				{ X: > 400 and < 640, Y: > 288 and < 448 } => PracticeSession.Exercise.Frequency,
 				_ => null
 			};
 			if (room.HasValue) MissionControl.Enqueue(GatewayMission.EnterRoom(room.Value));
