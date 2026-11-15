@@ -6,6 +6,7 @@ using ares.scripts.training;
 using ares.scripts.systems;
 using Ares.Systems.Controllers;
 using Ares.Systems.Audio;
+using ares.scripts.prelaunch;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource
@@ -192,6 +193,22 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (!malfunctionTransitionFailed) return;
 		backError = "Unable to start the launch cinematic. Press Retry transfer.";
 		Refresh();
+	}
+
+	private void TransferToPreLaunch()
+	{
+		if (!IsInsideTree() || Practice || MissionState.Instance?.LaunchRecord == null) return;
+		if (SceneTransition.Instance != null)
+		{
+			SceneTransition.Instance.GoTo(PreLaunch.ScenePath);
+			return;
+		}
+		var error = GetTree().ChangeSceneToFile(PreLaunch.ScenePath);
+		if (error != Error.Ok)
+		{
+			backError = "Unable to start pre-launch transfer.";
+			Refresh();
+		}
 	}
 
 	private void BeginIgnitionFromReady()
@@ -388,7 +405,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 				else if (!Practice && MissionState.Instance?.LaunchRecord != null &&
 					(GetTree().CurrentScene == this || SceneLoader != null))
 				{
-					Callable.From(TransferToMalfunctionCutscene).CallDeferred();
+					Callable.From(TransferToPreLaunch).CallDeferred();
 				}
 			}
 		}

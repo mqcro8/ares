@@ -19,6 +19,10 @@
 [ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/stations/fuse_cabinet.png" id="14_fuse"]
 [ext_resource type="Texture2D" uid="uid://c7ivrocqbfmlp" path="res://art/training/stations/frequency_workbench.png" id="15_frequency"]
 [ext_resource type="Texture2D" uid="uid://begn8rj0pamf1" path="res://art/training/stations/hull_repair_workbench.png" id="16_hull"]
+[ext_resource type="Texture2D" uid="uid://4sk40dtnsrrq" path="res://art/training/equipment/casillero_cerrado.png" id="17_locker"]
+[ext_resource type="Texture2D" uid="uid://ccb5h6hp2e20p" path="res://art/training/equipment/casillero_abierto.png" id="18_locker_open"]
+[ext_resource type="Script" uid="uid://b87ve2noy0ntc" path="res://scripts/training/EquipmentLocker.cs" id="19_locker_script"]
+[ext_resource type="Resource" uid="uid://ct7ihndubc4ww" path="res://data/equipment/items/maintenance_kit.tres" id="20_kit"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="21_monitor"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="22_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="23_slot"]
@@ -136,12 +140,12 @@ tile_set = SubResource("GatewayTiles")
 
 [node name="Floor" type="Polygon2D" parent="Tilemaps_layers" unique_id=477361562]
 z_index = -9
-position = Vector2(187.26373, 0.1294387)
-scale = Vector2(0.9523058, 1.1605985)
+position = Vector2(-178.05016, -161.10516)
+scale = Vector2(1.3284127, 1.6030356)
 color = Color(0.70324874, 0.80546254, 1, 1)
 texture = ExtResource("4_gifhk")
 texture_scale = Vector2(0.5, 0.5)
-polygon = PackedVector2Array(9.282532, 5.8986588, 1383.7325, -0.80597687, 1356.6323, 714.17505, 2.2960815, 714.17505)
+polygon = PackedVector2Array(4.5819626, 0.42184448, 1382.8911, -1.1820297, 1381.3856, 718.0784, 2.2960815, 714.17505)
 
 [node name="Corridor" type="Polygon2D" parent="Tilemaps_layers" unique_id=1096422001]
 z_index = -8

@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://ct7ihndubc4ww"]
 
-[ext_resource type="Script" path="res://scripts/systems/items/ItemData.cs" id="1_item"]
-[ext_resource type="Texture2D" path="res://art/training/equipment/kit_mantenimiento.png" id="1_icon"]
+[ext_resource type="Texture2D" uid="uid://iyjqmso4oy1f" path="res://art/training/equipment/kit_mantenimiento.png" id="1_icon"]
+[ext_resource type="Script" uid="uid://dwjon8uvl1oul" path="res://scripts/systems/items/ItemData.cs" id="1_item"]
 
 [resource]
 script = ExtResource("1_item")
