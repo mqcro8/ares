@@ -98,12 +98,12 @@ public partial class EquipmentLocker : Node2D
         if (!Contents.Contains(StarterKit)) return "SUPPLY LOCKER EMPTY.";
 
         if (!InventoryTransferService.TryTransfer(Contents, player.Inventory, StarterKit, 1,
-                mission?.CargoCapacity ?? 6, out string takeError,
+                mission?.CargoCapacity ?? ToolEffects.CargoCapacity, out string takeError,
                 mission?.OxygenCargoUsed ?? 0))
             return "CANNOT TAKE KIT — " + takeError;
 
         Refresh();
-        return $"MAINTENANCE KIT ACQUIRED — SELECT IT WITH 1  (CARGO {mission?.CargoUsed ?? 0}/{mission?.CargoCapacity ?? 6})";
+        return $"MAINTENANCE KIT ACQUIRED — SELECT IT WITH 1  (CARGO {mission?.CargoUsed ?? 0}/{mission?.CargoCapacity ?? ToolEffects.CargoCapacity})";
     }
 
     public string ToggleTool(Player player, ItemData tool)

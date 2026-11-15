@@ -128,23 +128,48 @@ public partial class EquipmentPanel : CanvasLayer
 		{
 			if (tool == null) continue;
 			var row = new HBoxContainer { Name = tool.Id + "Row" };
-			row.AddThemeConstantOverride("separation", 8);
+			row.AddThemeConstantOverride("separation", 5);
 			toolColumn.AddChild(row);
 			row.AddChild(MakeIcon(tool.Icon, tool.Id + "Icon"));
-			var name = MakeLabel($"{tool.DisplayName.ToUpperInvariant()} — {tool.CargoCost} CARGA", Colors.White, 8);
-			name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			name.VerticalAlignment = VerticalAlignment.Center;
-			row.AddChild(name);
-			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(84, 26) };
+			var identity = new VBoxContainer { Name = "Identity", CustomMinimumSize = new Vector2(112, 0) };
+			identity.AddThemeConstantOverride("separation", 2);
+			var name = MakeLabel(tool.DisplayName.ToUpperInvariant(), Colors.White, 7);
+			name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			name.ClipText = false;
+			identity.AddChild(name);
+			identity.AddChild(MakeLabel($"{tool.CargoCost} CARGA", new Color(0.65f, 0.77f, 0.82f), 6));
+			row.AddChild(identity);
+			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(60, 24) };
 			Action handler = () => ToggleTool(tool);
 			button.Pressed += handler;
 			row.AddChild(button);
 			_tools.Add((tool, button, handler));
-			var effect = MakeLabel(ToolEffects.Describe(tool.Id), new Color(0.65f, 0.77f, 0.82f), 7);
-			effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-			effect.ClipText = false;
-			effect.CustomMinimumSize = new Vector2(0, 18);
-			toolColumn.AddChild(effect);
+			var indicators = new VBoxContainer { Name = tool.Id + "Tradeoff", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+			indicators.AddThemeConstantOverride("separation", 2);
+			indicators.TooltipText = ToolEffects.Describe(tool.Id);
+			row.AddChild(indicators);
+			var benefitRow = new HBoxContainer { Name = "Benefit" };
+			benefitRow.AddThemeConstantOverride("separation", 4);
+			benefitRow.AddChild(MakeLabel("VENTAJA REL.", new Color("70ffb0"), 5));
+			benefitRow.AddChild(MakeMeter(ToolEffects.BenefitFraction(tool.Id), new Color("42d98b")));
+			var benefit = MakeLabel(ToolEffects.BenefitText(tool.Id), Colors.White, 6);
+			benefit.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			benefit.ClipText = false;
+			benefit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			benefitRow.AddChild(benefit);
+			indicators.AddChild(benefitRow);
+			var drawbackRow = new HBoxContainer { Name = "Drawback" };
+			drawbackRow.AddThemeConstantOverride("separation", 4);
+			drawbackRow.AddChild(MakeLabel("COSTE", new Color("ffb24a"), 5));
+			drawbackRow.AddChild(MakeMeter(tool.CargoCost / (float)ToolEffects.MaximumToolCargoCost,
+				new Color("e79a35")));
+			var drawback = MakeLabel($"{tool.CargoCost}/{ToolEffects.MaximumToolCargoCost} CARGA · {ToolEffects.DrawbackText(tool.Id)}",
+				new Color(1f, 0.78f, 0.52f), 6);
+			drawback.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			drawback.ClipText = false;
+			drawback.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			drawbackRow.AddChild(drawback);
+			indicators.AddChild(drawbackRow);
 		}
 
 		_oxygenWarning = MakeLabel("0 TANQUES: MARTE EMPIEZA SIN OXÍGENO.", new Color(1f, 0.72f, 0.24f), 7);
@@ -191,6 +216,24 @@ public partial class EquipmentPanel : CanvasLayer
 		};
 		slot.AddChild(icon);
 		return slot;
+	}
+
+	/// <summary>Visual-only relative benefit or cargo bar; exact values stay beside it.</summary>
+	private static ProgressBar MakeMeter(float value, Color fill)
+	{
+		var meter = new ProgressBar
+		{
+			MinValue = 0,
+			MaxValue = 1,
+			Value = Mathf.Clamp(value, 0, 1),
+			ShowPercentage = false,
+			CustomMinimumSize = new Vector2(42, 7),
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+			FocusMode = Control.FocusModeEnum.None,
+		};
+		meter.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = new Color("263746") });
+		meter.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = fill });
+		return meter;
 	}
 
 	private static Label MakeLabel(string text, Color color, int size)

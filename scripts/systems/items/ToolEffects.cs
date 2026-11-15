@@ -1,5 +1,6 @@
 namespace ares.scripts.systems.items;
 
+using System;
 using System.Globalization;
 
 /// <summary>Single source for tool identifiers, game effects and player-facing trade-offs.</summary>
@@ -18,6 +19,7 @@ public static class ToolEffects
 	public const string OxygenRegulator = "oxygen_regulator";
 
 	public const int CargoCapacity = 7;
+	public const int MaximumToolCargoCost = 2;
 	public const int OxygenTankCargoCost = 1;
 	public const double OxygenBaseSecondsPerTank = 180.0;
 	public const int OxygenRegulatorMinimumTanks = 2;
@@ -58,18 +60,50 @@ public static class ToolEffects
 	public static float FrequencyAnalyzerThreshold => FrequencyBaseThreshold + FrequencyThresholdDelta;
 	public static int FusePressesFor(bool equipped) => FuseBasePresses + (equipped ? FuseExtraPresses : 0);
 	public static int WireConnectionsFor(bool equipped) => WireConnectionCount - (equipped ? WirePreconnectedCount : 0);
+	/// <summary>Relative visual meter only; exact gameplay values appear beside the bar.</summary>
+	public static float BenefitFraction(string id) => id switch
+	{
+		SpareFuses => (float)FuseExtraPresses / FuseBasePresses,
+		FrequencyAnalyzer => Math.Abs(FrequencyThresholdDelta) / FrequencyBaseThreshold,
+		PrecisionWelder => Math.Max((HullPrecisionWeldTolerance - HullBaseWeldTolerance) / HullBaseWeldTolerance,
+			1 - HullWelderHeatFactor),
+		WirePliers => (float)WirePreconnectedCount / WireConnectionCount,
+		RoverBumper => (float)RoverBumperExtraDamageLimit / RoverBaseDamageLimit,
+		RoverServos => 1 / RoverServoControlTimeFactor - 1,
+		OxygenRegulator => (float)(OxygenRegulatorTankFactor - 1),
+		_ => 0f,
+	};
+
+	public static string BenefitText(string id) => id switch
+	{
+		SpareFuses => $"{Number(FuseBasePresses)} → {Number(FusePressesFor(true))} pulsaciones",
+		FrequencyAnalyzer => $"Umbral {Number(FrequencyBaseThreshold)} → {Number(FrequencyAnalyzerThreshold)}",
+		PrecisionWelder => $"{Number(HullBaseWeldTolerance)} → {Number(HullPrecisionWeldTolerance)} px; calor {Number(HullBaseHeatOffSeam)} → {Number(HullPrecisionHeatOffSeam)}/s",
+		WirePliers => $"{Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} cables listo",
+		RoverBumper => $"Daño máximo {Number(RoverBaseDamageLimit)} → {Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}",
+		RoverServos => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)} px/s",
+		OxygenRegulator => $"{Number(OxygenBaseSecondsPerTank)} → {Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s/tanque",
+		_ => "",
+	};
+
+	public static string DrawbackText(string id) => id switch
+	{
+		SpareFuses => "Solo fusibles",
+		FrequencyAnalyzer => $"Solo frecuencias; sostén {Number(FrequencyBaseHoldSeconds)} s sin cambio",
+		PrecisionWelder => "Solo casco",
+		WirePliers => "Sin temporizador; solo cables",
+		RoverBumper => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s",
+		RoverServos => $"Daño por choque {Number(RoverBaseDamagePerCollision)} → {Number(RoverServoDamagePerCollision)}",
+		OxygenRegulator => $"Solo funciona con {Number(OxygenRegulatorMinimumTanks)}+ tanques",
+		_ => "",
+	};
 
 	public static string Describe(string id) => id switch
 	{
 		MaintenanceKit => "Acceso a las cuatro prácticas de reparación. Desventaja: ocupa carga.",
 		OxygenTank => $"Reserva: {Number(OxygenBaseSecondsPerTank)} s por tanque. Desventaja: ocupa carga.",
-		SpareFuses => $"Fusibles: {Number(FuseBasePresses)} pulsaciones base + {Number(FuseExtraPresses)} de margen ({Number(FusePressesFor(true))} disponibles). Desventaja: ocupa carga y solo cubre fusibles.",
-		FrequencyAnalyzer => $"Frecuencia: umbral {Number(FrequencyBaseThreshold)} → {Number(FrequencyAnalyzerThreshold)}; sostén sin cambio ({Number(FrequencyBaseHoldSeconds)} s). Desventaja: ocupa carga y solo cubre frecuencias.",
-		PrecisionWelder => $"Casco: soldadura {Number(HullBaseWeldTolerance)} → {Number(HullPrecisionWeldTolerance)} px; calor fuera de costura {Number(HullBaseHeatOffSeam)} → {Number(HullPrecisionHeatOffSeam)}/s. Desventaja: ocupa más carga y solo cubre casco.",
-		WirePliers => $"Cables: {Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} conexiones lista al iniciar; quedan {Number(WireConnectionsFor(true))}. Sin temporizador. Desventaja: ocupa carga y solo cubre cables.",
-		RoverBumper => $"Rover: daño máximo {Number(RoverBaseDamageLimit)} → {Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}; carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s. Desventaja: rover más lento.",
-		RoverServos => $"Rover: carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)} px/s; daño por choque {Number(RoverBaseDamagePerCollision)} → {Number(RoverServoDamagePerCollision)}. Desventaja: cada choque resta más vidas.",
-		OxygenRegulator => $"Con {Number(OxygenRegulatorMinimumTanks)}+ tanques: {Number(OxygenBaseSecondsPerTank)} → {Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s por tanque (+{Number((OxygenRegulatorTankFactor - 1) * 100)}%). Desventaja: ocupa carga y no sirve con menos tanques.",
+		SpareFuses or FrequencyAnalyzer or PrecisionWelder or WirePliers or RoverBumper or RoverServos or OxygenRegulator =>
+			$"{BenefitText(id)}. Desventaja: {DrawbackText(id)}.",
 		_ => "Sin efecto de herramienta registrado."
 	};
 
