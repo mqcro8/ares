@@ -16,6 +16,9 @@ public static class PracticeSession
     public sealed record Snapshot(PhysicalTraining.Progress Course, TrainingMovement.Progress Movement, bool CompletionShown);
     public sealed record Travel(long Session, long Id, string Source, string Target, string Spawn, Vector2 ReturnPosition);
     public static readonly Dictionary<string, RoomPose> Rooms = new();
+    private static readonly Dictionary<string, HashSet<Exercise>> CompletedExercises = new();
+    public static bool CompletedIn(string scene, Exercise exercise)
+        => CompletedExercises.TryGetValue(scene, out var exercises) && exercises.Contains(exercise);
     public static Snapshot Saved { get; set; }
     public static Travel Pending { get; private set; }
     public static long SessionId { get; private set; }
@@ -48,6 +51,7 @@ public static class PracticeSession
     public static void Clear()
     {
         SessionId++; Pending = null; Saved = null; Rooms.Clear();
+        CompletedExercises.Clear();
         _exerciseTicket = 0; PendingLaunch = null; Feedback = "";
         ExerciseOriginScene = null; ExerciseReturnSpawn = null; ExerciseReturnPosition = Vector2.Zero;
     }
@@ -91,6 +95,10 @@ public static class PracticeSession
         _exerciseTicket = 0;
         if (success)
         {
+            string origin = ExerciseOriginScene ?? LabScene;
+            if (!CompletedExercises.TryGetValue(origin, out var exercises))
+                CompletedExercises[origin] = exercises = new();
+            exercises.Add(Selected);
             switch (Selected)
             {
                 case Exercise.Wires: MissionState.Instance.TrainingWiresComplete = true; break;

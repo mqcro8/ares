@@ -26,6 +26,7 @@ public partial class Gateway : Node2D
 
     private TrainingStations _stations;
     private Label _status;
+    public GatewayMissionControl MissionControl { get; private set; }
 
     public override void _Ready()
     {
@@ -40,14 +41,19 @@ public partial class Gateway : Node2D
 
         _stations = new TrainingStations { Name = "GatewayStations", Player = Player };
         AddChild(_stations);
-        AddStation("Wiring Room", WiresZone, PracticeSession.Exercise.Wires, "gateway.wires.return");
-        AddStation("Fuse Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
-        AddStation("Frequency Room", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
-        AddStation("Hull Room", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
+        AddStation("Electrical Bay", WiresZone, PracticeSession.Exercise.Wires, "gateway.wires.return");
+        AddStation("Power Distribution Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
+        AddStation("Communications Bay", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
+        AddStation("Hull Access", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
         if (Locker != null)
             _stations.Targets.Add(new("Supply locker", Locker.FrontZone, null, null,
                 Interact: () => Locker.Open(Player), Prompt: () => Locker.InteractionPrompt(Player)));
 
+        MissionControl = GD.Load<PackedScene>("res://scenes/gateway/MissionControlBox.tscn")
+            .Instantiate<GatewayMissionControl>();
+        AddChild(MissionControl);
+        MissionControl.Bind(Player, _stations);
+        foreach (string message in GatewayMission.ArrivalMessages()) MissionControl.Enqueue(message);
         FitCamera();
         GetViewport().SizeChanged += FitCamera;
     }
@@ -58,6 +64,19 @@ public partial class Gateway : Node2D
 
     public override void _Process(double delta)
     {
+        if (MissionControl != null && !MissionControl.IsOpen && EquipmentPanel.Active == null)
+        {
+            Vector2 position = Player.GlobalPosition;
+            PracticeSession.Exercise? room = position switch
+            {
+                { X: > 816 and < 1152, Y: > 16 and < 384 } => PracticeSession.Exercise.Wires,
+                { X: > 1152 and < 1488, Y: > 16 and < 384 } => PracticeSession.Exercise.Frequency,
+                { X: > 816 and < 1152, Y: > 480 and < 832 } => PracticeSession.Exercise.Fuses,
+                { X: > 1152 and < 1488, Y: > 480 and < 832 } => PracticeSession.Exercise.HullRepair,
+                _ => null
+            };
+            if (room.HasValue) MissionControl.Enqueue(GatewayMission.EnterRoom(room.Value));
+        }
         if (Monitor != null)
         {
             var mission = MissionState.Instance;
@@ -65,7 +84,7 @@ public partial class Gateway : Node2D
                 stamina: null, circuitProgress: 0, circuitComplete: false,
                 hasRepairKit: Player.Inventory?.HasCapability(ItemCapability.Repair) == true,
                 prompt: _stations?.MonitorPrompt, feedback: _stations?.MonitorFeedback,
-                visible: true));
+                visible: MissionControl?.IsOpen != true));
         }
         if (Camera != null && Player != null)
             Camera.GlobalPosition = Player.GlobalPosition;
