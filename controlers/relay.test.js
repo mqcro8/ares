@@ -345,6 +345,61 @@ test("team rooms have four fixed slots, retain reconnect tokens, and relay host 
   assert.deepEqual((await update).state, state);
 });
 
+test("two-player crews can start with a fixed participant roster and distributed repairs", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+  const host = await connect(port, "DUO1", "team_host");
+  const player = await connect(port, "DUO1", "player");
+  t.after(() => closeAll(host, player));
+  await nextMessage(player, (message) => message.type === "team_joined");
+  const rosterUpdate = nextMessage(host, (message) => message.type === "team_lobby" &&
+    message.players.length === 2 && message.players.every((entry) => entry.connected && entry.ready));
+  host.send(JSON.stringify({ type: "team_ready", slot: 0, ready: true }));
+  player.send(JSON.stringify({ type: "team_ready", ready: true }));
+  await rosterUpdate;
+  const started = nextMessage(player, (message) => message.type === "team_start");
+  host.send(JSON.stringify({ type: "team_start" }));
+  assert.deepEqual((await started).participants, [0, 1]);
+
+  player.send(JSON.stringify({ type: "team_event", name: "gateway_task_complete", index: 0 }));
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(host.received.some((message) => message.type === "team_event"), false,
+    "slot 1 cannot claim slot 0's evenly distributed task");
+  const accepted = nextMessage(host, (message) => message.type === "team_event" &&
+    message.name === "gateway_task_complete");
+  player.send(JSON.stringify({ type: "team_event", name: "gateway_task_complete", index: 3 }));
+  assert.equal((await accepted).index, 3);
+
+  const lateJoin = new WebSocket(`ws://127.0.0.1:${port}/?room=DUO1&role=player`);
+  const code = await new Promise((resolve, reject) => {
+    lateJoin.once("close", resolve);
+    lateJoin.once("error", reject);
+  });
+  assert.equal(code, 1008);
+});
+
+test("three-player crews keep every Gateway repair assigned", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+  const host = await connect(port, "TRIO1", "team_host");
+  const players = [await connect(port, "TRIO1", "player"), await connect(port, "TRIO1", "player")];
+  t.after(() => closeAll(host, ...players));
+  await Promise.all(players.map((socket) => nextMessage(socket, (message) => message.type === "team_joined")));
+  const rosterReady = nextMessage(host, (message) => message.type === "team_lobby" &&
+    message.players.length === 3 && message.players.every((entry) => entry.connected && entry.ready));
+  host.send(JSON.stringify({ type: "team_ready", slot: 0, ready: true }));
+  for (const player of players) player.send(JSON.stringify({ type: "team_ready", ready: true }));
+  await rosterReady;
+  const started = nextMessage(players[1], (message) => message.type === "team_start");
+  host.send(JSON.stringify({ type: "team_start" }));
+  assert.deepEqual((await started).participants, [0, 1, 2]);
+
+  const completed = nextMessage(host, (message) =>
+    message.type === "team_event" && message.name === "gateway_task_complete");
+  players[1].send(JSON.stringify({ type: "team_event", name: "gateway_task_complete", index: 2 }));
+  assert.equal((await completed).slot, 2);
+});
+
 test("serves the controller page and only the art it needs", async (t) => {
   const { relay, port } = await startRelay();
   t.after(() => relay.close());

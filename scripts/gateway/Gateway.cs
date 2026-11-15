@@ -72,8 +72,8 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private void AddStation(string name, Control zone, PracticeSession.Exercise exercise, string marker)
 		=> _stations.Targets.Add(new(name, zone, PracticeSession.SceneFor(exercise), marker,
-			exercise, Locked: () => IsTeamMission && AssignedTaskIndex != (int)exercise
-				? $"CREW ASSIGNMENT — PLAYER {(int)exercise + 1} OWNS THIS REPAIR."
+			exercise, Locked: () => IsTeamMission && _team.GatewayTaskOwner((int)exercise) != AssignedTaskIndex
+				? $"CREW ASSIGNMENT — PLAYER {_team.GatewayTaskOwner((int)exercise) + 1} OWNS THIS REPAIR."
 				: null, RequiredCapability: ItemCapability.Repair));
 
 	private bool IsTeamMission => _team?.Active == true && _team.MissionStarted;
@@ -81,10 +81,13 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private void ReportAssignedTaskIfAlreadyComplete()
 	{
-		if (AssignedTaskIndex is < 0 or > 3) return;
-		var exercise = (PracticeSession.Exercise)AssignedTaskIndex;
-		if (PracticeSession.CompletedIn(ScenePath, exercise))
-			_team.MarkGatewayTaskComplete(AssignedTaskIndex);
+		for (int task = 0; task < 4; task++)
+		{
+			var exercise = (PracticeSession.Exercise)task;
+			if (_team.GatewayTaskOwner(task) == AssignedTaskIndex &&
+				PracticeSession.CompletedIn(ScenePath, exercise))
+				_team.MarkGatewayTaskComplete(task);
+		}
 	}
 
 	private void OnTeamStateReceived(string json)

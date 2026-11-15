@@ -26,6 +26,7 @@ public partial class TeamSession : Node
     private readonly bool[] _roverResults = new bool[4];
     private readonly double[] _teamScores = { -1, -1, -1, -1 };
     private readonly bool[] _teamPasses = new bool[4];
+    private readonly bool[] _participants = new bool[4];
     private readonly HashSet<string> _claimedOxygen = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Action<bool>> _pendingOxygenClaims = new(StringComparer.Ordinal);
     private bool _applyingRemoteState;
@@ -47,17 +48,24 @@ public partial class TeamSession : Node
     public string ReconnectToken => _token;
     public string Status { get; private set; } = "Offline";
     public Godot.Collections.Array<Godot.Collections.Dictionary> Players { get; private set; } = new();
-    public bool EveryoneReady => Players.Count == 4 &&
-        Players.All(player => Get(player, "connected", false).AsBool() &&
-                              Get(player, "ready", false).AsBool());
+    public bool EveryoneReady => Players.Count(player =>
+        Get(player, "connected", false).AsBool() &&
+        Get(player, "ready", false).AsBool()) >= 2 &&
+        Players.Where(player => Get(player, "connected", false).AsBool())
+            .All(player => Get(player, "ready", false).AsBool());
     public bool MissionStarted => _missionStarted;
     public bool IsGatewayTaskComplete(int slot) =>
         slot >= 0 && slot < _gatewayTasks.Length && _gatewayTasks[slot];
     public bool AllGatewayTasksComplete => _gatewayTasks.All(done => done);
-    public bool AllRoversComplete => _roverResults.All(done => done);
-    public bool AllTeamScoresSubmitted => _teamScores.All(score => score >= 0);
-    public double TeamAverageScore => AllTeamScoresSubmitted ? _teamScores.Average() : 0;
-    public bool TeamPassed => AllTeamScoresSubmitted && _teamPasses.All(passed => passed);
+    public int ParticipantCount => _participants.Count(participating => participating);
+    public bool IsParticipant(int slot) => slot >= 0 && slot < _participants.Length && _participants[slot];
+    public int GatewayTaskOwner(int taskIndex) => ParticipantCount == 0 || taskIndex < 0 || taskIndex > 3
+        ? -1 : ActiveSlots[taskIndex % ParticipantCount];
+    public bool AllRoversComplete => ActiveSlots.All(slot => _roverResults[slot]);
+    public bool AllTeamScoresSubmitted => ActiveSlots.Length >= 2 && ActiveSlots.All(slot => _teamScores[slot] >= 0);
+    public double TeamAverageScore => AllTeamScoresSubmitted ? ActiveSlots.Average(slot => _teamScores[slot]) : 0;
+    public bool TeamPassed => AllTeamScoresSubmitted && ActiveSlots.All(slot => _teamPasses[slot]);
+    public int[] ActiveSlots => Enumerable.Range(0, _participants.Length).Where(slot => _participants[slot]).ToArray();
     public bool ApplyingRemoteState => _applyingRemoteState;
     public bool IsOxygenPickupClaimed(string id) => _claimedOxygen.Contains(id);
 
@@ -120,7 +128,7 @@ public partial class TeamSession : Node
 
     private void PublishLocalPosition(double delta)
     {
-        if (!_missionStarted || LocalSlot < 0 || LocalSlot > 3 || !EveryoneReady) return;
+        if (!_missionStarted || !IsParticipant(LocalSlot) || !EveryoneReady) return;
         _positionTimer -= delta;
         if (_positionTimer > 0) return;
         _positionTimer = 0.1;
@@ -143,7 +151,10 @@ public partial class TeamSession : Node
     private void ApplyDisconnectGate()
     {
         if (!_missionStarted || GetTree() == null) return;
-        bool wait = !EveryoneReady;
+        bool wait = ActiveSlots.Length < 2 || ActiveSlots.Any(slot =>
+            !Players.Any(player => Get(player, "slot", -1).AsInt32() == slot &&
+                                  Get(player, "connected", false).AsBool() &&
+                                  Get(player, "ready", false).AsBool()));
         if (GetTree().Paused != wait) GetTree().Paused = wait;
         Status = wait ? "Crew member disconnected — waiting for reconnection" : "Crew connected";
     }
@@ -167,6 +178,7 @@ public partial class TeamSession : Node
         Array.Clear(_roverResults);
         Array.Fill(_teamScores, -1);
         Array.Clear(_teamPasses);
+        Array.Clear(_participants);
         _claimedOxygen.Clear();
         foreach (Action<bool> pending in _pendingOxygenClaims.Values)
             pending?.Invoke(false);
@@ -207,6 +219,15 @@ public partial class TeamSession : Node
     public bool StartMission()
     {
         if (!IsHost || !EveryoneReady) return false;
+        Array.Clear(_participants);
+        foreach (var player in Players)
+        {
+            int slot = Get(player, "slot", -1).AsInt32();
+            if (slot is >= 0 and < 4 && Get(player, "connected", false).AsBool() &&
+                Get(player, "ready", false).AsBool())
+                _participants[slot] = true;
+        }
+        if (ParticipantCount < 2) return false;
         _missionStarted = true;
         Send(new Godot.Collections.Dictionary { ["type"] = "team_start" });
         return true;
@@ -221,7 +242,8 @@ public partial class TeamSession : Node
     /// <summary>Reports only the repair assigned to this player's fixed crew slot.</summary>
     public bool MarkGatewayTaskComplete(int slot)
     {
-        if (!Active || slot != LocalSlot || slot < 0 || slot > 3) return false;
+        if (!Active || !IsParticipant(LocalSlot) || GatewayTaskOwner(slot) != LocalSlot ||
+            slot < 0 || slot > 3) return false;
         if (!IsHost)
         {
             Send(new Godot.Collections.Dictionary
@@ -253,7 +275,7 @@ public partial class TeamSession : Node
 
     public bool MarkRoverComplete(int slot)
     {
-        if (!Active || LocalSlot != slot || slot < 0 || slot > 3) return false;
+        if (!Active || LocalSlot != slot || !IsParticipant(slot)) return false;
         if (!IsHost)
         {
             Send(new Godot.Collections.Dictionary
@@ -286,7 +308,7 @@ public partial class TeamSession : Node
 
     public bool SubmitTeamScore(double score, bool passed)
     {
-        if (!Active || LocalSlot < 0 || !double.IsFinite(score) || score is < 0 or > 100) return false;
+        if (!Active || !IsParticipant(LocalSlot) || !double.IsFinite(score) || score is < 0 or > 100) return false;
         if (!IsHost)
         {
             Send(new Godot.Collections.Dictionary
@@ -445,7 +467,8 @@ public partial class TeamSession : Node
             int index = (int)Get(message, "index", -1).AsInt64();
             int slot = (int)Get(message, "slot", -1).AsInt64();
             string name = Get(message, "name", "").AsString();
-            if (name == "gateway_task_complete" && index == slot && slot is >= 1 and <= 3)
+            if (name == "gateway_task_complete" && index is >= 0 and <= 3 &&
+                IsParticipant(slot) && GatewayTaskOwner(index) == slot)
             {
                 _gatewayTasks[slot] = true;
                 PublishSharedProgress();
@@ -455,12 +478,12 @@ public partial class TeamSession : Node
                 _marsTasks[index] = true;
                 PublishSharedProgress();
             }
-            else if (name == "rover_complete" && index == slot && slot is >= 1 and <= 3)
+            else if (name == "rover_complete" && index == slot && IsParticipant(slot))
             {
                 _roverResults[slot] = true;
                 PublishSharedProgress();
             }
-            else if (name == "score_submit" && index == slot && slot is >= 1 and <= 3)
+            else if (name == "score_submit" && index == slot && IsParticipant(slot))
             {
                 _teamScores[slot] = Get(message, "score", -1).AsDouble();
                 _teamPasses[slot] = Get(message, "passed", false).AsBool();
@@ -501,6 +524,16 @@ public partial class TeamSession : Node
         }
         else if (type == "team_start")
         {
+            if (message.TryGetValue("participants", out Variant participantValue) &&
+                participantValue.VariantType == Variant.Type.Array)
+            {
+                Array.Clear(_participants);
+                foreach (Variant slotValue in participantValue.AsGodotArray())
+                {
+                    int slot = (int)slotValue.AsInt64();
+                    if (slot is >= 0 and < 4) _participants[slot] = true;
+                }
+            }
             _missionStarted = true;
             GetTree().Paused = !EveryoneReady;
         }

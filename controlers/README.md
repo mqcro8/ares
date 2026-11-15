@@ -38,7 +38,7 @@ hosting.
 For local development, run `npm start` in `controlers` and set the game relay to
 `ws://<your-lan-ip>:8000`. Rover-wheel motion sensors need HTTPS in the browser.
 
-## Experimental four-player team rooms
+## Experimental 2–4 player team rooms
 
 Team rooms use the same **host-run Node relay**, not Vercel or Redis. One player
 starts the relay and exposes port 8000 with ngrok:
@@ -50,11 +50,11 @@ ngrok http 8000
 ```
 
 At the real launch pad, choose **Create Crew** and enter the ngrok HTTPS address.
-Share that address and the generated room code. The other three players should
-finish their individual training, choose **Join Crew**, and enter both values.
-The host can start only when all four slots are connected and ready; a fifth
-connection is rejected. Reconnecting players reclaim their reserved slot using
-a token saved locally by the game.
+Share that address and the generated room code. Other players finish individual
+training, choose **Join Crew**, and enter both values. The host can start with
+2–4 connected, ready players; a fifth connection is rejected. Participating
+slots are fixed at launch and late joins are rejected. Reconnecting players
+reclaim their reserved slot using a token saved locally by the game.
 
 Alternatively, preconfigure each game with user command-line arguments:
 
@@ -63,16 +63,16 @@ godot --path . -- --team-host --relay=https://YOUR-NGROK-DOMAIN --room=ABCDE
 godot --path . -- --team-join --relay=https://YOUR-NGROK-DOMAIN --room=ABCDE
 ```
 
-The team room remains experimental. It provides the four-slot lobby,
+The team room remains experimental. It provides a four-slot lobby,
 ready/start barrier, reconnect reservations, and a wait/pause gate on
-disconnect. Gateway repairs are assigned one per slot and shared; Mars
+disconnect. Gateway repairs are distributed across the active crew and shared; Mars
 generator, wiring, signal and door progress is shared; failed team rover runs
-retry, and Mars entry waits until all four rover results are in. It does **not**
-shows remote crew markers in shared world scenes (not animated astronaut
-sprites). Oxygen canisters are claimed once by the crew
-and refill only the collector's personal suit; suits and loadouts are not
-transferred between players. The debrief waits for all four players and shows
-their mean mission score; the crew passes only if every player's result passes.
+retry, and Mars entry waits until every participant has a rover result. It shows
+remote crew markers in shared world scenes (not animated astronaut sprites).
+Oxygen canisters are claimed once by the crew and refill only the collector's
+personal suit; suits and loadouts are not transferred between players. The
+debrief waits for all participants and shows their mean mission score; the crew
+passes only if every participant's result passes.
 
 ## Pages
 

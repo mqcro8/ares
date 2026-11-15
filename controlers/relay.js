@@ -242,6 +242,7 @@ export function createRelayServer({
       room = {
         controller: null, game: null, context: null, players: new Map(), nextSlot: 1,
         oxygenClaims: new Map(), positions: new Map(),
+        participants: null,
       };
       rooms.set(roomId, room);
     }
@@ -264,6 +265,10 @@ export function createRelayServer({
       if (!player) {
         if (room.players.size >= 3) {
           socket.close(1013, "Room is full");
+          return;
+        }
+        if (room.teamStarted) {
+          socket.close(1008, "Mission already started");
           return;
         }
         player = { slot: room.nextSlot++, token: randomUUID(), socket: null, ready: false };
@@ -344,12 +349,15 @@ export function createRelayServer({
         }
         if (message?.type === "team_start") {
           const roster = teamRoster(room);
-          if (roster.length !== 4 || roster.some((player) => !player.connected || !player.ready)) {
-            sendJson(socket, { type: "team_error", message: "All four players must be connected and ready." });
+          const participants = roster.filter((player) => player.connected && player.ready).map((player) => player.slot);
+          if (room.teamStarted || participants.length < 2 || participants.length > 4 ||
+              roster.some((player) => player.connected && !player.ready)) {
+            sendJson(socket, { type: "team_error", message: "At least two connected players must be ready." });
             return;
           }
           room.teamStarted = true;
-          broadcastTeam(room, { type: "team_start" });
+          room.participants = participants;
+          broadcastTeam(room, { type: "team_start", participants });
           return;
         }
         if (message?.type === "team_ready" && message.slot === 0) {
@@ -392,7 +400,8 @@ export function createRelayServer({
               sendJson(teammate.socket, { type: "team_position", ...position });
         } else if (room.teamStarted && message?.type === "team_event" &&
                    message.name === "gateway_task_complete" &&
-                   Number.isInteger(message.index) && message.index === player.slot) {
+                   Number.isInteger(message.index) && message.index >= 0 && message.index <= 3 &&
+                   isAssignedGatewayTask(room.participants, player.slot, message.index)) {
           sendJson(room.teamHost, {
             type: "team_event",
             name: message.name,
@@ -544,6 +553,11 @@ function teamRoster(room) {
       slot, connected: Boolean(socket), ready: Boolean(ready), host: false,
     })),
   ].sort((a, b) => a.slot - b.slot);
+}
+
+function isAssignedGatewayTask(participants, slot, taskIndex) {
+  if (!participants?.includes(slot) || participants.length === 0) return false;
+  return taskIndex % participants.length === participants.indexOf(slot);
 }
 
 function broadcastTeam(room, message) {

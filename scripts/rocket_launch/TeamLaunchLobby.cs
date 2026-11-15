@@ -4,7 +4,7 @@ using Ares.Systems.Multiplayer;
 
 namespace ares.scripts.rocket_launch;
 
-/// <summary>Launch-scene choice and exactly-four-player ready room.</summary>
+/// <summary>Launch-scene choice and two-to-four-player ready room.</summary>
 public partial class TeamLaunchLobby : CanvasLayer
 {
     [Signal] public delegate void LaunchSelectedEventHandler(bool teamMode);
@@ -47,7 +47,7 @@ public partial class TeamLaunchLobby : CanvasLayer
         title.HorizontalAlignment = HorizontalAlignment.Center;
         title.AddThemeFontSizeOverride("font_size", 18);
         column.AddChild(title);
-        column.AddChild(new Label { Text = "Training remains individual. Join a four-player crew for the mission." });
+        column.AddChild(new Label { Text = "Training remains individual. Start a crew mission with 2–4 players." });
         _relay = new LineEdit { PlaceholderText = "ngrok URL or ws://LAN-IP:8000", Text = _team?.RelayUrl ?? "" };
         column.AddChild(_relay);
         var codeRow = new HBoxContainer();
@@ -120,9 +120,11 @@ public partial class TeamLaunchLobby : CanvasLayer
                 if (candidate.TryGetValue("slot", out Variant value) && value.AsInt32() == slot) player = candidate;
             bool connected = player?.TryGetValue("connected", out Variant connectedValue) == true && connectedValue.AsBool();
             bool ready = player?.TryGetValue("ready", out Variant readyValue) == true && readyValue.AsBool();
-            lines.Add($"PLAYER {slot + 1}: {(connected ? ready ? "READY" : "CONNECTED" : "WAITING TO RECONNECT")}");
+            lines.Add($"PLAYER {slot + 1}: {(connected ? ready ? "READY" : "CONNECTED" : player == null ? "OPEN SLOT" : "WAITING TO RECONNECT")}");
         }
         _roster.Text = string.Join("\n", lines);
+        if (_team.MissionStarted)
+            _roster.Text += $"\nCREW SIZE: {_team.ParticipantCount}  //  MISSION IN PROGRESS";
         _ready.Visible = !_team.IsHost;
         _ready.Disabled = !_team.Active || _team.LocalSlot < 0;
         _start.Visible = _team.IsHost;
