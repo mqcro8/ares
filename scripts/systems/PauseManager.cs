@@ -26,6 +26,7 @@ public partial class PauseManager : Node
 	private bool _isOpen;
 	private Input.MouseModeEnum _savedMouseMode;
 	public bool IsOpen => _isOpen;
+	private readonly FeedbackSounds _sounds = new();
 
 	public override void _Ready()
 	{
@@ -91,6 +92,7 @@ public partial class PauseManager : Node
 		_layer.AddChild(screen);
 		ConfigureOptions(screen);
 		ShowScreen(screen);
+		_sounds.Play(SoundIds.PanelOpen, 100, true);
 	}
 
 	public void Close()
@@ -99,6 +101,7 @@ public partial class PauseManager : Node
 		_isOpen = false;
 
 		DestroyScreen(_subScreen);
+		_sounds.Play(SoundIds.UiBack, 100, true);
 		_subScreen = null;
 
 		DestroyScreen(_optionsScreen);
@@ -127,10 +130,12 @@ public partial class PauseManager : Node
 		_layer.AddChild(screen);
 		ConfigureSub(screen);
 		ShowScreen(screen);
+		_sounds.Play(SoundIds.UiConfirm, 100, true);
 	}
 
 	private void BackToOptions()
 	{
+		_sounds.Play(SoundIds.UiBack, 100, true);
 		DestroyScreen(_subScreen);
 		_subScreen = null;
 

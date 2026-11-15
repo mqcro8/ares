@@ -50,6 +50,7 @@ public partial class EndingSequenceTest : Node
 			TestSequenceResources();
 			await TestGoodEnding();
 			await TestBadEnding();
+			await TestLaunchFailureResults();
 			await TestRoverSuccessHandoff();
 			await TestMissingMarsSceneFallback();
 			await TestUnrecordedOutcome();
@@ -135,6 +136,22 @@ public partial class EndingSequenceTest : Node
 		var ending = LoadEnding();
 		Check(ending.CurrentPhase == "Unavailable" && !ending.IsResultsVisible,
 			"Direct ending-scene entry cannot invent a mission outcome");
+		ending.QueueFree();
+		await Frames();
+	}
+
+	private async Task TestLaunchFailureResults()
+	{
+		var mission = MissionState.Instance;
+		mission.BeginLaunchSequence();
+		mission.TrainingCourseComplete = mission.TrainingWiresComplete =
+			mission.TrainingFusesComplete = mission.TrainingFrequencyComplete =
+			mission.TrainingHullRepairComplete = mission.TrainingLaunchPracticeComplete = true;
+		Check(mission.FailLaunch(mission.LaunchSequence), "Failed launch records a scored bad outcome");
+		var ending = LoadEnding();
+		Check(ending.IsResultsVisible && ending.CurrentPhase == "Results" &&
+			ending.Outcome == MissionEnding.Bad && ending.ResultsMessage.Contains("ALL MISSIONS WON: NO"),
+			"Failed launch enters the score screen directly and marks the campaign unwon");
 		ending.QueueFree();
 		await Frames();
 	}

@@ -39,7 +39,9 @@ public partial class PlayerAnimation : AnimatedSprite2D
 	{
 		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_body)) return;
 		Vector2 velocity = _body.Velocity;
-		bool moving = velocity.Length() > MoveThreshold;
+		var player = _body as Player;
+		bool grounded = player?.TrainingMovement == null || player.TrainingMovement.Grounded;
+		bool moving = _body.IsPhysicsProcessing() && grounded && velocity.Length() > MoveThreshold;
 
 		if (moving)
 		{

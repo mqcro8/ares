@@ -16,14 +16,16 @@ public sealed class MissionScoring
 	public double Overall => Training * 0.10 + Launch * 0.20 + Repairs * 0.25 +
 		Rover * 0.20 + Resources * 0.25;
 	public bool HasReturnReserve { get; private set; }
+	public bool AllMissionsWon { get; private set; }
 	public double RecordedOxygenFraction { get; private set; }
 	public double FinalOxygenSeconds { get; private set; }
-	public bool Passed => Overall >= PassingGrade && HasReturnReserve;
+	public bool Passed => Overall >= PassingGrade && HasReturnReserve && AllMissionsWon;
 
 	public void Reset()
 	{
 		Training = Launch = Repairs = Rover = Resources = 0;
 		HasReturnReserve = false;
+		AllMissionsWon = false;
 		RecordedOxygenFraction = 0;
 		FinalOxygenSeconds = 0;
 	}
@@ -33,12 +35,15 @@ public sealed class MissionScoring
 		Training = Average(mission.TrainingCourseComplete, mission.TrainingWiresComplete,
 			mission.TrainingFusesComplete, mission.TrainingFrequencyComplete,
 			mission.TrainingHullRepairComplete, mission.TrainingLaunchPracticeComplete);
-		Launch = mission.LaunchRecord == null ? 0 : 70 + 30 * mission.LaunchRecord.IgnitionRatio;
+		Launch = mission.LaunchRecord == null || mission.LaunchFailed
+			? 0 : 70 + 30 * mission.LaunchRecord.IgnitionRatio;
 		Repairs = Average(mission.GeneratorRepaired, mission.WireBoxRepaired,
 			mission.SignalTableRepaired, mission.AllDoorAccessOn);
 		Rover = mission.RoverStageCompleted
 			? 70 + 30 * Math.Clamp(1.0 - mission.RoverImpacts / (double)Math.Max(1, mission.RoverDamageLimit), 0, 1)
 			: 0;
+		AllMissionsWon = mission.LaunchRecord != null && !mission.LaunchFailed &&
+			mission.RoverStageResolved && mission.RoverStageCompleted && mission.AllPuzzlesComplete;
 
 		FinalOxygenSeconds = mission.Oxygen.RemainingSeconds;
 		RecordedOxygenFraction = mission.Oxygen.CapacitySeconds > 0

@@ -6,6 +6,12 @@ using Godot;
 using ares.scripts.mission;
 using ares.scripts.rover;
 
+public interface IDevSceneSkipTarget
+{
+	bool CanSkipWithDevCode { get; }
+	bool SkipWithDevCode();
+}
+
 /// <summary>Hidden developer shortcuts. Type the code with Shift held so it never fights gameplay keys.</summary>
 public partial class DevCheats : Node
 {
@@ -13,8 +19,6 @@ public partial class DevCheats : Node
 	public const string SkipTrainingCode = "ARES";
 	/// <summary>Clears the training progress again.</summary>
 	public const string ResetTrainingCode = "ERASE";
-	/// <summary>Skips only the active rover stage through its normal success route.</summary>
-	public const string SkipRoverCode = "ORBIT";
 
 	private const double Timeout = 2.5;
 	private readonly StringBuilder _buffer = new();
@@ -62,7 +66,7 @@ public partial class DevCheats : Node
 	{
 		if (!Enabled) return;
 		if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
-		if (GetViewport().GuiGetFocusOwner() != null)
+		if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
 		{
 			_buffer.Clear();
 			return;
@@ -76,10 +80,10 @@ public partial class DevCheats : Node
 			_buffer.Clear();
 			return;
 		}
+		GetViewport().SetInputAsHandled();
 
 		_buffer.Append(((char)('A' + (key.Keycode - (int)Key.A))).ToString());
 		if (_buffer.Length > 16) _buffer.Remove(0, _buffer.Length - 16);
-		if (GetTree().CurrentScene is Rover_scence) GetViewport().SetInputAsHandled();
 		CheckCodes();
 	}
 
@@ -87,14 +91,6 @@ public partial class DevCheats : Node
 	public void CheckCodes()
 	{
 		string buffer = _buffer.ToString();
-		if (buffer.EndsWith(SkipRoverCode, StringComparison.Ordinal))
-		{
-			_buffer.Clear();
-			if (GetTree().CurrentScene is IRoverMissionSkipTarget rover &&
-				rover.CanSkipRoverMission && rover.SkipRoverMission())
-				ShowToast($"ROVER MISSION SKIPPED — {SkipRoverCode}");
-			return;
-		}
 		if (buffer.EndsWith(SkipTrainingCode, StringComparison.Ordinal))
 		{
 			_buffer.Clear();
@@ -112,8 +108,26 @@ public partial class DevCheats : Node
 
 	private void ApplySkip()
 	{
-		MissionState.Instance?.CompleteAllTraining();
-		ShowToast($"TRAINING SKIPPED — {SkipTrainingCode}");
+		var mission = MissionState.Instance;
+		mission?.CompleteAllTraining();
+		long currentRun = mission?.LaunchSequence ?? 0;
+		bool skipped = TrySkipActiveScene(GetTree().CurrentScene);
+		if (!skipped && GetTree().CurrentScene is IRoverMissionSkipTarget rover &&
+			rover.CanSkipRoverMission)
+			skipped = rover.SkipRoverMission();
+		if (mission != null && mission.LaunchSequence != currentRun)
+			mission.CompleteAllTraining();
+		ShowToast(skipped ? $"SCENE SKIPPED — {SkipTrainingCode}" : $"TRAINING SKIPPED — {SkipTrainingCode}");
+	}
+
+	private static bool TrySkipActiveScene(Node root)
+	{
+		if (root == null) return false;
+		if (root is IDevSceneSkipTarget target && target.CanSkipWithDevCode)
+			return target.SkipWithDevCode();
+		foreach (Node child in root.GetChildren())
+			if (TrySkipActiveScene(child)) return true;
+		return false;
 	}
 
 	private void ApplyReset()

@@ -3,6 +3,7 @@ namespace ares.scripts.training;
 using System;
 using System.Collections.Generic;
 using Godot;
+using Ares.Systems.Audio;
 using ares.scripts.mission;
 using ares.scripts.player;
 using ares.scripts.systems.inventory;
@@ -25,6 +26,7 @@ public partial class EquipmentPanel : CanvasLayer
 	private readonly List<(ItemData Item, Button Button, Action Handler)> _tools = new();
 	private Label _kitStatus, _tankCount, _tankCapacity, _cargoStatus, _oxygenWarning, _coverageStatus, _feedback;
 	private Button _kitButton, _minus, _plus, _close;
+	private readonly FeedbackSounds _sounds = new();
 
 	public override void _Ready()
 	{
@@ -34,6 +36,8 @@ public partial class EquipmentPanel : CanvasLayer
 		_physicsLock.Acquire(Player);
 		Refresh();
 		_close?.GrabFocus();
+		UiNavigationSounds.Attach(this);
+		_sounds.Play(SoundIds.PanelOpen);
 	}
 
 	private void BuildUi()
@@ -280,14 +284,18 @@ public partial class EquipmentPanel : CanvasLayer
 	private void ToggleKit()
 	{
 		if (Locker == null || Player == null) return;
+		bool before = Locker.StarterKit != null && Player.Inventory?.Contains(Locker.StarterKit) == true;
 		_feedback.Text = Locker.Toggle(Player);
+		_sounds.Transfer(before, Locker.StarterKit != null && Player.Inventory?.Contains(Locker.StarterKit) == true);
 		Refresh();
 	}
 
 	private void ToggleTool(ItemData tool)
 	{
 		if (Locker == null || Player == null) return;
+		bool before = tool != null && Player.Inventory?.Contains(tool) == true;
 		_feedback.Text = Locker.ToggleTool(Player, tool);
+		_sounds.Transfer(before, tool != null && Player.Inventory?.Contains(tool) == true);
 		Refresh();
 	}
 
@@ -299,8 +307,11 @@ public partial class EquipmentPanel : CanvasLayer
 	{
 		var mission = MissionState.Instance;
 		if (mission == null) return;
-		_feedback.Text = mission.TrySetOxygenTankCount(mission.OxygenTankCount + amount, out string error)
-			? "" : error;
+		int before = mission.OxygenTankCount;
+		bool accepted = mission.TrySetOxygenTankCount(before + amount, out string error);
+		_feedback.Text = accepted ? "" : error;
+		_sounds.Play(accepted && mission.OxygenTankCount != before
+			? amount > 0 ? SoundIds.EquipmentTake : SoundIds.EquipmentStore : SoundIds.UiDenied, 300);
 		Refresh();
 	}
 
@@ -358,6 +369,7 @@ public partial class EquipmentPanel : CanvasLayer
 	{
 		if (_closed) return;
 		_closed = true;
+		_sounds.Play(SoundIds.PanelClose);
 		_physicsLock.Release();
 		Closed?.Invoke();
 		Callable.From(QueueFree).CallDeferred();

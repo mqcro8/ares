@@ -1,7 +1,9 @@
 using Godot;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ares.scripts.mission;
+using ares.scripts.mars;
 using ares.scripts.ui;
 
 public partial class OxygenSystemTest : Node
@@ -92,6 +94,12 @@ public partial class OxygenSystemTest : Node
 		reserve.Advance(20);
 		Check(reserve.RemainingSeconds == 50 && reserve.IsCritical && reserve.IsReturnReserveLow,
 			"The critical warning takes over below fifteen percent");
+
+		var rescue = new OxygenSupply();
+		rescue.ProvideEmergencyReserve(OxygenSupply.DefaultSecondsPerTank);
+		Check(rescue.IsEmergencyReserve && rescue.TankCount == 0 && rescue.CapacitySeconds == 120 &&
+			!rescue.IsDepleted,
+			"Rover rescue oxygen lets a no-tank run continue without changing the selected loadout");
 	}
 
 	private void TestCanisterCollection()
@@ -111,8 +119,8 @@ public partial class OxygenSystemTest : Node
 		string feedback = pickup.Collect();
 		Check(feedback.Contains("+60") && pickup.Collected,
 			"Collecting a canister fills the suit reserve: " + feedback);
-		Check(Math.Abs(mission.Oxygen.RemainingSeconds - 320) < .001,
-			"The canister adds its seconds to the reserve");
+		Check(Math.Abs(mission.Oxygen.RemainingSeconds - (2 * OxygenSupply.DefaultSecondsPerTank - 100 + 60)) < .001,
+			$"The canister adds its seconds to the reserve ({mission.Oxygen.RemainingSeconds}/{2 * OxygenSupply.DefaultSecondsPerTank - 100 + 60})");
 		Check(pickup.Collect() == "ALREADY COLLECTED.",
 			"A collected canister cannot be taken twice");
 		var station = GD.Load<PackedScene>("res://scenes/mars/OxygenStation.tscn")
@@ -172,7 +180,7 @@ public partial class OxygenSystemTest : Node
 		});
 		Input.FlushBufferedEvents();
 		await Frames(2);
-		Check(pickup.Collected && mission.Oxygen.RemainingSeconds > 300,
+		Check(pickup.Collected && mission.Oxygen.RemainingSeconds > mission.Oxygen.CapacitySeconds - 60,
 			"Pressing E collects the canister into the suit reserve");
 		Check(mission.OxygenMessage.Contains("+60"),
 			"The HUD receives the pickup message: " + mission.OxygenMessage);
@@ -191,6 +199,8 @@ public partial class OxygenSystemTest : Node
 		Check(mission.TrySetOxygenTankCount(1, out string error), "Mission accepts one tank: " + error);
 		var hud = GD.Load<PackedScene>("res://scenes/ui/OxygenHud.tscn").Instantiate<OxygenHud>();
 		AddChild(hud);
+		Check(hud.ExtractionScene == "res://scenes/ending/ending.tscn",
+			"Oxygen failure goes to results, not directly to the main menu");
 		await Frames();
 		Check(mission.Stage == MissionStage.Mars && mission.Oxygen.IsActive,
 			"Oxygen HUD starts drain only for the Mars-surface scene");
@@ -202,6 +212,10 @@ public partial class OxygenSystemTest : Node
 		mission.Oxygen.Advance(mission.Oxygen.RemainingSeconds + 1);
 		Check(hud.IsEmergencyVisible && mission.Oxygen.IsDepleted,
 			"Running out of oxygen shows the emergency return screen");
+		Check(mission.Ending == MissionEnding.Bad && mission.ShowScoreImmediately,
+			"Oxygen depletion records a failed run for score results");
+		Check(mission.Ending == MissionEnding.Bad && mission.ShowScoreImmediately,
+			"Oxygen depletion ends at mission results instead of the main menu");
 		Check(!GetTree().Paused,
 			"Running out of oxygen no longer freezes the game so the astronaut can walk back");
 		hud.QueueFree();
@@ -224,6 +238,11 @@ public partial class OxygenSystemTest : Node
 			mars.GetNodeOrNull<OxygenPickup>("SurfaceOxygenCanister") != null &&
 			mars.GetNodeOrNull<OxygenPickup>("LanderOxygenStation") != null,
 			"Mars Base contains the oxygen HUD, a canister and the lander refill station");
+		Check(!mars.GetChildren().OfType<MarsBaseDebug>().Any() &&
+			mission.Oxygen.TankCount == 2 && mission.Oxygen.CapacitySeconds == 2 * OxygenSupply.DefaultSecondsPerTank,
+			"Real Mars entry preserves selected tanks and uses the shorter oxygen duration");
+		Check(mars.GetNode<ares.scripts.player.Player>("Player").FootstepSoundId == Ares.Systems.Audio.SoundIds.FootstepsPlanet,
+			"Mars exterior uses planetary footsteps");
 		var station = mars.GetNode<OxygenPickup>("LanderOxygenStation");
 		Check(station.PlayerNearby,
 			"The lander refill station is reachable from the Mars spawn");

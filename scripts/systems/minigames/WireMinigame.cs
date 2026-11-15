@@ -10,6 +10,7 @@ using Ares.Systems.Audio;
 public partial class WireMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
+	private readonly FeedbackSounds _feedbackSounds = new();
 
 	[Export] public Godot.Collections.Array<Color> WireColors { get; set; } = new()
 	{
@@ -181,6 +182,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 	// Bloque 4: crear cable
 	private void StartDrag(ColorRect t)
 	{
+		_feedbackSounds.Play(SoundIds.EquipmentTake);
 		_dragWire?.QueueFree();
 		_dragGlow?.QueueFree();
 		_dragFrom = t;
@@ -269,7 +271,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 		if (success)
 		{
-			AudioManager.PlaySfx(SoundIds.Enter, -8f, 1.25f);
+			_feedbackSounds.Play(SoundIds.ConnectorSnap);
 			// Bloque 8a: fijar cable
 			var end = Center(target);
 			wire.SetPointPosition(1, end);
@@ -293,7 +295,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		}
 		else
 		{
-			if (target != null) AudioManager.PlaySfx(SoundIds.OpenDoor, -8f, 0.8f);
+			if (target != null) _feedbackSounds.Play(SoundIds.ElectricalFault, 300);
 			// Bloque 8b: borrar cable
 			wire?.QueueFree();
 			glow?.QueueFree();
@@ -307,7 +309,11 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		_selectedLeft = -1;
 		Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 		ResetHighlights();
-		if (_finished) EmitSignal(SignalName.Completed);
+		if (_finished)
+		{
+			_feedbackSounds.Play(SoundIds.ObjectiveComplete);
+			EmitSignal(SignalName.Completed);
+		}
 		PublishControllerContext();
 	}
 

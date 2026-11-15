@@ -5,7 +5,7 @@ using Ares.Systems.Audio;
 
 namespace ares.scripts.stages;
 
-public partial class RocketMalfunction : Control
+public partial class RocketMalfunction : Control, ares.scripts.systems.IDevSceneSkipTarget
 {
 	public const string ScenePath = "res://scenes/cinematics/RocketMalfunction.tscn";
 	internal const string GatewayScene = "res://scenes/gateway/Gateway.tscn";
@@ -16,6 +16,7 @@ public partial class RocketMalfunction : Control
 	private AnimatedSprite2D _animation;
 	private AudioStreamPlayer _sound;
 	private bool _transitioning;
+	public bool CanSkipWithDevCode => IsInsideTree() && !_transitioning;
 	internal Func<string, Error> SceneLoader { get; set; }
 
 	public override void _Ready()
@@ -79,5 +80,12 @@ public partial class RocketMalfunction : Control
 			_transitioning = false;
 			GD.PushError($"Unable to load Gateway after malfunction cutscene: {error}");
 		}
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		TransitionToGateway();
+		return _transitioning;
 	}
 }

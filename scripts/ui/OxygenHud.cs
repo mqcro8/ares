@@ -6,7 +6,7 @@ using ares.scripts.mission;
 using Ares.Systems.Audio;
 
 /// <summary>Surface-only oxygen display, return warning and emergency extraction presentation.</summary>
-public partial class OxygenHud : CanvasLayer
+public partial class OxygenHud : CanvasLayer, ares.scripts.systems.IDevSceneSkipTarget
 {
 	private static readonly Color Cyan = new(0.46f, 0.89f, 0.96f);
 	private static readonly Color Amber = new(1f, 0.72f, 0.24f);
@@ -24,7 +24,7 @@ public partial class OxygenHud : CanvasLayer
 	private bool _wasCritical, _wasReturnLow;
 
 	[Export] public bool ActivateOnReady { get; set; } = true;
-	[Export] public string ExtractionScene { get; set; } = "res://scenes/main_menu/main_menu_take3.tscn";
+	[Export] public string ExtractionScene { get; set; } = "res://scenes/ending/ending.tscn";
 	public bool IsCritical => _mission?.Oxygen.IsCritical == true;
 	public bool IsFailureVisible => _failureOverlay?.Visible == true;
 	public bool IsCriticalWarningVisible => _criticalText?.Visible == true;
@@ -33,6 +33,7 @@ public partial class OxygenHud : CanvasLayer
 	public bool IsMessageVisible => _messageText?.Visible == true;
 	public string MessageText => _messageText?.Text ?? "";
 	public float CriticalFlashAlpha => _criticalFlash?.Color.A ?? 0;
+	public bool CanSkipWithDevCode => IsInsideTree() && IsFailureVisible;
 
 	public override void _Ready()
 	{
@@ -169,7 +170,7 @@ public partial class OxygenHud : CanvasLayer
 		cause.HorizontalAlignment = HorizontalAlignment.Center;
 		failureColumn.AddChild(cause);
 		_failureButton = new Button { Text = "EMERGENCY EXTRACTION" };
-		_failureButton.Pressed += ReturnToMissionControl;
+		_failureButton.Pressed += ViewMissionScore;
 		failureColumn.AddChild(_failureButton);
 	}
 
@@ -196,7 +197,7 @@ public partial class OxygenHud : CanvasLayer
 		var oxygen = _mission.Oxygen;
 		var remaining = System.TimeSpan.FromSeconds(oxygen.RemainingSeconds);
 		var capacity = System.TimeSpan.FromSeconds(oxygen.CapacitySeconds);
-		_oxygenText.Text = $"O2  {remaining.Minutes:D2}:{remaining.Seconds:D2} / {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({oxygen.Fraction:P0})";
+		_oxygenText.Text = $"{(oxygen.IsEmergencyReserve ? "EMERGENCY O2" : "O2")}  {remaining.Minutes:D2}:{remaining.Seconds:D2} / {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({oxygen.Fraction:P0})";
 		_bar.Value = oxygen.Fraction * 100;
 		_barFill.BgColor = oxygen.IsCritical ? Red : oxygen.IsReturnReserveLow ? Amber : Cyan;
 		if (oxygen.IsCritical && !_wasCritical) AudioManager.PlaySfx(SoundIds.Enter, -5f, 0.7f);
@@ -241,19 +242,28 @@ public partial class OxygenHud : CanvasLayer
 	{
 		if (_failed) return;
 		_failed = true;
+		_mission.FailMissionImmediately();
 		AudioManager.StopMusic(0.6);
 		AudioManager.PlaySfx(SoundIds.SystemMalfunction);
 		_criticalFlash.Color = new Color(1, 0, 0, 0);
 		_criticalText.Visible = false;
 		_returnText.Visible = false;
 		_failureOverlay.Visible = true;
+		_failureButton.Text = "VIEW MISSION SCORE";
 		_failureButton?.GrabFocus();
 	}
 
-	private void ReturnToMissionControl()
+	private void ViewMissionScore()
 	{
 		if (GetTree().ChangeSceneToFile(ExtractionScene) != Error.Ok)
-			GD.PushError("OxygenHud could not start the emergency extraction.");
+			GD.PushError("OxygenHud could not open the mission score.");
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		ViewMissionScore();
+		return true;
 	}
 
 	public override void _ExitTree()

@@ -14,8 +14,10 @@ public sealed class OxygenSupply
 
 	public int TankCount { get; private set; }
 	private readonly double _baseSecondsPerTank;
+	private double _emergencyReserveCapacity;
 	public double SecondsPerTank => _baseSecondsPerTank * RegulatorFactor;
-	public double CapacitySeconds => TankCount * SecondsPerTank;
+	public double CapacitySeconds => Math.Max(TankCount * SecondsPerTank, _emergencyReserveCapacity);
+	public bool IsEmergencyReserve => _emergencyReserveCapacity > 0;
 	public double RemainingSeconds { get; private set; }
 	public double Fraction => CapacitySeconds > 0 ? RemainingSeconds / CapacitySeconds : 0;
 	public bool IsActive { get; private set; }
@@ -68,6 +70,7 @@ public sealed class OxygenSupply
 		}
 
 		TankCount = count;
+		_emergencyReserveCapacity = 0;
 		RemainingSeconds = CapacitySeconds;
 		EmergencyReturnRequired = false;
 		Changed?.Invoke();
@@ -97,6 +100,19 @@ public sealed class OxygenSupply
 	{
 		if (!IsActive) return;
 		IsActive = false;
+		Changed?.Invoke();
+	}
+
+	/// <summary>One-time rescue supply after rover loss; never changes selected tank count or cargo.</summary>
+	public void ProvideEmergencyReserve(double seconds)
+	{
+		if (!double.IsFinite(seconds) || seconds <= 0) return;
+		_emergencyReserveCapacity = Math.Max(_emergencyReserveCapacity, seconds);
+		RemainingSeconds = Math.Min(CapacitySeconds, seconds);
+		IsActive = false;
+		HasStartedSurface = false;
+		IsDepleted = false;
+		EmergencyReturnRequired = false;
 		Changed?.Invoke();
 	}
 
@@ -171,6 +187,7 @@ public sealed class OxygenSupply
 		HasStartedSurface = false;
 		IsDepleted = false;
 		EmergencyReturnRequired = false;
+		_emergencyReserveCapacity = 0;
 		Changed?.Invoke();
 	}
 
@@ -178,6 +195,7 @@ public sealed class OxygenSupply
 	public void DebugFill(int tankCount = MaxTanks)
 	{
 		TankCount = Math.Clamp(tankCount, 0, MaxTanks);
+		_emergencyReserveCapacity = 0;
 		RemainingSeconds = CapacitySeconds;
 		IsActive = false;
 		HasStartedSurface = false;

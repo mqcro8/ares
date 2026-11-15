@@ -241,7 +241,7 @@ public partial class LoadoutTest : Node
         Check(supply.Toggle(astronaut).Contains("ACQUIRED") && mission.CargoUsed == 3,
             "Taking the existing kit still costs three cargo");
         Check(mission.TrySetOxygenTankCount(1, out tankError) && mission.CargoUsed == 4 &&
-            mission.Oxygen.CapacitySeconds == 180 && mission.CargoCapacity - mission.CargoUsed == 3,
+            mission.Oxygen.CapacitySeconds == ToolEffects.OxygenBaseSecondsPerTank && mission.CargoCapacity - mission.CargoUsed == 3,
             "One-tank survival kit leaves three cargo for tools");
         Check(supply.ToggleTool(astronaut, supply.Tools[0]).Contains("ACQUIRED") &&
             mission.HasEquipped(ToolEffects.SpareFuses) && mission.CargoUsed == 5,
@@ -254,7 +254,7 @@ public partial class LoadoutTest : Node
             "Over-capacity selection leaves both inventories unchanged");
         Check(mission.GetOrCreateLocker(4, kit, supply.Tools).CountOf(supply.Tools[0]) == 0,
             "Revisiting the locker does not duplicate a tool already taken");
-        Check(mission.CargoUsed == 6 && mission.Oxygen.CapacitySeconds == 180,
+        Check(mission.CargoUsed == 6 && mission.Oxygen.CapacitySeconds == ToolEffects.OxygenBaseSecondsPerTank,
             "Two specialized tools trade two cargo units while preserving one tank");
 
         var testSlot = GD.Load<PackedScene>("res://scripts/hotbar_scene.tscn").Instantiate<HotbarSlot>();

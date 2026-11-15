@@ -8,7 +8,7 @@ using ares.scripts.systems.items;
 using ares.scripts.ui.mission_monitor;
 
 /// <summary>Scene-local briefing; owns only the player's temporary physics lock.</summary>
-public partial class TrainingIntro : Node2D
+public partial class TrainingIntro : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	[Export] public DialogueSequence Briefing { get; set; }
 	[Export] public DialogueSequence CompletionNotice { get; set; }
@@ -37,6 +37,7 @@ public partial class TrainingIntro : Node2D
 	private TrainingControlsGuide _controlsGuide;
 	public bool BriefingActive => _active;
 	public bool CompletionShown => _completionShown;
+	public bool CanSkipWithDevCode => IsInsideTree() && _player != null;
 	public TrainingStations Stations => _stations;
 	public TrainingControlsGuide ControlsGuide => _controlsGuide;
 
@@ -154,6 +155,24 @@ public partial class TrainingIntro : Node2D
 		_continue.Text = "Continue";
 		_panel.Show();
 		_continue.GrabFocus();
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		var mission = MissionState.Instance;
+		mission.CompleteAllTraining();
+		mission.TakeTrainingCompletionNotification();
+		_active = false;
+		_physicsLock.Release();
+		PracticeSession.Prepare(PracticeSession.TrainingScene, PracticeSession.LabScene,
+			"lab.from_gym", _player.GlobalPosition);
+		Error error = GetTree().ChangeSceneToFile(PracticeSession.LabScene);
+		if (error == Error.Ok) return true;
+		PracticeSession.Abort();
+		_active = true;
+		AcquirePhysicsLock();
+		return false;
 	}
 
 	private void ShowLine()

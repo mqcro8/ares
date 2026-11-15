@@ -7,7 +7,7 @@ using ares.scripts.systems.items;
 using ares.scripts.ui.mission_monitor;
 
 /// <summary>Room restoration and interaction; all room geometry lives in the scene.</summary>
-public partial class TrainingLab : Node2D
+public partial class TrainingLab : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	public const float RoomWidth = 768f;
 	public const float RoomHeight = 432f;
@@ -27,6 +27,7 @@ public partial class TrainingLab : Node2D
 	private TrainingStations _stations;
 	private Label _cargoStatus;
 	private bool _completionNoticeOpen;
+	public bool CanSkipWithDevCode => IsInsideTree() && MissionState.Instance?.LoadoutConfirmed == false;
 
 	public override void _Ready()
 	{
@@ -137,6 +138,22 @@ public partial class TrainingLab : Node2D
 		_stations.Targets.Add(new("Launch pad", LaunchPadZone,
 			"res://scenes/RocketLaunch/Launching.tscn", "launch.real", null,
 			PracticeSession.LaunchMode.Real, LaunchPadLockMessage));
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		var mission = MissionState.Instance;
+		mission.CompleteAllTraining();
+		mission.TakeTrainingCompletionNotification();
+		if (Locker != null && Locker.StarterKit != null && Player.Inventory?.Contains(Locker.StarterKit) != true)
+			Locker.Toggle(Player);
+		if (mission.OxygenTankCount == 0) mission.TrySetOxygenTankCount(1, out _);
+		PracticeSession.RequestLaunch(PracticeSession.LaunchMode.Real, Player.GlobalPosition);
+		Error error = GetTree().ChangeSceneToFile("res://scenes/RocketLaunch/Launching.tscn");
+		if (error == Error.Ok) return true;
+		PracticeSession.Abort();
+		return false;
 	}
 
 	private static string LaunchPadLockMessage()

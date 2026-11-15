@@ -235,6 +235,8 @@ public partial class ProjectConsistencyTest : Node
 		mission.SpareParts = 17;
 		mission.TrainingWiresComplete = true;
 		var run = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
+		string destination = "";
+		run.SceneLoader = path => { destination = path; return Error.Ok; };
 		AddChild(run);
 		await Frames();
 		var rover = run.GetNode<Rover>("CharacterBody2D");
@@ -247,23 +249,43 @@ public partial class ProjectConsistencyTest : Node
 			Check(rover.RemainingLives == 5 - lost,
 				$"Rover collision {lost} removes one local heart");
 		}
+		await Frames();
 		Check(rover.IsGameOver && mission.Ending == ares.scripts.mission.MissionEnding.None &&
-			!mission.RoverStageCompleted,
-			"Losing rover hearts does not end the whole mission or mark rover recovered");
+			mission.RoverStageResolved && !mission.RoverStageCompleted,
+			$"Losing rover hearts resolves the stage as a failure without ending the campaign (gameover={rover.IsGameOver}, resolved={mission.RoverStageResolved}, success={mission.RoverStageCompleted}, seq={mission.LaunchSequence}, stage={mission.Stage})");
+		Check(mission.Oxygen.IsEmergencyReserve && mission.Oxygen.CapacitySeconds > 0,
+			"Rover loss provides a small rescue reserve when no tanks were equipped");
 		Check(mission.SpareParts == 17 && mission.TrainingWiresComplete,
 			"Rover failure preserves unrelated mission resources and training");
+		await Wait(4.1);
+		Check(destination == "res://scenes/mars/MarsBase.tscn",
+			"Rover defeat continues to the Mars walk without a retry screen");
 		run.QueueFree();
 		await Frames();
-
-		var retry = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
-		AddChild(retry);
+		var mars = GD.Load<PackedScene>("res://scenes/mars/MarsBase.tscn").Instantiate<Node2D>();
+		AddChild(mars);
 		await Frames();
-		Check(retry.GetNode<Rover>("CharacterBody2D").RemainingLives == 5,
-			"Retry restores all five rover hearts");
+		var oxygenHud = mars.GetNode<ares.scripts.ui.OxygenHud>("OxygenHud");
+		Check(mission.Stage == ares.scripts.mission.MissionStage.Mars && mission.Oxygen.IsActive &&
+			mission.Oxygen.IsEmergencyReserve && !oxygenHud.IsEmergencyVisible,
+			"Rover rescue arrives at the walk with emergency oxygen instead of bouncing to the menu");
+		mars.QueueFree();
+		await Frames();
+
+		var reentry = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
+		destination = "";
+		reentry.SceneLoader = path => { destination = path; return Error.Ok; };
+		AddChild(reentry);
+		await Frames();
+		Check(reentry.GetNode<Rover>("CharacterBody2D").RemainingLives == 0 && destination == "",
+			"Re-entering a failed rover cannot reset lives or start another attempt");
+		await Wait(4.1);
+		Check(destination == "res://scenes/mars/MarsBase.tscn",
+			"A resolved rover re-entry redirects to Mars");
 		Check(mission.SpareParts == 17 && mission.TrainingWiresComplete &&
 			mission.Ending == ares.scripts.mission.MissionEnding.None,
-			"Retry preserves cargo/training and leaves whole-mission outcome active");
-		retry.QueueFree();
+			"Rover failure preserves campaign progression and training");
+		reentry.QueueFree();
 		await Frames();
 		mission.BeginLaunchSequence();
 	}

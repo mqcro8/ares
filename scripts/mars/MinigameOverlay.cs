@@ -4,12 +4,13 @@ using Godot;
 using System;
 using ares.scripts.training;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 /// <summary>
 /// Reusable full-screen mini-game overlay. Freezes the player, runs the mini-game,
 /// then releases the player in the exact same spot without unloading the building.
 /// </summary>
-public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
+public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares.scripts.systems.IDevSceneSkipTarget
 {
 	/// <summary>True when the player solved the mini-game, false when they backed out.</summary>
 	public event Action<bool> Finished;
@@ -21,6 +22,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 	private bool _closed;
 	private bool _solved;
 	private int _session;
+	public bool CanSkipWithDevCode => IsInsideTree() && !_closed;
 
 	public static MinigameOverlay Open(Node owner, Node2D player, string scenePath, string title, string hint,
 		string completedTitle = "Repaired!")
@@ -53,6 +55,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 		// re-enable the board, and republish the controller context it cleared.
 		StripTrainingWrapper();
 		SetGameActive(true);
+		if (_game is WireMinigame or FuseBoxMinigame) AudioManager.PlaySfx(SoundIds.PanelOpen);
 		BeginControllerContext();
 
 		switch (_game)
@@ -219,6 +222,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 			return;
 
 		_closed = true;
+		if (!solved && (_game is WireMinigame or FuseBoxMinigame)) AudioManager.PlaySfx(SoundIds.PanelClose);
 		_session++;
 		GetViewport().SizeChanged -= FitLayout;
 		ControllerCommandRouter.Unregister(this);
@@ -252,6 +256,14 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 		Finished?.Invoke(solved);
 		QueueFree();
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		_solved = true;
+		Close(true);
+		return true;
 	}
 
 	public bool HandleControllerCommand(ControllerCommand command)

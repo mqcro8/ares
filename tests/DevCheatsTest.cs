@@ -6,10 +6,11 @@ using ares.scripts.rover;
 using ares.scripts.systems;
 using ares.scripts.training;
 
-public partial class DevCheatsTest : Node, IRoverMissionSkipTarget
+public partial class DevCheatsTest : Node, IRoverMissionSkipTarget, IDevSceneSkipTarget
 {
 	private int _assertions;
 	public bool CanSkipRoverMission { get; set; }
+	public bool CanSkipWithDevCode => CanSkipRoverMission;
 	public int RoverSkips { get; private set; }
 	public bool SkipRoverMission()
 	{
@@ -19,6 +20,7 @@ public partial class DevCheatsTest : Node, IRoverMissionSkipTarget
 			MissionState.Instance.CompleteRoverStage(MissionState.Instance.LaunchSequence);
 		return true;
 	}
+	public bool SkipWithDevCode() => SkipRoverMission();
 
 	private void Check(bool condition, string message)
 	{
@@ -117,13 +119,13 @@ public partial class DevCheatsTest : Node, IRoverMissionSkipTarget
 
 		mission.BeginLaunchSequence();
 		CanSkipRoverMission = false;
-		foreach (Key key in new[] { Key.O, Key.R, Key.B, Key.I, Key.T }) PressKey(key, true);
+		foreach (Key key in new[] { Key.A, Key.R, Key.E, Key.S }) PressKey(key, true);
 		Check(RoverSkips == 0 && !mission.RoverStageCompleted,
-			"ORBIT is ignored when there is no active rover stage to skip");
+			"ARES does not skip a mission when its target rejects the skip");
 		CanSkipRoverMission = true;
-		foreach (Key key in new[] { Key.O, Key.R, Key.B, Key.I, Key.T }) PressKey(key, true);
+		foreach (Key key in new[] { Key.A, Key.R, Key.E, Key.S }) PressKey(key, true);
 		Check(RoverSkips == 1 && mission.RoverStageCompleted && mission.Ending == MissionEnding.None,
-			"ORBIT skips only the rover stage and does not end the whole mission");
+			"ARES uses the active scene's normal rover-success route");
 
 		stations.QueueFree();
 		stations.Player.QueueFree();

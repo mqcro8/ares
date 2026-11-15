@@ -6,6 +6,18 @@ namespace Ares.Systems.Audio;
 /// </summary>
 public static class SoundIds
 {
+	public const string UiNavigate = "ui_navigate";
+	public const string UiConfirm = "ui_confirm";
+	public const string UiBack = "ui_back";
+	public const string UiDenied = "ui_denied";
+	public const string PanelOpen = "panel_open";
+	public const string PanelClose = "panel_close";
+	public const string EquipmentTake = "equipment_take";
+	public const string EquipmentStore = "equipment_store";
+	public const string ConnectorSnap = "connector_snap";
+	public const string ElectricalFault = "electrical_fault";
+	public const string RelayEngage = "relay_engage";
+	public const string ObjectiveComplete = "objective_complete";
 	public const string MenuMusic = "menu_music";
 	public const string RoverAmbientWind = "rover_ambient_wind";
 	public const string RoverMoving = "rover_moving";
