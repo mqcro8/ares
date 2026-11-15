@@ -6,9 +6,9 @@
 [resource]
 script = ExtResource("1_item")
 Id = "rover_bumper"
-DisplayName = "Parachoques reforzado"
+DisplayName = "Reinforced Rover Bumper"
 Icon = ExtResource("2_icon")
-HotbarLabel = "PA"
+HotbarLabel = "RB"
 MaxStackSize = 1
 CargoCost = 2
 metadata/_custom_type_script = "res://scripts/systems/items/ItemData.cs"

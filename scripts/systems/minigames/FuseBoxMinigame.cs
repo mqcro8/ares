@@ -22,8 +22,8 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 
 	private bool[] _state;
 	private bool[] _initial;
-	private int _double;      // interruptor que cambia dos a la vez
-	private int _partner;     // el que cambia junto con él
+	private int _double;      // switch that toggles two fuses
+	private int _partner;     // the linked switch
 	private int _maxPresses;
 	private int _pressesLeft;
 	private bool _busy;
@@ -65,7 +65,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		PracticeReturn.Attach(this);
 	}
 
-	// Duplica el estilo de cada interruptor/luz para poder cambiar su color por separado
+	// Duplicate each switch/light style so its color can be changed independently.
 	private Panel PreparePanel(Panel p)
 	{
 		if (p.GetThemeStylebox("panel") is StyleBoxFlat sb)
@@ -73,7 +73,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		return p;
 	}
 
-	// Bloque 2: generar puzzle con un solo interruptor encendido (siempre tiene solución)
+	// Generate a solvable puzzle with exactly one switch initially on.
 	private void GeneratePuzzle()
 	{
 		int n = _switches.Count;
@@ -82,8 +82,8 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		_double = GD.RandRange(0, n - 1);
 		do { _partner = GD.RandRange(0, n - 1); } while (_partner == _double);
 
-		// El único encendido no es el doble ni su pareja: la solución es pulsar
-		// los otros 4, de modo que el doble encienda también a su pareja.
+		// The initially-on switch is neither the double switch nor its partner.
+		// Pressing the other four switches lets the double switch turn on its partner.
 		int on;
 		do { on = GD.RandRange(0, n - 1); } while (on == _double || on == _partner);
 		_state[on] = true;
@@ -92,7 +92,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		_pressesLeft = _maxPresses;
 	}
 
-	// Bloque 4: alternar (el interruptor doble cambia también a su pareja)
+	// Toggle the selected switch and its partner when the double switch is selected.
 	private void Toggle(int i)
 	{
 		_state[i] = !_state[i];
@@ -117,7 +117,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		}
 		for (int i = 0; i < _lights.Count; i++)
 			SetPanelColor(_lights[i], i < _pressesLeft ? LightOn : LightOff);
-		_status.Text = $"Presses: {_pressesLeft}/{_maxPresses}\nDOUBLE: {_double + 1} → also toggles {_partner + 1}";
+		_status.Text = $"Presses: {_pressesLeft}/{_maxPresses}";
 		PublishControllerContext();
 	}
 
@@ -141,7 +141,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 			return;
 		}
 
-		// Bloque 3: clic en interruptor
+		// Handle switch clicks.
 		if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
 		{
 			for (int i = 0; i < _switches.Count; i++)
@@ -161,7 +161,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 
 		Toggle(i);
 
-		// Bloque 5: gastar un intento
+		// Spend one press.
 		_pressesLeft--;
 		Refresh();
 
@@ -169,19 +169,19 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		if (i == _double)
 			Sparks(_switches[_partner], _state[_partner] ? OnColor : OffColor);
 
-		// Bloque 6: ¿todos encendidos?
+		// Check whether all switches are on.
 		if (_state.All(s => s))
 		{
-			// Bloque 7a: emitir completed
+			// Emit completed after the success animation.
 			_busy = true;
 			foreach (var sw in _switches) Sparks(sw, OnColor);
 			_status.Text = "All switches ON!";
 			_pending.Start(0.6);
 		}
-		// Bloque 7b: ¿quedan intentos?
+		// Check whether any presses remain.
 		else if (_pressesLeft <= 0)
 		{
-			// Bloque 8: reiniciar caja
+			// Reset the box after the failure message.
 			_busy = true;
 			_status.Text = "No presses left. Resetting the box…";
 			_pending.Start(0.5);

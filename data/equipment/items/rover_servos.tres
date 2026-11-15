@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1_item")
 Id = "rover_servos"
-DisplayName = "Servos del rover"
+DisplayName = "Rover Servos"
 Icon = ExtResource("2_icon")
 HotbarLabel = "SE"
 MaxStackSize = 1

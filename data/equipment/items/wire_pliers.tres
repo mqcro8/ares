@@ -6,9 +6,9 @@
 [resource]
 script = ExtResource("1_item")
 Id = "wire_pliers"
-DisplayName = "Alicates para cables"
+DisplayName = "Wire Pliers"
 Icon = ExtResource("2_icon")
-HotbarLabel = "AL"
+HotbarLabel = "WP"
 MaxStackSize = 1
 CargoCost = 1
 metadata/_custom_type_script = "res://scripts/systems/items/ItemData.cs"

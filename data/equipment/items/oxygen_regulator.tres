@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1_item")
 Id = "oxygen_regulator"
-DisplayName = "Regulador de oxígeno"
+DisplayName = "Oxygen Regulator"
 Icon = ExtResource("2_icon")
 HotbarLabel = "OR"
 MaxStackSize = 1

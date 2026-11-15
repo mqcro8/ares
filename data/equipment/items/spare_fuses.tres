@@ -6,9 +6,9 @@
 [resource]
 script = ExtResource("1_item")
 Id = "spare_fuses"
-DisplayName = "Fusibles de repuesto"
+DisplayName = "Spare Fuses"
 Icon = ExtResource("2_icon")
-HotbarLabel = "FU"
+HotbarLabel = "SF"
 MaxStackSize = 1
 CargoCost = 1
 metadata/_custom_type_script = "res://scripts/systems/items/ItemData.cs"
