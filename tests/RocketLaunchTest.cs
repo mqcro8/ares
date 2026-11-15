@@ -169,8 +169,12 @@ public partial class RocketLaunchTest : Node
         await Load(); await Capture("ready");
         Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launching_background.jpeg"),
             "Launch-site background is used");
-        Check(launch.GetNode<Sprite2D>("Rocket/Rocket").Texture.ResourcePath.EndsWith("rocket_sprite.png"),
-            "Existing rocket sprite is preserved");
+        var launchRocketSprite = launch.GetNode<Sprite2D>("Rocket/Rocket");
+        Check(launchRocketSprite.Texture.ResourcePath.EndsWith("rocket_sprite.png") &&
+            launchRocketSprite.Texture.GetWidth() == 952 && launchRocketSprite.Texture.GetHeight() == 1599 &&
+            Mathf.IsEqualApprox(launchRocketSprite.Scale.X, 0.19275205f) &&
+            Mathf.IsEqualApprox(launchRocketSprite.Scale.Y, 0.21775326f),
+            "Replacement rocket sprite preserves native resolution and launch-scale alignment");
         Check(launch.GetNode<Control>("IntroUI/Briefing").Visible && !launch.GetNode<Control>("IntroUI/Panel").Visible,
             "Launch Pad shows a compact ready dialog");
         var launchBriefing = launch.GetNode<PanelContainer>("IntroUI/Briefing");
