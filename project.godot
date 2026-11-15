@@ -23,7 +23,6 @@ room_code=""
 
 [autoload]
 
-MusicPlayer="*res://scripts/systems/audio/MusicPlayer.cs"
 MissionState="*res://scripts/mission/MissionState.cs"
 SceneManager="*uid://b4v2hsojp1mr2"
 AudioManager="*res://scripts/systems/audio/AudioManager.cs"
