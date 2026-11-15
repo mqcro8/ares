@@ -26,6 +26,7 @@ public partial class OxygenSystemTest : Node
 			TestSupplyModel();
 			TestCanisterCollection();
 			await TestPickupInteraction();
+			await TestMarsBaseWiring();
 			await TestHudAndMissionFailure();
 			GD.Print($"OXYGEN PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -205,6 +206,31 @@ public partial class OxygenSystemTest : Node
 			"Running out of oxygen no longer freezes the game so the astronaut can walk back");
 		hud.QueueFree();
 		await Frames();
+		mission.ResetEquipment();
+	}
+
+	private async Task TestMarsBaseWiring()
+	{
+		var mission = MissionState.Instance;
+		mission.ResetEquipment();
+		mission.CargoCapacity = 6;
+		Check(mission.TrySetOxygenTankCount(2, out string error), "Mars loadout accepts oxygen tanks: " + error);
+		var mars = GD.Load<PackedScene>("res://scenes/mars/MarsBase.tscn").Instantiate<Node2D>();
+		AddChild(mars);
+		await Frames(6);
+		Check(mission.Stage == MissionStage.Mars && mission.Oxygen.IsActive,
+			"The outdoor Mars scene activates oxygen drain");
+		Check(mars.GetNodeOrNull<CanvasLayer>("OxygenHud") != null &&
+			mars.GetNodeOrNull<OxygenPickup>("SurfaceOxygenCanister") != null &&
+			mars.GetNodeOrNull<OxygenPickup>("LanderOxygenStation") != null,
+			"Mars Base contains the oxygen HUD, a canister and the lander refill station");
+		var station = mars.GetNode<OxygenPickup>("LanderOxygenStation");
+		Check(station.PlayerNearby,
+			"The lander refill station is reachable from the Mars spawn");
+		mars.QueueFree();
+		await Frames();
+		Check(!mission.Oxygen.IsActive,
+			"Leaving the outdoor Mars scene pauses oxygen drain indoors");
 		mission.ResetEquipment();
 	}
 }

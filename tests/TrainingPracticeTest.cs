@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ares.scripts.dialogue;
 using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.training;
@@ -152,6 +153,10 @@ public partial class TrainingPracticeTest : Node
         };
         Check(tutorial?.Texture?.ResourcePath.EndsWith(expectedTutorial) == true && tutorial.Visible,
             "Practice instructions show the matching reference image");
+        var tutorialPanel = Find<PanelContainer>(Scene.GetNode<PracticeReturn>("PracticeReturn"),
+            panel => panel.Name == "DialoguePanel");
+        Check(tutorialPanel != null && tutorialPanel.GetThemeStylebox("panel") is StyleBoxFlat,
+            "Minigame tutorial uses the shared dialogue panel style");
         if (Visual)
         {
             var window = GetWindow();
@@ -210,6 +215,13 @@ public partial class TrainingPracticeTest : Node
         Check(Gym.LabReturnMarker.Owner == Gym && Gym.LabDoorZone.Owner == Gym,
             "Gym door zone and return marker are scene-owned");
         Check(Gym.BriefingActive && !Gym.Monitor.IsDisplayed, "Welcome hides the mission monitor");
+        var gymDialogue = Gym.GetNode<PanelContainer>("IntroUI/Panel");
+        Check(Mathf.IsEqualApprox(gymDialogue.AnchorLeft, 0.08f) &&
+            Mathf.IsEqualApprox(gymDialogue.AnchorRight, 0.92f) &&
+            gymDialogue.CustomMinimumSize.Y == DialoguePanelStyle.StandardHeight &&
+            Gym.GetNode<Label>("IntroUI/Panel/Margin/VBox/Speaker").GetThemeFontSize("font_size") == DialoguePanelStyle.SpeakerSize &&
+            Gym.GetNode<Label>("IntroUI/Panel/Margin/VBox/Text").GetThemeFontSize("font_size") == DialoguePanelStyle.BodySize,
+            "Training dialogue uses the shared width, height and typography");
         Check(Find<Label>(Scene, l => l.Text.StartsWith("CIRCUIT") && l.IsVisibleInTree()) == null,
             "Welcome hides monitor objectives");
         await Capture("gym-welcome");
@@ -251,11 +263,11 @@ public partial class TrainingPracticeTest : Node
         await Frames(8); Check(Scene is TrainingLab, "Held E cannot immediately return through entrance");
         Input.ParseInputEvent(new InputEventKey { Keycode = Key.E, PhysicalKeycode = Key.E, Pressed = false }); Input.FlushBufferedEvents();
         var saved = PracticeSession.Saved;
+        Check(saved.Course.Direction != 0 && saved.Course.Cleared == 1 && saved.Movement.Stamina < 100, "Partial course and stamina saved");
         float labEntryStamina = ares.scripts.mission.MissionState.Instance.Stamina;
         await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
         Check(ares.scripts.mission.MissionState.Instance.Stamina > labEntryStamina,
             "Stamina regenerates while resting in the lab");
-        Check(saved.Course.Direction != 0 && saved.Course.Cleared == 1 && saved.Movement.Stamina < 100, "Partial course and stamina saved");
         Check(Player.Position.DistanceTo(TrainingLab.DefaultSpawn) < 1, "Room-specific entrance, never gym position");
         Check(TrainingLab.RoomWidth == 768f && TrainingLab.RoomHeight == 432f,
             "Lab matches the gym spawn-room footprint");
@@ -626,6 +638,9 @@ public partial class TrainingPracticeTest : Node
                     direction == 1 ? block.Position.Y - body.Size.Y / 2 - 12 : block.End.Y + body.Size.Y / 2 + 12) - offset;
                 Player.Velocity = Vector2.Zero;
                 await Frames(8);
+                for (int wait = 0; Player.TrainingMovement.Stamina < 20 && wait < 180; wait++)
+                    await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                Check(Player.TrainingMovement.Stamina >= 20, "Rest restores enough stamina for the next hurdle");
                 Check(Player.TestMove(Player.GlobalTransform, new Vector2(0, direction * 45)), "Hurdle blocks grounded approach");
                 if (direction == 1 && step == 0)
                 {

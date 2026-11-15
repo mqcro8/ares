@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using ares.scripts.dialogue;
 using ares.scripts.mission;
 using ares.scripts.training;
 using ares.scripts.systems;
@@ -72,6 +73,15 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		briefingTutorial = GetNode<TextureRect>(BriefingUi + "Tutorial");
 		briefingStart = GetNode<Button>(BriefingUi + "Actions/Start");
 		briefingBack = GetNode<Button>(BriefingUi + "Actions/Back");
+		DialoguePanelStyle.ApplyPanel(briefing as PanelContainer);
+		DialoguePanelStyle.ApplyMargins(briefing.GetNodeOrNull<MarginContainer>("Margin"));
+		DialoguePanelStyle.ApplyColumn(briefing.GetNodeOrNull<VBoxContainer>("Margin/VBox"));
+		DialoguePanelStyle.ApplySpeaker(briefingSpeaker);
+		DialoguePanelStyle.ApplyBody(briefingText);
+		DialoguePanelStyle.ApplyAction(briefingStart);
+		DialoguePanelStyle.ApplyAction(briefingBack);
+		FitBriefing();
+		GetViewport().SizeChanged += FitBriefing;
 		gauge = GetNode<Control>(Ui + "Gauge");
 		ignitionProgress = GetNode<ProgressBar>("HUD/ProgressBar");
 		centeredProgress = GetNode<ProgressBar>(Ui + "CenteredProgress");
@@ -139,6 +149,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	public override void _ExitTree()
 	{
+		if (GetViewport() != null) GetViewport().SizeChanged -= FitBriefing;
 		if (GodotObject.IsInstanceValid(pauseManager)) pauseManager.PauseChanged -= OnPauseChanged;
 		fire.AnimationFinished -= OnAnimationFinished;
 		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
@@ -543,13 +554,12 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		{
 			float tutorialWidth = Math.Min(480, GetViewportRect().Size.X * .64f);
 			briefingTutorial.CustomMinimumSize = new Vector2(tutorialWidth, tutorialWidth * .4f);
-			briefing.OffsetTop = -180; briefing.OffsetBottom = 180;
 		}
 		else
 		{
 			briefingTutorial.CustomMinimumSize = Vector2.Zero;
-			briefing.OffsetTop = -96; briefing.OffsetBottom = 96;
 		}
+		FitBriefing();
 		briefingStart.Text = Practice ? "Begin simulator" : "Begin ignition";
 		briefingBack.Text = fromTraining ? "Return to lab" : "Back to Mission Control";
 		if (ignitionFailed) stats.Text = IgnitionStats();
@@ -601,6 +611,13 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		return Practice
 			? $"SIMULATOR COMPLETE — launch practice requirement cleared.{faults} Return to the lab and walk to LAUNCH PAD."
 			: $"LAUNCH COMPLETE — waiting for the next scene.{faults}";
+	}
+
+	private void FitBriefing()
+	{
+		if (briefing == null) return;
+		float height = Math.Max(DialoguePanelStyle.StandardHeight, briefing.GetCombinedMinimumSize().Y);
+		DialoguePanelStyle.FitCentered(briefing, GetViewport().GetVisibleRect().Size, height);
 	}
 
 	private void LayoutGauge()

@@ -157,6 +157,10 @@ public partial class ControllerInputTest : Node
             "hull_select accepts plate 3");
         Check(ControllerCommands.Validate(Make("launch_retry", 0, false, 0, false), out _),
             "launch_retry takes no arguments");
+        Check(ControllerCommands.Validate(Make("ending_skip", 0, false, 0, false), out _) &&
+            ControllerCommands.Validate(Make("ending_pause", 0, false, 0, false), out _) &&
+            ControllerCommands.Validate(Make("ending_continue", 0, false, 0, false), out _),
+            "Ending controls take no arguments");
 
         Check(ControllerActions.IsSupported(ControllerActions.MinigameAction),
             "minigame_action is a supported held action");
@@ -227,7 +231,10 @@ public partial class ControllerInputTest : Node
         data = json.Data.AsGodotDictionary();
         Check(data["mode"].AsString() == "none" && !data["active"].AsBool(),
             "Inactive context tells the phone to restore its previous view");
-        ControllerContext.Reset();
+		ControllerContext.Begin(owner, ControllerContextMode.Ending);
+		Check(ControllerContext.ModeId(ControllerContext.Mode) == "ending",
+			"Ending context selects the cinematic phone view");
+		ControllerContext.Reset();
     }
 
     private void RoomCodes()

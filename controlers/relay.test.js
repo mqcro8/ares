@@ -121,6 +121,28 @@ test("forwards context to the phone and replays it when a phone joins", async (t
   assert.deepEqual(await nextMessage(second, (message) => message.type === "context"), context);
 });
 
+test("supports ending cinematic context and controls", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+
+  const game = await connect(port, "END1", "game");
+  const controller = await connect(port, "END1", "controller");
+  t.after(() => closeAll(game, controller));
+
+  const context = {
+    type: "context", mode: "ending", active: true,
+    state: { outcome: "good", phase: "dialogue", beat: 2, beat_count: 3, can_skip: true, paused: false },
+  };
+  game.send(JSON.stringify(context));
+  assert.deepEqual(await nextMessage(controller, (message) => message.type === "context"), context);
+
+  for (const name of ["ending_pause", "ending_skip", "ending_continue"]) {
+    const received = nextMessage(game, (message) => message.type === "command" && message.name === name);
+    controller.send(JSON.stringify({ type: "command", name }));
+    assert.deepEqual(await received, { type: "command", name });
+  }
+});
+
 test("drops invalid context and never forwards it from the phone", async (t) => {
   const { relay, port } = await startRelay();
   t.after(() => relay.close());

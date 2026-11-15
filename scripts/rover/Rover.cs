@@ -18,6 +18,8 @@ public partial class Rover : CharacterBody2D
 	private const int MaxCollisions = 5;
 	private const float LagPerCollision = 0.2f;
 	private int _collisionCount = 0;
+	public int RemainingLives => Math.Max(0, MaxCollisions - _collisionCount);
+	public int Collisions => _collisionCount;
 	private float InputLag => _collisionCount * LagPerCollision;
 	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
@@ -28,12 +30,13 @@ public partial class Rover : CharacterBody2D
 	public override void _Ready()
 	{
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("AnimatedSprite2D");
-		_normalModulate = _roverAnimation.Modulate;
 		if (_roverAnimation == null)
 		{
 			GD.PushError("RoverScene: missing elements");
 			return;
 		}
+		_normalModulate = _roverAnimation.Modulate;
+		_collisionCount = 0;
 
 	}
 

@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d0c66h6ctijt3" path="res://scripts/player/Player.cs" id="1_hv47d"]
 [ext_resource type="Script" uid="uid://dm34bvcxyokia" path="res://scripts/ui/CameraBounds.cs" id="2_nyxx7"]
-[ext_resource type="Script" uid="uid://djp2edx8aqjif" path="res://scripts/training/TrainingMovement.cs" id="3_lp3q2"]
 [ext_resource type="Texture2D" uid="uid://0jtkidrhdsbn" path="res://art/player/walking/idle_front.png" id="4_74coo"]
 [ext_resource type="Texture2D" uid="uid://6cls6smxmhep" path="res://art/player/walking/idle_side.png" id="5_haskr"]
 [ext_resource type="Texture2D" uid="uid://di4lxsdafxtjl" path="res://art/player/walking/idle_back.png" id="6_ppt0s"]
@@ -29,6 +28,12 @@
 [ext_resource type="Script" uid="uid://c2rflhicgja8l" path="res://scripts/mars/EndingTrigger.cs" id="27_endtrigger"]
 [ext_resource type="Script" uid="uid://bm77rhwep6h65" path="res://scripts/dialogue/DialogueView.cs" id="28_dialogue"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="29_objective"]
+[ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="30_oxygen_hud"]
+[ext_resource type="PackedScene" path="res://scenes/mars/OxygenCanister.tscn" id="31_oxygen_canister"]
+[ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
+[ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="30_oxygen_hud"]
+[ext_resource type="PackedScene" path="res://scenes/mars/OxygenCanister.tscn" id="31_oxygen_canister"]
+[ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_7lra3"]
 animations = [{
@@ -130,11 +135,10 @@ size = Vector2(67, 31.5)
 
 [node name="MarsBase" type="Node2D" unique_id=895941075]
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=690492024 node_paths=PackedStringArray("TrainingMovement") groups=["player"]]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=690492024 groups=["player"]]
 z_index = 2
 position = Vector2(-2, 435)
 script = ExtResource("1_hv47d")
-TrainingMovement = NodePath("TrainingMovement")
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=430553522 node_paths=PackedStringArray("TileMapLayer")]
 process_physics_priority = 10
@@ -143,12 +147,6 @@ zoom = Vector2(2, 2)
 process_callback = 0
 script = ExtResource("2_nyxx7")
 TileMapLayer = NodePath("../../Terrains/GroundTilemap")
-
-[node name="TrainingMovement" type="Node" parent="Player" unique_id=2023765293 node_paths=PackedStringArray("Visual", "Footprint", "Shadow")]
-script = ExtResource("3_lp3q2")
-Visual = NodePath("../AnimatedSprite2D")
-Footprint = NodePath("../CollisionShape2D")
-Shadow = NodePath("../JumpShadow")
 
 [node name="JumpShadow" type="Polygon2D" parent="Player" unique_id=1993019635]
 scale = Vector2(0.75, 0.75)
@@ -263,6 +261,14 @@ tile_set = ExtResource("16_haskr")
 z_index = 5
 
 [node name="Sprites" type="Node" parent="." unique_id=1128206557]
+
+[node name="OxygenHud" parent="." instance=ExtResource("30_oxygen_hud")]
+
+[node name="LanderOxygenStation" parent="." instance=ExtResource("32_oxygen_station")]
+position = Vector2(28, 435)
+
+[node name="SurfaceOxygenCanister" parent="." instance=ExtResource("31_oxygen_canister")]
+position = Vector2(140, 300)
 
 [node name="AnimatedSprite2D2" type="AnimatedSprite2D" parent="Sprites" unique_id=74813652]
 z_index = 5
@@ -403,3 +409,14 @@ grow_vertical = 0
 script = ExtResource("28_dialogue")
 
 [node name="ObjectiveDialogue" parent="." unique_id=497977403 instance=ExtResource("29_objective")]
+
+[node name="OxygenHud" parent="." instance=ExtResource("30_oxygen_hud")]
+
+[node name="LanderOxygenStation" parent="." instance=ExtResource("32_oxygen_station")]
+position = Vector2(28, 435)
+
+[node name="SurfaceOxygenCanisterWest" parent="." instance=ExtResource("31_oxygen_canister")]
+position = Vector2(-145, 270)
+
+[node name="SurfaceOxygenCanisterEast" parent="." instance=ExtResource("31_oxygen_canister")]
+position = Vector2(155, 315)

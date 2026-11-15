@@ -56,6 +56,9 @@ public static class ControllerCommands
     public const string LaunchStart = "launch_start";
     public const string LaunchTap = "launch_tap";
     public const string LaunchRetry = "launch_retry";
+    public const string EndingSkip = "ending_skip";
+    public const string EndingContinue = "ending_continue";
+    public const string EndingPause = "ending_pause";
 
     private static readonly HashSet<string> Known = new(StringComparer.Ordinal)
     {
@@ -71,6 +74,9 @@ public static class ControllerCommands
         LaunchStart,
         LaunchTap,
         LaunchRetry,
+        EndingSkip,
+        EndingContinue,
+        EndingPause,
     };
 
     public static bool IsSupported(string name) =>

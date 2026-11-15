@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="CinematicSequence" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/ending/CinematicSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/ending/CinematicBeat.cs" id="2_beat"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_fail_1.png" id="3_departure"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_fail_2.png" id="4_earth"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_fail_3.png" id="5_control"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_fail_4.png" id="6_window"]
+
+[sub_resource type="Resource" id="BeatDeparture"]
+script = ExtResource("2_beat")
+Image = ExtResource("3_departure")
+Speaker = "MISSION CONTROL"
+Text = "Ares, your systems are failing. Report your status."
+HoldSeconds = 5.0
+CrossfadeSeconds = 0.8
+
+[sub_resource type="Resource" id="BeatEarth"]
+script = ExtResource("2_beat")
+Image = ExtResource("4_earth")
+Speaker = "ASTRONAUT"
+Text = "Mission Control, the return trajectory is unstable."
+HoldSeconds = 5.0
+CrossfadeSeconds = 0.8
+
+[sub_resource type="Resource" id="BeatControl"]
+script = ExtResource("2_beat")
+Image = ExtResource("5_control")
+Speaker = "MISSION CONTROL"
+Text = "Ares, we are losing telemetry. Do you copy?"
+HoldSeconds = 5.0
+CrossfadeSeconds = 0.8
+
+[sub_resource type="Resource" id="BeatWindow"]
+script = ExtResource("2_beat")
+Image = ExtResource("6_window")
+Speaker = "MISSION CONTROL"
+Text = "Signal lost. The transfer window is closing."
+HoldSeconds = 6.0
+CrossfadeSeconds = 0.8
+
+[resource]
+script = ExtResource("1_sequence")
+Id = "bad"
+Beats = Array[ExtResource("2_beat")]([SubResource("BeatDeparture"), SubResource("BeatEarth"), SubResource("BeatControl"), SubResource("BeatWindow")])

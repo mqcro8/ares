@@ -238,6 +238,9 @@ public partial class MissionState : Node
 		LaunchSequence++;
 		LaunchRecord = null; // Deliberately preserve existing resource values.
 		PendingLaunchFaults = 0;
+		Outcome.BeginRun(LaunchSequence);
+		RoverStageCompleted = false;
+		ResetPuzzleProgress();
 		TrainingCourseComplete = TrainingWiresComplete = TrainingFusesComplete = false;
 		TrainingFrequencyComplete = TrainingHullRepairComplete = TrainingLaunchPracticeComplete = false;
 		TrainingCompletionPending = TrainingCompletionShown = false;
@@ -307,7 +310,35 @@ public partial class MissionState : Node
 	public int SpareParts { get; set; }
 	public int RoverImpacts { get; set; }
 	public int RoverCollisions { get; set; }
-	public override void _EnterTree() => Instance = this;
+	/// <summary>Rover is an intermediate mission stage, not a whole-run ending.</summary>
+	public bool RoverStageCompleted { get; private set; }
+	public bool CompleteRoverStage(long runSequence)
+	{
+		if (runSequence != LaunchSequence || RoverStageCompleted || IsRunOver) return false;
+		RoverStageCompleted = true;
+		return true;
+	}
+
+	/// <summary>Authoritative lives and terminal result of the run.</summary>
+	public MissionOutcome Outcome { get; } = new();
+	public MissionEnding Ending => Outcome.Ending;
+	public bool IsRunOver => Outcome.IsOver;
+
+	/// <summary>Records completion of the whole campaign, not an intermediate rover stage.</summary>
+	public bool TryCompleteMission() => Outcome.TryComplete(LaunchSequence);
+	public bool TryFailMission() => Outcome.TryFail(LaunchSequence);
+
+	public override void _EnterTree()
+	{
+		Instance = this;
+		if (Outcome.RunId == 0) Outcome.BeginRun(LaunchSequence);
+	}
+
+	public override void _ExitTree()
+	{
+		if (Instance == this) Instance = null;
+	}
+
 	public override void _Process(double delta)
 	{
 		var player = GetTree()?.GetFirstNodeInGroup("player") as Player;

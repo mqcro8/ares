@@ -1,6 +1,7 @@
 namespace ares.scripts.training;
 using Godot;
 using Ares.Systems.Controllers;
+using ares.scripts.dialogue;
 
 /// <summary>Instructions inside the real minigame, with standalone completion signals intact.</summary>
 public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
@@ -51,15 +52,17 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
         _overlay = new Control(); AddChild(_overlay); _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         var shade = new ColorRect { Color = new Color(0.015f, 0.028f, 0.05f, 0.965f) }; _overlay.AddChild(shade);
         shade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _instructions = new PanelContainer(); _overlay.AddChild(_instructions);
+        _instructions = new PanelContainer { Name = "DialoguePanel" }; _overlay.AddChild(_instructions);
         _instructions.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _instructions.OffsetLeft = -340; _instructions.OffsetRight = 340; _instructions.OffsetTop = -150; _instructions.OffsetBottom = 150;
-        _instructions.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = new Color("152535"), BorderColor = new Color("75e4ff"), BorderWidthLeft = 2, BorderWidthRight = 2, BorderWidthTop = 2, BorderWidthBottom = 2 });
+        DialoguePanelStyle.ApplyPanel(_instructions);
         var margin = new MarginContainer(); _instructions.AddChild(margin);
-        foreach (string side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 20);
-        var box = new VBoxContainer(); box.AddThemeConstantOverride("separation", 12); margin.AddChild(box);
+        DialoguePanelStyle.ApplyMargins(margin);
+        var box = new VBoxContainer(); DialoguePanelStyle.ApplyColumn(box); margin.AddChild(box);
         PracticeSession.Exercise exercise = ExerciseForGame();
-        box.AddChild(new Label { Text = TitleFor(exercise) });
+        var title = new Label { Text = TitleFor(exercise) };
+        DialoguePanelStyle.ApplySpeaker(title);
+        box.AddChild(title);
         string tutorialPath = exercise switch
         {
             PracticeSession.Exercise.Wires => "res://art/training/tutorials/wires/cable_connection_tutorial.png",
@@ -81,13 +84,15 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
             };
             box.AddChild(_tutorial);
         }
-        box.AddChild(new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Text = TrainingStations.Instructions(exercise) });
-        _start = new Button { Text = "Start" }; box.AddChild(_start);
+        var instruction = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Text = TrainingStations.Instructions(exercise) };
+        DialoguePanelStyle.ApplyBody(instruction);
+        box.AddChild(instruction);
+        _start = new Button { Text = "Start" }; DialoguePanelStyle.ApplyAction(_start); box.AddChild(_start);
         _start.Pressed += () => { _starting = true; _start.ReleaseFocus(); };
         _start.GrabFocus();
         _back = new Button { Text = _ticket != 0 ? "Cancel and return to lab" : "Cancel / restart", Position = new(12, 8) };
         AddChild(_back); _back.Hide(); _back.Pressed += Cancel;
-        var cancel = new Button { Text = _back.Text }; box.AddChild(cancel); cancel.Pressed += Cancel;
+        var cancel = new Button { Text = _back.Text }; DialoguePanelStyle.ApplyAction(cancel); box.AddChild(cancel); cancel.Pressed += Cancel;
         GetViewport().SizeChanged += FitLayout;
         FitLayout();
         // Tell the phone the instructions overlay is up even for minigames that
@@ -97,13 +102,15 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void FitLayout()
     {
         Vector2 size = GetViewport().GetVisibleRect().Size;
-        float halfWidth = Mathf.Min(340, (size.X - 32) / 2);
+        float halfWidth = Mathf.Max(140, (size.X - 32) * 0.42f);
         _instructions.OffsetLeft = -halfWidth;
         _instructions.OffsetRight = halfWidth;
-        float tutorialWidth = _tutorial == null ? 0 : Mathf.Max(160, Mathf.Min(480, size.X - 80));
+        float contentWidth = halfWidth * 2 - 48;
+		float tutorialWidth = _tutorial == null ? 0 : Mathf.Max(120, Mathf.Min(480, Mathf.Min(size.X * 0.64f, contentWidth)));
         if (_tutorial != null)
             _tutorial.CustomMinimumSize = new Vector2(tutorialWidth, tutorialWidth * 0.4f);
-        float panelHeight = Mathf.Min(size.Y - 24, 180 + tutorialWidth * 0.4f);
+        float panelHeight = Mathf.Min(size.Y - 24,
+            Mathf.Max(DialoguePanelStyle.StandardHeight, 180 + tutorialWidth * 0.4f));
         _instructions.OffsetTop = -panelHeight / 2;
         _instructions.OffsetBottom = panelHeight / 2;
         if (_game is WireMinigame)

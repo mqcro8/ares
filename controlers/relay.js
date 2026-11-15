@@ -43,9 +43,12 @@ const CommandRules = new Map([
   ["launch_start", {}],
   ["launch_tap", {}],
   ["launch_retry", {}],
+  ["ending_skip", {}],
+  ["ending_continue", {}],
+  ["ending_pause", {}],
 ]);
 
-const ContextModes = new Set(["none", "wires", "fuses", "frequency", "hull", "launch"]);
+const ContextModes = new Set(["none", "wires", "fuses", "frequency", "hull", "launch", "ending"]);
 
 const RoomPattern = /^[A-Z0-9]{4,8}$/;
 const Roles = new Set(["controller", "game"]);

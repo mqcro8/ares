@@ -1,51 +1,18 @@
 [gd_scene format=3 uid="uid://c6s0q4yc6jab6"]
 
-[ext_resource type="Script" uid="uid://bvlrfy52a4d5m" path="res://scripts/ending/Ending.cs" id="1_uhqb6"]
-[ext_resource type="Texture2D" uid="uid://b7p7h72lg2kse" path="res://art/cinematics/ending_score_bg.png" id="2_fycm3"]
+[ext_resource type="Script" path="res://scripts/ending/Ending.cs" id="1_ending"]
+[ext_resource type="Resource" path="res://data/cinematics/ending_good.tres" id="2_good"]
+[ext_resource type="Resource" path="res://data/cinematics/ending_bad.tres" id="3_bad"]
+[ext_resource type="Texture2D" uid="uid://b7p7h72lg2kse" path="res://art/cinematics/ending_score_bg.png" id="4_results"]
 
-[node name="Ending" type="Node2D" unique_id=2062126394]
-script = ExtResource("1_uhqb6")
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1411991248]
-position = Vector2(580, 322)
-texture = ExtResource("2_fycm3")
-
-[node name="total_score" type="Label" parent="." unique_id=1729847688]
-offset_left = 811.0
-offset_top = 470.0
-offset_right = 1038.0
-offset_bottom = 566.0
-theme_override_font_sizes/font_size = 70
-text = "04235"
-
-[node name="oxygen_score" type="Label" parent="." unique_id=450805410]
-offset_left = 950.0
-offset_top = 149.0
-offset_right = 1009.0
-offset_bottom = 202.0
-theme_override_font_sizes/font_size = 38
-text = "0%"
-
-[node name="hull_score" type="Label" parent="." unique_id=1535543748]
-offset_left = 950.0
-offset_top = 230.0
-offset_right = 1009.0
-offset_bottom = 283.0
-theme_override_font_sizes/font_size = 38
-text = "0%"
-
-[node name="energy_score" type="Label" parent="." unique_id=1260276207]
-offset_left = 950.0
-offset_top = 304.0
-offset_right = 1009.0
-offset_bottom = 357.0
-theme_override_font_sizes/font_size = 38
-text = "0%"
-
-[node name="mission_score" type="Label" parent="." unique_id=870593885]
-offset_left = 950.0
-offset_top = 385.0
-offset_right = 1009.0
-offset_bottom = 438.0
-theme_override_font_sizes/font_size = 38
-text = "0%"
+[node name="Ending" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ending")
+GoodSequence = ExtResource("2_good")
+BadSequence = ExtResource("3_bad")
+ResultsBackground = ExtResource("4_results")

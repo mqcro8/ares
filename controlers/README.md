@@ -101,6 +101,9 @@ Phone → relay, semantic minigame command:
 | `launch_start` | — | Begin ignition |
 | `launch_tap` | — | Register one ignition tap |
 | `launch_retry` | — | Retry a failed ignition |
+| `ending_skip` | — | Skip the current ending cinematic |
+| `ending_pause` | — | Toggle the pause menu during the ending |
+| `ending_continue` | — | Return to Mission Control from the ending debrief |
 
 The relay drops unknown names, mistyped indexes and unexpected arguments. Game →
 phone context:
@@ -109,7 +112,7 @@ phone context:
 { "type": "context", "mode": "hull", "active": true, "state": { "phase": "weld" } }
 ```
 
-Modes are `none`, `wires`, `fuses`, `frequency`, `hull` and `launch`. The relay
+Modes are `none`, `wires`, `fuses`, `frequency`, `hull`, `launch` and `ending`. The relay
 caches the latest context and replays it to a phone that joins late, and clears
 it when the game disconnects. `active:false` (or `none`) tells the page to
 restore its previous view. Context is state, not input: phones may never send it.

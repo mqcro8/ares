@@ -35,6 +35,8 @@ In the gym, small in-world prompts introduce movement, jumping near hurdles, and
 
 Launching needs 25 taps within five seconds, but 22 taps (85%) still lift the rocket with ignition faults that become repair work after landing. The green hold band now moves to random positions along the gauge and narrows slightly as the hold progresses.
 
+The ending player uses `data/cinematics/ending_good.tres` and `ending_bad.tres` for whole-game outcomes. Rover is an intermediate stage: losing its five local hearts shows the rover failure image and allows a retry; recovering the rover shows its success image and continues toward the Mars walk. Both cinematic sequences use timed crossfades and dialogue beats; score values remain unavailable until the scoring system exists.
+
 ## Developer shortcuts
 
 The `DevCheats` autoload listens for secret codes typed with **Shift** held, so they never collide with the movement, interaction or hotbar keys:
@@ -43,8 +45,9 @@ The `DevCheats` autoload listens for secret codes typed with **Shift** held, so 
 | --- | --- |
 | `Shift+A R E S` | Completes every training exercise and unlocks the launch pad. |
 | `Shift+E R A S E` | Clears the training progress again. |
+| `Shift+O R B I T` | Skips only the active rover stage through its normal recovery screen. |
 
-Both codes work in any scene and confirm themselves with an on-screen message.
+Training codes work in any scene. `ORBIT` only works during an unfinished rover stage. Each successful code shows an on-screen message.
 
 ## Architecture
 

@@ -11,11 +11,17 @@ public partial class DialogueView : PanelContainer
 	public override void _Ready()
 	{
 		MouseFilter = MouseFilterEnum.Ignore;
-		CustomMinimumSize = new Vector2(0, 150);
+		CustomMinimumSize = new Vector2(0, DialoguePanelStyle.StandardHeight);
+		DialoguePanelStyle.ApplyPanel(this);
+		FitToViewport();
+		GetViewport().SizeChanged += FitToViewport;
 
+		var margin = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
+		DialoguePanelStyle.ApplyMargins(margin);
+		AddChild(margin);
 		var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-		column.AddThemeConstantOverride("separation", 6);
-		AddChild(column);
+		DialoguePanelStyle.ApplyColumn(column);
+		margin.AddChild(column);
 
 		_speaker = new Label
 		{
@@ -23,8 +29,7 @@ public partial class DialogueView : PanelContainer
 			Text = "MISSION CONTROL",
 			MouseFilter = MouseFilterEnum.Ignore,
 		};
-		_speaker.AddThemeColorOverride("font_color", new Color(0.55f, 0.85f, 0.9f));
-		_speaker.AddThemeFontSizeOverride("font_size", 12);
+		DialoguePanelStyle.ApplySpeaker(_speaker);
 		column.AddChild(_speaker);
 
 		_text = new Label
@@ -35,10 +40,11 @@ public partial class DialogueView : PanelContainer
 			SizeFlagsVertical = SizeFlags.ExpandFill,
 			MouseFilter = MouseFilterEnum.Ignore,
 		};
-		_text.AddThemeColorOverride("font_color", new Color(0.94f, 0.95f, 0.97f));
-		_text.AddThemeFontSizeOverride("font_size", 20);
+		DialoguePanelStyle.ApplyBody(_text);
 		column.AddChild(_text);
 	}
+
+	private void FitToViewport() => DialoguePanelStyle.FitBottom(this, GetViewportRect().Size);
 
 	public void ShowLine(DialogueLine line, bool animate = true)
 	{
@@ -62,5 +68,11 @@ public partial class DialogueView : PanelContainer
 		_tween?.Kill();
 		_tween = null;
 		Visible = false;
+	}
+
+	public override void _ExitTree()
+	{
+		if (GetViewport() != null) GetViewport().SizeChanged -= FitToViewport;
+		_tween?.Kill();
 	}
 }

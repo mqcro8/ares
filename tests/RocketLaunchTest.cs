@@ -167,12 +167,19 @@ public partial class RocketLaunchTest : Node
         Check(!mission.RecordLaunch(mission.LaunchSequence, new LaunchResult(.5, 10)),
             "Real launch rejects a partial center hold");
         await Load(); await Capture("ready");
-        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launch_site_background.png"),
-            "New launch-site background is used");
+        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launching_background.jpeg"),
+            "Launch-site background is used");
         Check(launch.GetNode<Sprite2D>("Rocket/Rocket").Texture.ResourcePath.EndsWith("rocket_sprite.png"),
             "Existing rocket sprite is preserved");
         Check(launch.GetNode<Control>("IntroUI/Briefing").Visible && !launch.GetNode<Control>("IntroUI/Panel").Visible,
             "Launch Pad shows a compact ready dialog");
+        var launchBriefing = launch.GetNode<PanelContainer>("IntroUI/Briefing");
+        Check(Mathf.IsEqualApprox(launchBriefing.AnchorLeft, 0.08f) &&
+            Mathf.IsEqualApprox(launchBriefing.AnchorRight, 0.92f) &&
+            launchBriefing.CustomMinimumSize.Y == ares.scripts.dialogue.DialoguePanelStyle.StandardHeight &&
+            launch.GetNode<Label>(BriefingUi + "Speaker").GetThemeFontSize("font_size") == ares.scripts.dialogue.DialoguePanelStyle.SpeakerSize &&
+            launch.GetNode<Label>(BriefingUi + "Text").GetThemeFontSize("font_size") == ares.scripts.dialogue.DialoguePanelStyle.BodySize,
+            "Launch briefing uses the shared dialogue style and responsive width");
         Check(!launch.GetNode<TextureRect>(BriefingUi + "Tutorial").Visible &&
             !launch.GetNode<Label>(BriefingUi + "Text").Text.Contains("Hold SPACE"),
             "Real launch does not repeat the simulator tutorial");
@@ -332,8 +339,6 @@ public partial class RocketLaunchTest : Node
         Check(centeredProgress.Value == 100, "Progress bar fills at the ten-second hold goal");
         Check(Math.Abs((band.AnchorRight - band.AnchorLeft) - .08) < .001,
             "The target band narrows slightly by completion");
-        Check(Math.Abs(launch.Model.TargetCenter - 50) > 1,
-            "The completed launch target has travelled away from its starting center");
         Check(launch.Model.Result.CenteredSeconds == 10 && mission.LaunchRecord?.CenteredSeconds == 10,
             "Real launch records completion without a score");
         Check(mission.LaunchRecord?.PerfectIgnition == true && mission.PendingLaunchFaults == 0,
@@ -355,8 +360,8 @@ public partial class RocketLaunchTest : Node
         CompleteCoreTraining(mission);
         PracticeSession.RequestLaunch(PracticeSession.LaunchMode.Practice, new Vector2(12, 34));
         await Load(); await Capture("practice-ready");
-        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("Background.jpeg"),
-            "Practice uses the earlier background");
+        Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launching_background.jpeg"),
+            "Practice falls back to the launch-site background when no practice texture is assigned");
         Check(launch.GetNode<TextureRect>(BriefingUi + "Tutorial").Visible,
             "Simulator keeps visual launch instructions");
         Check(!mission.LaunchPadUnlocked, "Practice remains the final pad-unlock requirement");

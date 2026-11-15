@@ -10,6 +10,7 @@ using Ares.Systems.Audio;
 public partial class ProjectConsistencyTest : Node
 {
 	private int _assertions;
+	private bool Visual => OS.GetCmdlineUserArgs().Contains("--visual");
 	private void Check(bool condition, string message)
 	{
 		_assertions++;
@@ -23,6 +24,14 @@ public partial class ProjectConsistencyTest : Node
 
 	private async Task Wait(double seconds) =>
 		await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);
+
+	private async Task Capture(string filename)
+	{
+		if (!Visual) return;
+		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+		Check(GetViewport().GetTexture().GetImage().SavePng($"/tmp/opencode/{filename}.png") == Error.Ok,
+			"Dialogue screenshot saved: " + filename);
+	}
 
 	private static T Find<T>(Node root, Func<T, bool> match) where T : Node
 	{
@@ -42,6 +51,7 @@ public partial class ProjectConsistencyTest : Node
 			await RetainedScenes();
 			await PauseUi();
 			await BoardLifecycle();
+			await RoverLocalLives();
 			await RoverLifecycle();
 			GD.Print($"CONSISTENCY PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -68,12 +78,18 @@ public partial class ProjectConsistencyTest : Node
 			Check(node.IsInsideTree(), "Retained scene loads: " + path);
 			if (node is GameOver || node is MissionCompleted)
 			{
+				var dialoguePanel = Find<PanelContainer>(node,
+					panel => panel.Name == "Panel" && panel.GetParent() is CanvasLayer);
+				Check(dialoguePanel != null && Mathf.IsEqualApprox(dialoguePanel.AnchorLeft, 0.08f) &&
+					Mathf.IsEqualApprox(dialoguePanel.AnchorRight, 0.92f) &&
+					dialoguePanel.CustomMinimumSize.Y == ares.scripts.dialogue.DialoguePanelStyle.StandardHeight,
+					"Rover result dialogue uses the shared screen-space panel");
 				await Wait(2.1);
-				var next = node.GetNode<Button>("Panel/Margin/VBox/Continue");
+				var next = Find<Button>(node, button => button.Name == "Continue");
 				Check(next.IsVisibleInTree(), "Rover result dialogue becomes available");
 				for (int i = 0; i < 3; i++) next.EmitSignal(BaseButton.SignalName.Pressed);
 				await Wait(1.6);
-				Check(node.GetNode<Label>("Title").IsVisibleInTree(),
+				Check(Find<Label>(node, label => label.Name == "Title").IsVisibleInTree(),
 					"Preserved rover signal connections reveal the shared result presentation");
 			}
 			node.QueueFree();
@@ -169,6 +185,16 @@ public partial class ProjectConsistencyTest : Node
 		var rover = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
 		AddChild(rover);
 		await Frames();
+		await Wait(2.5);
+		var roverDialogue = rover.GetNode<PanelContainer>("RoverTutorialDialogueLayer/Panel");
+		Check(roverDialogue.IsVisibleInTree() && Mathf.IsEqualApprox(roverDialogue.AnchorLeft, 0.08f) &&
+			Mathf.IsEqualApprox(roverDialogue.AnchorRight, 0.92f) &&
+			roverDialogue.CustomMinimumSize.Y == ares.scripts.dialogue.DialoguePanelStyle.StandardHeight,
+			$"Rover tutorial uses the shared screen-space dialogue panel (visible={roverDialogue.IsVisibleInTree()}, anchors={roverDialogue.AnchorLeft:F2}/{roverDialogue.AnchorRight:F2}, min={roverDialogue.CustomMinimumSize})");
+		await Capture("consistent-rover-dialogue");
+		var continueButton = Find<Button>(rover, button => button.Name == "Continue");
+		for (int i = 0; i < 4; i++) continueButton.EmitSignal(BaseButton.SignalName.Pressed);
+		await Frames();
 		rover._UnhandledInput(new InputEventKey { Keycode = Key.Enter, Pressed = true });
 		var pause = GetNode<PauseManager>("/root/PauseManager");
 		pause.OpenPauseMenu();
@@ -200,5 +226,45 @@ public partial class ProjectConsistencyTest : Node
 			"Failed rover transition restores a visible way out");
 		rover.QueueFree();
 		await Frames();
+	}
+
+	private async Task RoverLocalLives()
+	{
+		var mission = ares.scripts.mission.MissionState.Instance;
+		mission.BeginLaunchSequence();
+		mission.SpareParts = 17;
+		mission.TrainingWiresComplete = true;
+		var run = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
+		AddChild(run);
+		await Frames();
+		var rover = run.GetNode<Rover>("CharacterBody2D");
+		rover.TutorialEnded = true;
+		for (int lost = 1; lost <= 5; lost++)
+		{
+			rover.RegisterObstacleCollision();
+			if (lost < 5)
+				await ToSignal(rover.GetNode<RoverAnimation>("AnimatedSprite2D"), AnimatedSprite2D.SignalName.AnimationFinished);
+			Check(rover.RemainingLives == 5 - lost,
+				$"Rover collision {lost} removes one local heart");
+		}
+		Check(rover.IsGameOver && mission.Ending == ares.scripts.mission.MissionEnding.None &&
+			!mission.RoverStageCompleted,
+			"Losing rover hearts does not end the whole mission or mark rover recovered");
+		Check(mission.SpareParts == 17 && mission.TrainingWiresComplete,
+			"Rover failure preserves unrelated mission resources and training");
+		run.QueueFree();
+		await Frames();
+
+		var retry = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
+		AddChild(retry);
+		await Frames();
+		Check(retry.GetNode<Rover>("CharacterBody2D").RemainingLives == 5,
+			"Retry restores all five rover hearts");
+		Check(mission.SpareParts == 17 && mission.TrainingWiresComplete &&
+			mission.Ending == ares.scripts.mission.MissionEnding.None,
+			"Retry preserves cargo/training and leaves whole-mission outcome active");
+		retry.QueueFree();
+		await Frames();
+		mission.BeginLaunchSequence();
 	}
 }

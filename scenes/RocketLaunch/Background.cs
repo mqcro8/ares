@@ -10,7 +10,8 @@ public partial class Background : Sprite2D
 	{
 		if (practice)
 		{
-			Texture = PracticeTexture;
+			if (PracticeTexture != null)
+				Texture = PracticeTexture;
 			_launchSocket = new Vector2(300, 1340);
 		}
 		else

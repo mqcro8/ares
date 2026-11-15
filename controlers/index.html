@@ -222,6 +222,17 @@ h1{font:88px/1 Aerospace,Pixel;margin:0;color:var(--cream);text-shadow:2px 3px #
   </div>
 </section>
 
+<section id="ending" class="mg">
+  <h2>MISSION DEBRIEF</h2>
+  <p id="endingInfo" class="mg-sub">CINEMATIC</p>
+  <p id="endingBeat" class="mg-meter"></p>
+  <div id="endingAction">
+    <button id="endingPause" class="mg-btn big">PAUSE</button>
+    <button id="endingSkip" class="mg-btn big">SKIP CINEMATIC</button>
+    <button id="endingContinue" class="mg-btn big" hidden>MISSION CONTROL</button>
+  </div>
+</section>
+
 <div id="gate"><div class="card"><h3 id="gateTitle"></h3><p id="gateText"></p><button id="gateBtn" class="mg-btn big"></button></div></div>
 
 <div id="err"></div>
@@ -293,8 +304,8 @@ document.addEventListener("visibilitychange", () => document.hidden && releaseAl
 document.addEventListener("contextmenu", e => e.preventDefault());
 
 // ---- Routing: fixed views plus the minigame views the game can switch to ----
-const VIEWS = new Set(["pad", "wheel", "wires", "fuses", "frequency", "hull", "launch"]);
-const MINIGAME_VIEWS = new Set(["wires", "fuses", "frequency", "hull", "launch"]);
+const VIEWS = new Set(["pad", "wheel", "wires", "fuses", "frequency", "hull", "launch", "ending"]);
+const MINIGAME_VIEWS = new Set(["wires", "fuses", "frequency", "hull", "launch", "ending"]);
 let previousView = "menu";
 let currentContext = null;
 
@@ -450,7 +461,25 @@ function renderContext(view, s) {
   else if (view === "frequency") renderFrequency(s);
   else if (view === "hull") renderHull(s);
   else if (view === "launch") renderLaunch(s);
+  else if (view === "ending") renderEnding(s);
 }
+
+function renderEnding(s) {
+  const phase = String(s.phase || "cinematic").toUpperCase();
+  const outcome = String(s.outcome || "").toUpperCase();
+  $("#endingInfo").textContent = `${outcome} ENDING · ${phase}`;
+  $("#endingBeat").textContent = s.beat_count > 0
+    ? `SCENE ${s.beat || 1} / ${s.beat_count}`
+    : "MISSION RESULT";
+  $("#endingPause").textContent = s.paused ? "RESUME" : "PAUSE";
+  $("#endingPause").hidden = phase === "RESULTS";
+  $("#endingSkip").hidden = !s.can_skip;
+  $("#endingContinue").hidden = !s.can_continue;
+}
+
+$("#endingSkip").onclick = () => sendCommand("ending_skip");
+$("#endingPause").onclick = () => sendCommand("ending_pause");
+$("#endingContinue").onclick = () => sendCommand("ending_continue");
 
 // Wires ---------------------------------------------------------------------
 $("#wireLeft").onclick = e => {

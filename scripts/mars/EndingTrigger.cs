@@ -120,11 +120,17 @@ public partial class EndingTrigger : Area2D
 
 	private void BeginEnding()
 	{
+		var mission = MissionState.Instance;
+		if (mission?.TryCompleteMission() != true)
+		{
+			if (IsInstanceValid(_player))
+				_player.SetPhysicsProcess(true);
+			return;
+		}
 		_changing = true;
 		GetParent()?.GetNodeOrNull<ObjectiveDialogue>("ObjectiveDialogue")?.Dismiss();
 		_player?.SetPhysicsProcess(false);
-		if (MissionState.Instance != null)
-			MissionState.Instance.Stage = MissionStage.Ending;
+		mission.Stage = MissionStage.Ending;
 		Callable.From(ChangeToEnding).CallDeferred();
 	}
 

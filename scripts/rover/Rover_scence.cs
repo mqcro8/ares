@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ares.Systems.Audio;
 using Godot;
+using ares.scripts.dialogue;
 
-public partial class Rover_scence : Node2D
+public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 {
 	private RoverAnimation _roverAnimation;
 	private Rover _rover;
@@ -36,6 +37,7 @@ public partial class Rover_scence : Node2D
 	private const float ShakeStrength = 7.0f;
 	private bool _gameOver;
 	private bool _victory;
+	private long _roverRunSequence;
 	private float _survivalTime;
 	private readonly List<Obstacle> _spawnedObstacles = new();
 
@@ -58,6 +60,11 @@ public partial class Rover_scence : Node2D
 	private bool _leaving;
 	private readonly List<TaskCompletionSource<bool>> _waits = new();
 	internal Func<string, Error> SceneLoader { get; set; }
+	public bool CanSkipRoverMission => IsInsideTree() && !_gameOver && !_victory &&
+		MissionStateForRover?.LaunchSequence == _roverRunSequence &&
+		MissionStateForRover?.RoverStageCompleted == false;
+	private ares.scripts.mission.MissionState MissionStateForRover =>
+		ares.scripts.mission.MissionState.Instance;
 	// 0 disables the timer; useful while testing the scene.
 	[Export(PropertyHint.Range, "0,300,1")]
 	public float VictoryTime { get; set; } = 100f;
@@ -82,6 +89,23 @@ public partial class Rover_scence : Node2D
 		{
 			GD.PushError("RoverScene: missing elements");
 			return;
+		}
+		var dialogueLayer = new CanvasLayer { Name = "RoverTutorialDialogueLayer", Layer = 30 };
+		AddChild(dialogueLayer);
+		_panel.Reparent(dialogueLayer, false);
+		DialoguePanelStyle.ApplyPanel(_panel);
+		DialoguePanelStyle.ApplyMargins(_panel.GetNodeOrNull<MarginContainer>("Margin"));
+		DialoguePanelStyle.ApplyColumn(_panel.GetNodeOrNull<VBoxContainer>("Margin/VBox"));
+		DialoguePanelStyle.ApplySpeaker(_Speaker);
+		DialoguePanelStyle.ApplyBody(_text);
+		DialoguePanelStyle.ApplyAction(_continue);
+		FitDialoguePanel();
+		GetViewport().SizeChanged += FitDialoguePanel;
+		if (ares.scripts.mission.MissionState.Instance != null &&
+			ares.scripts.mission.MissionState.Instance.Ending == ares.scripts.mission.MissionEnding.None)
+		{
+			_roverRunSequence = ares.scripts.mission.MissionState.Instance.LaunchSequence;
+			ares.scripts.mission.MissionState.Instance.Stage = ares.scripts.mission.MissionStage.Rover;
 		}
 
 		_ = ShowPanel();
@@ -299,6 +323,7 @@ public partial class Rover_scence : Node2D
 
 	public override void _ExitTree()
 	{
+		if (GetViewport() != null) GetViewport().SizeChanged -= FitDialoguePanel;
 		_leaving = true;
 		foreach (var wait in _waits.ToArray()) wait.TrySetResult(false);
 		_waits.Clear();
@@ -310,6 +335,9 @@ public partial class Rover_scence : Node2D
 
 		AudioManager.StopMusic(0.25);
 	}
+
+	private void FitDialoguePanel() =>
+		DialoguePanelStyle.FitBottom(_panel, GetViewport().GetVisibleRect().Size);
 
 	// Text "Press Enter to start game"
 	private async Task Blink()
@@ -531,13 +559,14 @@ public partial class Rover_scence : Node2D
 		_engineSound?.Stop(0.25f);
 		AudioManager.StopMusic(0.75);
 		AudioManager.PlaySfx2D(SoundIds.RoverExplode, _rover.GlobalPosition);
-
 		await FadeAndChangeScene("res://scenes/rover/GameOver.tscn");
 	}
 
 	private async void Victory()
 	{
 		if (_victory)
+			return;
+		if (MissionStateForRover?.CompleteRoverStage(_roverRunSequence) != true)
 			return;
 
 		_victory = true;
@@ -559,5 +588,23 @@ public partial class Rover_scence : Node2D
 		_label.Show();
 
 		await FadeAndChangeScene("res://scenes/rover/MissionCompleted.tscn");
+	}
+
+	/// <summary>Developer shortcut: skip only this rover stage through its normal success screen.</summary>
+	public bool SkipRoverMission()
+	{
+		if (!CanSkipRoverMission || _rover == null) return false;
+		_tutorialActive = false;
+		_tutorialPaused = false;
+		_tutorialSpeedActive = false;
+		_gameStarted = true;
+		_rover.TutorialEnded = true;
+		_rover.CanMove = false;
+		_panel?.Hide();
+		_continue?.Hide();
+		_label.Text = "ROVER RECOVERED";
+		_label.Show();
+		Victory();
+		return _victory;
 	}
 }

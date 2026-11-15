@@ -150,11 +150,6 @@ public partial class IntroSequence : Control
 		AddChild(MakeSignalLost());
 
 		_dialogue = new DialogueView { Name = "Dialogue", Visible = false };
-		_dialogue.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
-		_dialogue.OffsetLeft = 80;
-		_dialogue.OffsetRight = -80;
-		_dialogue.OffsetTop = -210;
-		_dialogue.OffsetBottom = -36;
 		AddChild(_dialogue);
 
 		_objective = MakeObjectives();
@@ -206,7 +201,7 @@ public partial class IntroSequence : Control
 
 	private void LoadBackdrops()
 	{
-		var fallback = GD.Load<Texture2D>("res://art/gateway/Backgrond/Background.jpeg");
+		var fallback = GD.Load<Texture2D>("res://art/gateway/background/starry sky.jpg");
 		foreach (string path in new[]
 		{
 			"res://art/cinematics/Silent Mars Gateway.png",

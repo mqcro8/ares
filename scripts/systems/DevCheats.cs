@@ -4,6 +4,7 @@ using System;
 using System.Text;
 using Godot;
 using ares.scripts.mission;
+using ares.scripts.rover;
 
 /// <summary>Hidden developer shortcuts. Type the code with Shift held so it never fights gameplay keys.</summary>
 public partial class DevCheats : Node
@@ -12,6 +13,8 @@ public partial class DevCheats : Node
 	public const string SkipTrainingCode = "ARES";
 	/// <summary>Clears the training progress again.</summary>
 	public const string ResetTrainingCode = "ERASE";
+	/// <summary>Skips only the active rover stage through its normal success route.</summary>
+	public const string SkipRoverCode = "ORBIT";
 
 	private const double Timeout = 2.5;
 	private readonly StringBuilder _buffer = new();
@@ -59,6 +62,11 @@ public partial class DevCheats : Node
 	{
 		if (!Enabled) return;
 		if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
+		if (GetViewport().GuiGetFocusOwner() != null)
+		{
+			_buffer.Clear();
+			return;
+		}
 		double now = Time.GetTicksMsec() / 1000.0;
 		if (now - _lastKeyTime > Timeout) _buffer.Clear();
 		_lastKeyTime = now;
@@ -71,6 +79,7 @@ public partial class DevCheats : Node
 
 		_buffer.Append(((char)('A' + (key.Keycode - (int)Key.A))).ToString());
 		if (_buffer.Length > 16) _buffer.Remove(0, _buffer.Length - 16);
+		if (GetTree().CurrentScene is Rover_scence) GetViewport().SetInputAsHandled();
 		CheckCodes();
 	}
 
@@ -78,6 +87,14 @@ public partial class DevCheats : Node
 	public void CheckCodes()
 	{
 		string buffer = _buffer.ToString();
+		if (buffer.EndsWith(SkipRoverCode, StringComparison.Ordinal))
+		{
+			_buffer.Clear();
+			if (GetTree().CurrentScene is IRoverMissionSkipTarget rover &&
+				rover.CanSkipRoverMission && rover.SkipRoverMission())
+				ShowToast($"ROVER MISSION SKIPPED — {SkipRoverCode}");
+			return;
+		}
 		if (buffer.EndsWith(SkipTrainingCode, StringComparison.Ordinal))
 		{
 			_buffer.Clear();

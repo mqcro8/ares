@@ -18,6 +18,7 @@ corner_radius_bottom_left = 4
 
 [node name="MissionCompleted" type="Node2D" unique_id=84184234]
 script = ExtResource("1_2tyxm")
+NextScenePath = "res://scenes/mars/MarsBase.tscn"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=256257588]
 position = Vector2(576, 324)
@@ -34,8 +35,40 @@ theme_override_colors/font_color = Color(0.78, 0.82, 0.94, 1)
 theme_override_colors/font_outline_color = Color(0.04, 0.035, 0.09, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 70
-text = "MISSION COMPLETED"
+text = "ROVER RECOVERED"
 horizontal_alignment = 1
+
+[node name="Actions" type="Control" parent="." unique_id=713593202]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = 90.0
+offset_right = 260.0
+offset_bottom = 145.0
+
+[node name="Buttons" type="HBoxContainer" parent="Actions"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="NextStage" type="Button" parent="Actions/Buttons" unique_id=392845219]
+custom_minimum_size = Vector2(340, 42)
+size_flags_horizontal = 3
+layout_mode = 2
+text = "CONTINUE TO MARS"
+
+[node name="MainMenu" type="Button" parent="Actions/Buttons"]
+custom_minimum_size = Vector2(160, 42)
+size_flags_horizontal = 3
+layout_mode = 2
+text = "MISSION CONTROL"
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=680839032]
 visible = false
@@ -91,3 +124,5 @@ theme_override_font_sizes/font_size = 18
 text = "Continue"
 
 [connection signal="pressed" from="Panel/Margin/VBox/Continue" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="Actions/Buttons/NextStage" to="." method="_on_continue_to_mars_pressed"]
+[connection signal="pressed" from="Actions/Buttons/MainMenu" to="." method="_on_main_menu_pressed"]

@@ -70,6 +70,14 @@ public partial class TrainingIntro : Node2D
 			_panel?.Hide();
 			return;
 		}
+		DialoguePanelStyle.ApplyPanel(_panel);
+		DialoguePanelStyle.ApplyMargins(_panel.GetNodeOrNull<MarginContainer>("Margin"));
+		DialoguePanelStyle.ApplyColumn(_panel.GetNodeOrNull<VBoxContainer>("Margin/VBox"));
+		DialoguePanelStyle.ApplySpeaker(_speaker);
+		DialoguePanelStyle.ApplyBody(_text);
+		DialoguePanelStyle.ApplyAction(_continue);
+		FitDialoguePanel();
+		GetViewport().SizeChanged += FitDialoguePanel;
 
 		if (Briefing == null)
 			Briefing = GD.Load<DialogueSequence>("res://data/dialogue/training_intro.tres");
@@ -193,8 +201,12 @@ public partial class TrainingIntro : Node2D
 		_physicsLock.Release();
 	}
 
+	private void FitDialoguePanel() =>
+		DialoguePanelStyle.FitBottom(_panel, GetViewport().GetVisibleRect().Size);
+
 	public override void _ExitTree()
 	{
+		if (GetViewport() != null) GetViewport().SizeChanged -= FitDialoguePanel;
 		if (GodotObject.IsInstanceValid(Course)) Course.Completed -= QueueCompletion;
 		if (GodotObject.IsInstanceValid(_continue))
 			_continue.Pressed -= Advance;

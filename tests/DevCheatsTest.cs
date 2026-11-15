@@ -2,12 +2,23 @@ using Godot;
 using System;
 using System.Threading.Tasks;
 using ares.scripts.mission;
+using ares.scripts.rover;
 using ares.scripts.systems;
 using ares.scripts.training;
 
-public partial class DevCheatsTest : Node
+public partial class DevCheatsTest : Node, IRoverMissionSkipTarget
 {
 	private int _assertions;
+	public bool CanSkipRoverMission { get; set; }
+	public int RoverSkips { get; private set; }
+	public bool SkipRoverMission()
+	{
+		if (!CanSkipRoverMission) return false;
+		RoverSkips++;
+		if (MissionState.Instance != null)
+			MissionState.Instance.CompleteRoverStage(MissionState.Instance.LaunchSequence);
+		return true;
+	}
 
 	private void Check(bool condition, string message)
 	{
@@ -103,6 +114,16 @@ public partial class DevCheatsTest : Node
 		mission.CompleteAllTraining();
 		Check(pad.LockedText == null,
 			"The launch pad unlocks immediately after the secret code");
+
+		mission.BeginLaunchSequence();
+		CanSkipRoverMission = false;
+		foreach (Key key in new[] { Key.O, Key.R, Key.B, Key.I, Key.T }) PressKey(key, true);
+		Check(RoverSkips == 0 && !mission.RoverStageCompleted,
+			"ORBIT is ignored when there is no active rover stage to skip");
+		CanSkipRoverMission = true;
+		foreach (Key key in new[] { Key.O, Key.R, Key.B, Key.I, Key.T }) PressKey(key, true);
+		Check(RoverSkips == 1 && mission.RoverStageCompleted && mission.Ending == MissionEnding.None,
+			"ORBIT skips only the rover stage and does not end the whole mission");
 
 		stations.QueueFree();
 		stations.Player.QueueFree();

@@ -32,30 +32,19 @@ public partial class TrainingCompletionDialog : CanvasLayer
         shade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(shade);
 
-        _panel = new PanelContainer();
-        _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-        AddChild(_panel);
-        float halfWidth = Mathf.Min(270, (GetViewport().GetVisibleRect().Size.X - 32) / 2);
-        _panel.OffsetLeft = -halfWidth;
-        _panel.OffsetRight = halfWidth;
-        _panel.OffsetTop = -110;
-        _panel.OffsetBottom = 110;
-        _panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = new Color("152535"), BorderColor = new Color("75e4ff"),
-            BorderWidthLeft = 2, BorderWidthRight = 2, BorderWidthTop = 2, BorderWidthBottom = 2,
-            CornerRadiusTopLeft = 5, CornerRadiusTopRight = 5,
-            CornerRadiusBottomLeft = 5, CornerRadiusBottomRight = 5
-        });
+		_panel = new PanelContainer();
+		AddChild(_panel);
+		DialoguePanelStyle.ApplyPanel(_panel);
+		FitPanel();
+		GetViewport().SizeChanged += FitPanel;
 
-        var margin = new MarginContainer(); _panel.AddChild(margin);
-        foreach (string side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 18);
-        var column = new VBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
-        column.AddThemeConstantOverride("separation", 12); margin.AddChild(column);
-        var title = new Label { Text = "MISSION CONTROL", HorizontalAlignment = HorizontalAlignment.Center };
-        title.AddThemeColorOverride("font_color", new Color("75e4ff"));
-        title.AddThemeFontSizeOverride("font_size", 18);
-        column.AddChild(title);
+		var margin = new MarginContainer(); _panel.AddChild(margin);
+		DialoguePanelStyle.ApplyMargins(margin);
+		var column = new VBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+		DialoguePanelStyle.ApplyColumn(column); margin.AddChild(column);
+		var title = new Label { Text = "MISSION CONTROL", HorizontalAlignment = HorizontalAlignment.Center };
+		DialoguePanelStyle.ApplySpeaker(title);
+		column.AddChild(title);
         var message = new Label
         {
             Text = CompletionLine().Text,
@@ -63,20 +52,24 @@ public partial class TrainingCompletionDialog : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(0, 86)
         };
-        column.AddChild(message);
-        _continue = new Button { Text = "Continue", CustomMinimumSize = new Vector2(0, 34) };
+		DialoguePanelStyle.ApplyBody(message);
+		column.AddChild(message);
+		_continue = new Button { Text = "Continue", CustomMinimumSize = new Vector2(0, 40) };
+		DialoguePanelStyle.ApplyAction(_continue);
         _continue.Pressed += Close;
         column.AddChild(_continue);
         _continue.GrabFocus();
     }
 
-    public static DialogueLine CompletionLine(DialogueSequence sequence = null)
+	public static DialogueLine CompletionLine(DialogueSequence sequence = null)
     {
         sequence ??= GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
         return sequence != null && sequence.Lines.Count > 0
             ? sequence.Lines[0]
             : new DialogueLine { Speaker = "MISSION CONTROL", Text = "All training is complete." };
-    }
+	}
+
+	private void FitPanel() => DialoguePanelStyle.FitBottom(_panel, GetViewport().GetVisibleRect().Size);
 
     private void Close()
     {
@@ -85,8 +78,9 @@ public partial class TrainingCompletionDialog : CanvasLayer
         QueueFree();
     }
 
-    public override void _ExitTree()
-    {
+	public override void _ExitTree()
+	{
+		if (GetViewport() != null) GetViewport().SizeChanged -= FitPanel;
         if (GodotObject.IsInstanceValid(_continue)) _continue.Pressed -= Close;
         _physicsLock.Release();
     }

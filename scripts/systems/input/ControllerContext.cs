@@ -11,6 +11,7 @@ public enum ControllerContextMode
     Frequency,
     Hull,
     Launch,
+    Ending,
 }
 
 /// <summary>
@@ -22,7 +23,7 @@ public static class ControllerContext
 {
     private static readonly string[] ModeIds =
     {
-        "none", "wires", "fuses", "frequency", "hull", "launch",
+        "none", "wires", "fuses", "frequency", "hull", "launch", "ending",
     };
 
     private static object _owner;
@@ -39,7 +40,7 @@ public static class ControllerContext
     public static ControllerContextMode Mode => _mode;
 
     public static string ModeId(ControllerContextMode mode) =>
-        mode is >= ControllerContextMode.None and <= ControllerContextMode.Launch
+        mode is >= ControllerContextMode.None and <= ControllerContextMode.Ending
             ? ModeIds[(int)mode]
             : ModeIds[(int)ControllerContextMode.None];
 
