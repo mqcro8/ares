@@ -140,6 +140,11 @@ public partial class MarsRepairRetryTest : Node
 			randomizer.StreamsCount == 4 &&
 			Enumerable.Range(0, 4).All(i => randomizer.GetStream(i) != null),
 			$"{surface} footsteps choose randomly from four per-step sounds");
+		if (def?.Stream is not AudioStreamRandomizer steps) return;
+		Check(Enumerable.Range(0, steps.StreamsCount)
+				.Select(steps.GetStream)
+				.All(stream => stream.GetLength() is > 0 and < 1.5),
+			$"{surface} footstep clips are single steps, not combined sequences");
 	}
 
 	private async Task TestNoToolRetryForEachStation()
