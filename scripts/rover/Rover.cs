@@ -20,8 +20,7 @@ public partial class Rover : CharacterBody2D
 	public int MaxImpactPoints { get; private set; } = ToolEffects.RoverBaseDamageLimit;
 	public int DamagePerCollision { get; private set; } = ToolEffects.RoverBaseDamagePerCollision;
 	public float EffectiveLaneChangeSpeed { get; private set; } = ToolEffects.RoverBaseLaneChangeSpeed;
-	private int _collisionCount = 0;
-	public int DamagePoints => _collisionCount;
+	public int DamagePoints => MissionState.Instance?.RoverImpacts ?? 0;
 	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
 	public bool IsGameOver => _gameOver;
@@ -143,17 +142,17 @@ public partial class Rover : CharacterBody2D
 		
 		if (TutorialEnded)
 		{
-			_collisionCount = Math.Min(MaxImpactPoints, _collisionCount + DamagePerCollision);
 			if (MissionState.Instance != null)
 			{
 				MissionState.Instance.RoverCollisions++;
-				MissionState.Instance.RoverImpacts += DamagePerCollision;
+				MissionState.Instance.RoverImpacts = Math.Min(MaxImpactPoints,
+					MissionState.Instance.RoverImpacts + DamagePerCollision);
 			}
 		}
-		CollisionRegistered?.Invoke(_collisionCount);
+		CollisionRegistered?.Invoke(DamagePoints);
 		
 
-		if (_collisionCount >= MaxImpactPoints)
+		if (DamagePoints >= MaxImpactPoints)
 		{
 			LoseRover();
 			return;
@@ -169,7 +168,7 @@ public partial class Rover : CharacterBody2D
 		
 		_roverAnimation.Play("walk");
 
-		GD.Print($"Collisions: {_collisionCount}");
+		GD.Print($"Collision damage: {DamagePoints}");
 		GD.Print($"Lane change speed: {EffectiveLaneChangeSpeed:F0}px/s");
 	}
 
