@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using ares.scripts.gateway;
 using ares.scripts.training;
 using ares.scripts.mission;
+using ares.scripts.rover;
+using ares.scripts.systems.items;
 
 public partial class GatewayMissionTest : Node
 {
@@ -85,9 +87,40 @@ public partial class GatewayMissionTest : Node
 
     private async Task PanelAndMovement()
     {
+        var mission = MissionState.Instance;
+        mission.BeginLaunchSequence();
+        var lab = GD.Load<PackedScene>(PracticeSession.LabScene).Instantiate<TrainingLab>();
+        AddChild(lab);
+        Check(lab.Locker.Toggle(lab.Player).Contains("ACQUIRED"), "Training supplies the mission repair kit");
+        var fuses = lab.Locker.Tools[0];
+        Check(lab.Locker.ToggleTool(lab.Player, fuses).Contains("ACQUIRED") &&
+            mission.TrySetOxygenTankCount(1, out _), "Training sets the tools and oxygen for the mission");
+        Check(lab.Locker.ToggleTool(lab.Player, lab.Locker.Tools[4]).Contains("ACQUIRED"),
+            "Training selects the rover bumper before launch");
+        var inventory = lab.Player.Inventory;
+        int cargo = mission.CargoUsed;
+        double oxygenCapacity = mission.Oxygen.CapacitySeconds;
+        RemoveChild(lab);
+        lab.Free();
+        Check(mission.RecordLaunch(mission.LaunchSequence, new LaunchResult(10, 10)),
+            "Real launch confirms the selected training loadout");
         var gateway = GD.Load<PackedScene>(Gateway.ScenePath).Instantiate<Gateway>();
         string nextScene = "";
         AddChild(gateway);
+        Check(!gateway.HasNode("SupplyLocker") && !gateway.GetChildren().OfType<EquipmentLocker>().Any(),
+            "Gateway has no supply locker or locker collision");
+        Check(gateway.Player.Inventory == inventory && inventory.HasCapability(ItemCapability.Repair) &&
+            inventory.Contains(fuses) && mission.CargoUsed == cargo && mission.OxygenTankCount == 1 &&
+            mission.Oxygen.CapacitySeconds == oxygenCapacity && mission.LoadoutConfirmed,
+            "Gateway preserves training inventory, cargo and oxygen after launch");
+        Check(!mission.TrySetOxygenTankCount(2, out _), "Gateway cannot change confirmed training tanks");
+        var fuseGame = GD.Load<PackedScene>(PracticeSession.SceneFor(PracticeSession.Exercise.Fuses))
+            .Instantiate<FuseBoxMinigame>();
+        AddChild(fuseGame);
+        Check(fuseGame.GetNode<HBoxContainer>("Box/Lights").GetChildCount() == ToolEffects.FusePressesFor(true),
+            "Training spare fuses keep their repair bonus in Gateway");
+        RemoveChild(fuseGame);
+        fuseGame.Free();
         var panel = gateway.MissionControl;
         panel.SceneLoader = path => { nextScene = path; return Error.Ok; };
         var stations = gateway.GetNode<TrainingStations>("GatewayStations");
@@ -171,6 +204,17 @@ public partial class GatewayMissionTest : Node
         panel.Advance();
         Check(panel.EndingFrame == 2 && !GatewayMission.ArrivalMessages().Any(),
             "Ending does not replay within the same session");
+        var roverScene = GD.Load<PackedScene>(nextScene).Instantiate();
+        AddChild(roverScene);
+        var rover = roverScene.GetNode<Rover>("CharacterBody2D");
+        Check(mission.PlayerInventory == inventory && mission.CargoUsed == cargo &&
+            mission.OxygenTankCount == 1 && mission.Oxygen.CapacitySeconds == oxygenCapacity &&
+            rover.MaxImpactPoints == ToolEffects.RoverBaseDamageLimit + ToolEffects.RoverBumperExtraDamageLimit &&
+            Mathf.IsEqualApprox(rover.EffectiveLaneChangeSpeed,
+                ToolEffects.RoverBaseLaneChangeSpeed * ToolEffects.RoverBumperSpeedFactor),
+            "Rover retains training inventory, oxygen and bumper benefits and drawbacks");
+        RemoveChild(roverScene);
+        roverScene.Free();
         gateway.QueueFree();
     }
 }

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using ares.scripts.mission;
 using ares.scripts.player;
 using ares.scripts.rover;
@@ -12,11 +13,11 @@ public partial class LoadoutTest : Node
 {
     private int _assertions;
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         try
         {
-            Run();
+            await Run();
             GD.Print($"LOADOUT PASS ({_assertions} assertions)");
             GetTree().Quit();
         }
@@ -115,7 +116,7 @@ public partial class LoadoutTest : Node
         mission.ResetEquipment();
     }
 
-    private void Run()
+    private async Task Run()
     {
         var mission = MissionState.Instance;
         var kit = GD.Load<ItemData>("res://data/equipment/items/maintenance_kit.tres");
@@ -267,12 +268,13 @@ public partial class LoadoutTest : Node
 
         var equipmentPanel = new EquipmentPanel { Player = astronaut, Locker = supply };
         AddChild(equipmentPanel);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         var panelSize = equipmentPanel.GetNode<PanelContainer>("Panel");
         Check(panelSize.GetCombinedMinimumSize().Y <= panelSize.Size.Y + 1f,
             $"Equipment rows fit the panel: {panelSize.GetCombinedMinimumSize().Y}/{panelSize.Size.Y}");
         Check(!equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,
             "Zero-tank warning stays hidden while carrying oxygen");
-        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Text == "GUARDAR",
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Text == "STORE",
             "Equipment screen shows carried tool and provides a store action");
         var fuseRow = equipmentPanel.GetNode<HBoxContainer>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow");
         var fuseButton = fuseRow.GetNode<Button>("spare_fusesButton");
@@ -289,6 +291,17 @@ public partial class LoadoutTest : Node
         equipmentPanel.Refresh();
         Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Disabled,
             "Confirmed loadout locks the new tool actions");
+        var previouslyConfirmedStage = mission.Stage;
+        mission.Stage = MissionStage.Gateway;
+        equipmentPanel.Refresh();
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Disabled &&
+            equipmentPanel.GetNode<Button>("Panel/Margin/VBox/TankRow/AddTank").Disabled,
+            "Gateway keeps the training loadout locked after launch");
+        Check(!mission.TrySetOxygenTankCount(1, out tankError) &&
+            supply.ToggleTool(astronaut, supply.Tools[3]).Contains("LOCKED") &&
+            supply.Toggle(astronaut).Contains("LOCKED"),
+            "Confirmed kit, tools and tanks cannot change in Gateway");
+        mission.Stage = previouslyConfirmedStage;
         equipmentPanel.Close();
         mission.ResetEquipment();
         CheckRepairEffects(false);
