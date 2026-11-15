@@ -56,6 +56,8 @@ public static class ToolEffects
 	public const float RoverServoControlTimeFactor = 0.5f;
 	public const int RoverBaseDamagePerCollision = 1;
 	public const int RoverServoDamagePerCollision = 2;
+	public const float RoverBaseControlLagPerCollision = 0.2f;
+	public const float RoverServoControlLagFactor = 0.5f;
 
 	public static float FrequencyAnalyzerThreshold => FrequencyBaseThreshold + FrequencyThresholdDelta;
 	public static int FusePressesFor(bool equipped) => FuseBasePresses + (equipped ? FuseExtraPresses : 0);
@@ -105,7 +107,7 @@ public static class ToolEffects
 		PrecisionWelder => "Solo casco",
 		WirePliers => "Sin temporizador; solo cables",
 		RoverBumper => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s",
-		RoverServos => "Cada choque resta doble",
+		RoverServos => "Cada choque resta doble; permite acelerar",
 		OxygenRegulator => $"Solo funciona con {Number(OxygenRegulatorMinimumTanks)}+ tanques",
 		_ => "",
 	};

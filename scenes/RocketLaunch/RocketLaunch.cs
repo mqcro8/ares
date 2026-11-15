@@ -369,6 +369,10 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 					practiceReturnPending = false;
 					Callable.From(ReturnToLab).CallDeferred();
 				}
+				else if (!Practice && GetTree().CurrentScene == this)
+				{
+					Callable.From(() => GetTree().ChangeSceneToFile("res://scenes/cinematics/RocketMalfunction.tscn")).CallDeferred();
+				}
 			}
 		}
 		LayoutRocket();

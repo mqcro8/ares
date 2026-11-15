@@ -6,11 +6,11 @@ public partial class Animator : AnimatedSprite2D
 {
 
 
-    public override void _Ready()
-    {
-        if (SpriteFrames != null && SpriteFrames.HasAnimation("blink"))
-        {
-            Play("blink");
-        }
-    }
+	public override void _Ready()
+	{
+		if (SpriteFrames != null && SpriteFrames.HasAnimation("blink"))
+		{
+			Play("blink");
+		}
+	}
 }

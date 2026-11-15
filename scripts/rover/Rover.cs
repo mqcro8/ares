@@ -17,14 +17,19 @@ public partial class Rover : CharacterBody2D
 	private float _blinkTimer;
 	private bool _isDimmed;
 	private Color _normalModulate;
-	private const float LagPerCollision = 0.2f;
+	private float _controlLag;
+	private float _queuedSteerDirection;
+	private float _steerQueueTimer;
 	public int MaxImpactPoints { get; private set; } = ToolEffects.RoverBaseDamageLimit;
 	public int DamagePerCollision { get; private set; } = ToolEffects.RoverBaseDamagePerCollision;
 	public float EffectiveLaneChangeSpeed { get; private set; } = ToolEffects.RoverBaseLaneChangeSpeed;
 	public int DamagePoints => MissionState.Instance?.RoverImpacts ?? 0;
 	public int RemainingLives => Math.Max(0, MaxImpactPoints - DamagePoints);
 	public int Collisions => MissionState.Instance?.RoverCollisions ?? 0;
-	private float InputLag => Collisions * LagPerCollision;
+	private float InputLag => _controlLag;
+	public float CurrentControlLag => InputLag;
+	public bool CanAccelerate { get; private set; }
+	public bool HasServos { get; private set; }
 	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
 	public bool IsGameOver => _gameOver;
@@ -42,6 +47,8 @@ public partial class Rover : CharacterBody2D
 		_normalModulate = _roverAnimation.Modulate;
 		bool hasBumper = MissionState.Instance?.HasEquipped(ToolEffects.RoverBumper) == true;
 		bool hasServos = MissionState.Instance?.HasEquipped(ToolEffects.RoverServos) == true;
+		HasServos = hasServos;
+		CanAccelerate = hasServos;
 		MaxImpactPoints = ToolEffects.RoverBaseDamageLimit +
 			(hasBumper ? ToolEffects.RoverBumperExtraDamageLimit : 0);
 		DamagePerCollision = hasServos ? ToolEffects.RoverServoDamagePerCollision :
@@ -66,6 +73,11 @@ public partial class Rover : CharacterBody2D
 	{
 		if(!CanMove) return;
 
+		if (_steerQueueTimer > 0f)
+		{
+			_steerQueueTimer -= (float)delta;
+			if (_steerQueueTimer <= 0f) ApplySteer(_queuedSteerDirection);
+		}
 		HandleInput();
 
 		float targetX = LanePositions[(int)_currentLane];
@@ -105,27 +117,34 @@ public partial class Rover : CharacterBody2D
 		if (Input.IsActionJustPressed("move_left"))
 		{
 			AudioManager.PlaySfx2D(SoundIds.Whoosh, GlobalPosition);
-			if (_currentLane == Lane.Left)
-			{
-				RegisterCollision();
-			}
-			else
-			{
-				_currentLane--;
-			}
+			QueueSteer(-1f);
 		}
 
 		if (Input.IsActionJustPressed("move_right"))
 		{
 			AudioManager.PlaySfx2D(SoundIds.Whoosh, GlobalPosition);
-			if (_currentLane == Lane.Right)
-			{
-				RegisterCollision();
-			}
-			else
-			{
-				_currentLane++;
-			}
+			QueueSteer(1f);
+		}
+	}
+
+	private void QueueSteer(float direction)
+	{
+		_queuedSteerDirection = direction;
+		_steerQueueTimer = InputLag;
+		if (_steerQueueTimer <= 0f) ApplySteer(direction);
+	}
+
+	private void ApplySteer(float direction)
+	{
+		if (direction < 0)
+		{
+			if (_currentLane == Lane.Left) RegisterCollision();
+			else _currentLane--;
+		}
+		else
+		{
+			if (_currentLane == Lane.Right) RegisterCollision();
+			else _currentLane++;
 		}
 	}
 
@@ -150,6 +169,9 @@ public partial class Rover : CharacterBody2D
 			if (MissionState.Instance != null)
 			{
 				MissionState.Instance.RoverCollisions++;
+				_controlLag = Math.Min(1.2f, _controlLag +
+					ToolEffects.RoverBaseControlLagPerCollision *
+					(HasServos ? ToolEffects.RoverServoControlLagFactor : 1f));
 				MissionState.Instance.RoverImpacts = Math.Min(MaxImpactPoints,
 					MissionState.Instance.RoverImpacts + DamagePerCollision);
 			}
