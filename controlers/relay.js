@@ -3,6 +3,7 @@ import { createReadStream } from "fs";
 import { promises as fs } from "fs";
 import { extname, join, resolve, sep } from "path";
 import { fileURLToPath } from "url";
+import { randomUUID } from "crypto";
 import { WebSocketServer, WebSocket } from "ws";
 
 const ControlersRoot = fileURLToPath(new URL(".", import.meta.url));
@@ -51,7 +52,7 @@ const CommandRules = new Map([
 const ContextModes = new Set(["none", "wires", "fuses", "frequency", "hull", "launch", "ending"]);
 
 const RoomPattern = /^[A-Z0-9]{4,8}$/;
-const Roles = new Set(["controller", "game"]);
+const Roles = new Set(["controller", "game", "team_host", "player"]);
 
 const MimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -238,32 +239,72 @@ export function createRelayServer({
 
     let room = rooms.get(roomId);
     if (!room) {
-      room = { controller: null, game: null, context: null };
+      room = {
+        controller: null, game: null, context: null, players: new Map(), nextSlot: 1,
+        oxygenClaims: new Map(), positions: new Map(),
+      };
       rooms.set(roomId, room);
     }
 
-    const previous = room[role];
+    const previous = role === "player" ? null : room[role];
     if (previous && previous !== socket) {
       // Replace stale or duplicate connections instead of rejecting them so a
       // phone/game reload can reconnect without waiting for the old socket.
-      notify(room, role === "controller" ? "game" : "controller",
-        { type: role === "controller" ? "controller_disconnected" : "game_disconnected" });
+      if (role === "controller" || role === "game")
+        notify(room, role === "controller" ? "game" : "controller",
+          { type: role === "controller" ? "controller_disconnected" : "game_disconnected" });
       previous.close(1000, "Replaced by a new connection");
     }
 
-    room[role] = socket;
+    if (role !== "player") room[role] = socket;
+    if (role === "team_host") room.teamHost = socket;
+    if (role === "player") {
+      const token = String(url.searchParams.get("token") ?? "");
+      let player = token ? [...room.players.values()].find((entry) => entry.token === token) : null;
+      if (!player) {
+        if (room.players.size >= 3) {
+          socket.close(1013, "Room is full");
+          return;
+        }
+        player = { slot: room.nextSlot++, token: randomUUID(), socket: null, ready: false };
+        room.players.set(player.slot, player);
+      }
+      player.socket = socket;
+      player.ready = false;
+      socket.playerSlot = player.slot;
+      socket.playerToken = player.token;
+      sendJson(socket, {
+        type: "team_joined",
+        slot: player.slot,
+        token: player.token,
+        players: teamRoster(room),
+      });
+      if (room.teamState) sendJson(socket, { type: "team_state", state: room.teamState });
+      for (const position of room.positions.values())
+        sendJson(socket, { type: "team_position", ...position });
+      broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
+    }
     socket.isAlive = true;
     socket.on("pong", () => { socket.isAlive = true; });
 
     log(`[${roomId}] ${role} connected`);
 
-    if (role === "game") {
+    if (role === "team_host") {
+      sendJson(socket, { type: "team_lobby", players: teamRoster(room) });
+      if (room.teamState) sendJson(socket, { type: "team_state", state: room.teamState });
+      for (const position of room.positions.values())
+        sendJson(socket, { type: "team_position", ...position });
+    } else if (role === "game") {
       sendJson(socket, room.controller ? { type: "controller_connected" } : { type: "room_ready" });
       notify(room, "controller", { type: "game_connected" });
-    } else {
+      sendJson(socket, { type: "team_lobby", players: teamRoster(room) });
+      if (room.teamState) sendJson(socket, { type: "team_state", state: room.teamState });
+    } else if (role === "controller") {
       sendJson(socket, room.game ? { type: "game_connected" } : { type: "room_ready" });
       if (room.context) sendJson(socket, room.context);
       notify(room, "game", { type: "controller_connected" });
+    } else {
+      sendJson(socket, { type: "team_lobby", players: teamRoster(room) });
     }
 
     socket.on("message", (data) => {
@@ -275,6 +316,55 @@ export function createRelayServer({
         return;
       }
 
+      if (role === "team_host") {
+        if (room.teamStarted && message?.type === "team_position" &&
+            message.slot === 0 && validTeamPosition(message)) {
+          const position = { slot: 0, scene: message.scene, x: message.x, y: message.y,
+            facing: message.facing, flip: message.flip };
+          room.positions.set(0, position);
+          for (const player of room.players.values())
+            sendJson(player.socket, { type: "team_position", ...position });
+          return;
+        }
+        if (room.teamStarted && message?.type === "team_position_broadcast" &&
+            Number.isInteger(message.slot) && message.slot >= 1 && message.slot <= 3 &&
+            validTeamPosition(message)) {
+          const position = { slot: message.slot, scene: message.scene, x: message.x, y: message.y,
+            facing: message.facing, flip: message.flip };
+          room.positions.set(message.slot, position);
+          for (const player of room.players.values())
+            sendJson(player.socket, { type: "team_position", ...position });
+          return;
+        }
+        if (message?.type === "team_state" && isPlainObject(message.state)) {
+          room.teamState = message.state;
+          for (const player of room.players.values())
+            sendJson(player.socket, { type: "team_state", state: message.state });
+          return;
+        }
+        if (message?.type === "team_start") {
+          const roster = teamRoster(room);
+          if (roster.length !== 4 || roster.some((player) => !player.connected || !player.ready)) {
+            sendJson(socket, { type: "team_error", message: "All four players must be connected and ready." });
+            return;
+          }
+          room.teamStarted = true;
+          broadcastTeam(room, { type: "team_start" });
+          return;
+        }
+        if (message?.type === "team_ready" && message.slot === 0) {
+          room.hostReady = message.ready === true;
+          broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
+          return;
+        }
+        if (room.teamStarted && message?.type === "team_event" && message.name === "oxygen_pickup_claim" &&
+            message.slot === 0 && validPickupId(message.id)) {
+          claimOxygenPickup(room, 0, message.id);
+          return;
+        }
+        return;
+      }
+
       if (role === "game") {
         const context = normalizeContext(message);
         if (!context) {
@@ -283,6 +373,64 @@ export function createRelayServer({
         }
         room.context = context;
         notify(room, "controller", context);
+        return;
+      }
+
+      if (role === "player") {
+        const player = room.players.get(socket.playerSlot);
+        if (!player || player.socket !== socket) return;
+        if (message?.type === "team_ready") {
+          player.ready = message.ready === true;
+          broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
+        } else if (room.teamStarted && message?.type === "team_position" && validTeamPosition(message)) {
+          const position = { slot: player.slot, scene: message.scene, x: message.x, y: message.y,
+            facing: message.facing, flip: message.flip };
+          room.positions.set(player.slot, position);
+          sendJson(room.teamHost, { type: "team_position", ...position });
+          for (const teammate of room.players.values())
+            if (teammate.slot !== player.slot)
+              sendJson(teammate.socket, { type: "team_position", ...position });
+        } else if (room.teamStarted && message?.type === "team_event" &&
+                   message.name === "gateway_task_complete" &&
+                   Number.isInteger(message.index) && message.index === player.slot) {
+          sendJson(room.teamHost, {
+            type: "team_event",
+            name: message.name,
+            slot: player.slot,
+            index: message.index,
+          });
+        } else if (room.teamStarted && message?.type === "team_event" &&
+                   message.name === "mars_task_complete" &&
+                   Number.isInteger(message.index) && message.index >= 0 && message.index <= 6) {
+          sendJson(room.teamHost, {
+            type: "team_event",
+            name: message.name,
+            slot: player.slot,
+            index: message.index,
+          });
+        } else if (room.teamStarted && message?.type === "team_event" &&
+                   message.name === "rover_complete" &&
+                   Number.isInteger(message.index) && message.index === player.slot) {
+          sendJson(room.teamHost, {
+            type: "team_event",
+            name: message.name,
+            slot: player.slot,
+            index: message.index,
+          });
+        } else if (room.teamStarted && message?.type === "team_event" &&
+                   message.name === "oxygen_pickup_claim" && validPickupId(message.id)) {
+          claimOxygenPickup(room, player.slot, message.id);
+        } else if (room.teamStarted && message?.type === "team_event" &&
+                   message.name === "score_submit" && validTeamScore(message.score, message.passed)) {
+          sendJson(room.teamHost, {
+            type: "team_event",
+            name: "score_submit",
+            slot: player.slot,
+            index: player.slot,
+            score: message.score,
+            passed: message.passed,
+          });
+        }
         return;
       }
 
@@ -314,17 +462,36 @@ export function createRelayServer({
     socket.on("close", () => {
       log(`[${roomId}] ${role} disconnected`);
 
-      if (room[role] !== socket) return;
-      room[role] = null;
-
-      if (role === "controller") {
-        notify(room, "game", { type: "controller_disconnected" });
-      } else {
-        room.context = null;
-        notify(room, "controller", { type: "game_disconnected" });
+      if (role !== "player") {
+        if (room[role] !== socket) return;
+        room[role] = null;
       }
 
-      if (!room.controller && !room.game) {
+      if (role === "player") {
+        const player = room.players.get(socket.playerSlot);
+        if (player?.socket === socket) {
+          player.socket = null;
+          player.ready = false;
+        }
+        if (room.teamHost) sendJson(room.teamHost, { type: "team_player_disconnected", slot: socket.playerSlot });
+        broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
+      } else if (role === "controller") {
+        notify(room, "game", { type: "controller_disconnected" });
+      } else if (role === "game") {
+        room.context = null;
+        notify(room, "controller", { type: "game_disconnected" });
+      } else {
+        if (room.teamHost !== socket) return;
+        room.teamHost = null;
+        room.hostReady = false;
+        for (const player of room.players.values()) {
+          player.socket?.close(1001, "Host disconnected");
+          player.socket = null;
+          player.ready = false;
+        }
+      }
+
+      if (!room.controller && !room.game && room.players.size === 0) {
         rooms.delete(roomId);
       }
     });
@@ -368,4 +535,49 @@ export function createRelayServer({
       });
     },
   };
+}
+
+function teamRoster(room) {
+  return [
+    { slot: 0, connected: Boolean(room.teamHost), ready: Boolean(room.hostReady), host: true },
+    ...[...room.players.values()].map(({ slot, socket, ready }) => ({
+      slot, connected: Boolean(socket), ready: Boolean(ready), host: false,
+    })),
+  ].sort((a, b) => a.slot - b.slot);
+}
+
+function broadcastTeam(room, message) {
+  sendJson(room.teamHost, message);
+  for (const player of room.players.values()) sendJson(player.socket, message);
+}
+
+function validPickupId(id) {
+  return typeof id === "string" && id.length > 0 && id.length <= 160 &&
+    /^[A-Za-z0-9_.:/-]+$/.test(id);
+}
+
+function validTeamScore(score, passed) {
+  return typeof score === "number" && Number.isFinite(score) &&
+    score >= 0 && score <= 100 && typeof passed === "boolean";
+}
+
+function validTeamPosition(message) {
+  return typeof message.scene === "string" && message.scene.length > 0 &&
+    message.scene.length <= 160 && Number.isFinite(message.x) &&
+    Number.isFinite(message.y) && Math.abs(message.x) <= 100000 &&
+    Math.abs(message.y) <= 100000 &&
+    ["up", "down", "side", "left", "right"].includes(message.facing) &&
+    typeof message.flip === "boolean";
+}
+
+function claimOxygenPickup(room, slot, id) {
+  const owner = room.oxygenClaims.get(id);
+  const accepted = owner === undefined || owner === slot;
+  if (accepted && owner === undefined) {
+    room.oxygenClaims.set(id, slot);
+    sendJson(room.teamHost, { type: "team_event", name: "oxygen_pickup_claimed", slot, id });
+  }
+  const result = { type: "team_pickup_result", id, accepted };
+  if (slot === 0) sendJson(room.teamHost, result);
+  else sendJson(room.players.get(slot)?.socket, result);
 }

@@ -150,8 +150,10 @@ public partial class TrainingLab : Node2D, ares.scripts.systems.IDevSceneSkipTar
 			Locker.Toggle(Player);
 		if (mission.OxygenTankCount == 0) mission.TrySetOxygenTankCount(1, out _);
 		PracticeSession.RequestLaunch(PracticeSession.LaunchMode.Real, Player.GlobalPosition);
+		_stations?.MarkTravelRequested();
 		Error error = GetTree().ChangeSceneToFile("res://scenes/RocketLaunch/Launching.tscn");
 		if (error == Error.Ok) return true;
+		_stations?.CancelTravelRequest();
 		PracticeSession.Abort();
 		return false;
 	}

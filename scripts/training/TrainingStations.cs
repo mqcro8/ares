@@ -130,4 +130,9 @@ public partial class TrainingStations : Node
     {
         if (!_travelRequested) PracticeSession.Clear();
     }
+
+    /// <summary>Preserves a prepared PracticeSession request during an external scene transition.</summary>
+    public void MarkTravelRequested() => _travelRequested = true;
+
+    public void CancelTravelRequest() => _travelRequested = false;
 }

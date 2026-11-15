@@ -7,6 +7,7 @@ using ares.scripts.systems;
 using Ares.Systems.Controllers;
 using Ares.Systems.Audio;
 using ares.scripts.prelaunch;
+using ares.scripts.rocket_launch;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource, IDevSceneSkipTarget
@@ -44,6 +45,8 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private bool holding, spaceHeld, mouseHeld, inputBlocked;
 	private bool fromTraining;
 	private bool launchAllowed;
+	private bool teamMode;
+	private TeamLaunchLobby teamLobby;
 	private bool accessDenied;
 	private bool ignitionFailed;
 	private bool practiceReturnPending;
@@ -121,6 +124,26 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		ControllerCommandRouter.Register(this, this);
 		ControllerContext.Begin(this, ControllerContextMode.Launch);
 		PublishControllerContext();
+		bool testScene = GetTree().CurrentScene?.SceneFilePath.StartsWith("res://tests/", StringComparison.Ordinal) == true;
+		if (!testScene && !Practice && request != null && launchAllowed)
+		{
+			briefing.Hide();
+			teamLobby = new TeamLaunchLobby();
+			AddChild(teamLobby);
+			teamLobby.LaunchSelected += OnLaunchSelected;
+		}
+	}
+
+	private void OnLaunchSelected(bool useTeam)
+	{
+		teamMode = useTeam;
+		if (GodotObject.IsInstanceValid(teamLobby))
+		{
+			teamLobby.LaunchSelected -= OnLaunchSelected;
+			teamLobby.QueueFree();
+		}
+		briefing.Show();
+		Refresh();
 	}
 
 	private void SetGaugeBand()
@@ -158,6 +181,8 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (GetViewport() != null) GetViewport().SizeChanged -= FitBriefing;
 		if (GodotObject.IsInstanceValid(pauseManager)) pauseManager.PauseChanged -= OnPauseChanged;
 		fire.AnimationFinished -= OnAnimationFinished;
+		if (GodotObject.IsInstanceValid(teamLobby))
+			teamLobby.LaunchSelected -= OnLaunchSelected;
 		briefingStart.Pressed -= BeginIgnitionFromReady; briefingBack.Pressed -= Back;
 		pause.Pressed -= TogglePause; back.Pressed -= Back;
 		ControllerCommandRouter.Unregister(this);

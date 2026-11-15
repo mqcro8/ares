@@ -260,6 +260,91 @@ test("rejects invalid room codes and roles", async (t) => {
   }
 });
 
+test("team rooms have four fixed slots, retain reconnect tokens, and relay host state", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+  const host = await connect(port, "TEAM1", "team_host");
+  t.after(() => closeAll(host));
+  const players = [];
+  for (let i = 0; i < 3; i++) players.push(await connect(port, "TEAM1", "player"));
+  t.after(() => closeAll(...players));
+  const joined = await Promise.all(players.map((socket) =>
+    nextMessage(socket, (message) => message.type === "team_joined")));
+  assert.deepEqual(joined.map((message) => message.slot).sort(), [1, 2, 3]);
+  const lobby = nextMessage(host, (message) => message.type === "team_lobby" &&
+    message.players.length === 4 && message.players.every((player) => player.connected && player.ready));
+  host.send(JSON.stringify({ type: "team_ready", slot: 0, ready: true }));
+  for (let i = 0; i < players.length; i++)
+    players[i].send(JSON.stringify({ type: "team_ready", ready: true }));
+  assert.equal((await lobby).players.length, 4);
+  const starts = players.map((socket) => nextMessage(socket, (message) => message.type === "team_start"));
+  host.send(JSON.stringify({ type: "team_start" }));
+  assert.equal((await Promise.all(starts)).length, 3);
+
+  const full = new WebSocket(`ws://127.0.0.1:${port}/?room=TEAM1&role=player`);
+  const closeCode = await new Promise((resolve, reject) => {
+    full.once("close", resolve);
+    full.once("error", reject);
+  });
+  assert.equal(closeCode, 1013);
+
+  const token = joined[1].token;
+  const lost = players[1];
+  const closed = new Promise((resolve) => lost.once("close", resolve));
+  lost.close();
+  await closed;
+  const retry = new WebSocket(`ws://127.0.0.1:${port}/?room=TEAM1&role=player&token=${token}`);
+  retry.received = [];
+  retry.on("message", (data) => retry.received.push(JSON.parse(data.toString())));
+  await new Promise((resolve, reject) => { retry.once("open", resolve); retry.once("error", reject); });
+  t.after(() => closeAll(retry));
+  assert.equal((await nextMessage(retry, (message) => message.type === "team_joined")).slot, joined[1].slot);
+
+  retry.send(JSON.stringify({ type: "team_event", name: "gateway_task_complete", index: 1 }));
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(host.received.some((message) => message.type === "team_event"), false,
+    "players cannot complete another slot's assigned repair");
+  const taskEvent = nextMessage(host, (message) => message.type === "team_event");
+  retry.send(JSON.stringify({ type: "team_event", name: "gateway_task_complete", index: joined[1].slot }));
+  assert.equal((await taskEvent).index, joined[1].slot);
+
+  const marsEvent = nextMessage(host, (message) => message.type === "team_event" &&
+    message.name === "mars_task_complete");
+  retry.send(JSON.stringify({ type: "team_event", name: "mars_task_complete", index: 5 }));
+  assert.equal((await marsEvent).index, 5);
+
+  const pickupEvent = nextMessage(host, (message) => message.type === "team_event" &&
+    message.name === "oxygen_pickup_claimed");
+  const pickupResult = nextMessage(retry, (message) => message.type === "team_pickup_result");
+  retry.send(JSON.stringify({ type: "team_event", name: "oxygen_pickup_claim", id: "MarsBase/OxygenCanister1" }));
+  assert.equal((await pickupEvent).id, "MarsBase/OxygenCanister1");
+  assert.equal((await pickupResult).accepted, true);
+  const duplicateResult = nextMessage(players[0], (message) => message.type === "team_pickup_result");
+  players[0].send(JSON.stringify({ type: "team_event", name: "oxygen_pickup_claim", id: "MarsBase/OxygenCanister1" }));
+  assert.equal((await duplicateResult).accepted, false);
+
+  const scoreEvent = nextMessage(host, (message) => message.type === "team_event" &&
+    message.name === "score_submit");
+  retry.send(JSON.stringify({ type: "team_event", name: "score_submit", score: 87.5, passed: true }));
+  const submittedScore = await scoreEvent;
+  assert.equal(submittedScore.score, 87.5);
+  assert.equal(submittedScore.slot, joined[1].slot);
+
+  const remotePosition = nextMessage(host, (message) => message.type === "team_position");
+  const teammatePosition = nextMessage(players[0], (message) => message.type === "team_position");
+  retry.send(JSON.stringify({
+    type: "team_position", scene: "res://scenes/mars/MarsBase.tscn",
+    x: 123.5, y: 80, facing: "left", flip: true,
+  }));
+  assert.equal((await remotePosition).slot, joined[1].slot);
+  assert.equal((await teammatePosition).x, 123.5);
+
+  const state = { stage: "Mars", objectiveComplete: [true, false, false, false] };
+  const update = nextMessage(retry, (message) => message.type === "team_state");
+  host.send(JSON.stringify({ type: "team_state", state }));
+  assert.deepEqual((await update).state, state);
+});
+
 test("serves the controller page and only the art it needs", async (t) => {
   const { relay, port } = await startRelay();
   t.after(() => relay.close());

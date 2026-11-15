@@ -20,6 +20,7 @@ public partial class SignalTable : Interactable
 	{
 		base._Ready();
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+		MissionState.Instance.SignalTableRepairedChanged += OnSignalTableRepairedChanged;
 		_calibrated = MissionState.Instance?.SignalTableRepaired ?? false;
 		ApplyState();
 	}
@@ -69,5 +70,18 @@ public partial class SignalTable : Interactable
 		}
 
 		_sprite.Play("default");
+	}
+
+	private void OnSignalTableRepairedChanged(bool repaired)
+	{
+		if (!repaired || _calibrated) return;
+		_calibrated = true;
+		ApplyState();
+	}
+
+	public override void _ExitTree()
+	{
+		if (MissionState.Instance != null)
+			MissionState.Instance.SignalTableRepairedChanged -= OnSignalTableRepairedChanged;
 	}
 }

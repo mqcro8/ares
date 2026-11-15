@@ -8,6 +8,7 @@ using ares.scripts.systems.items;
 using ares.scripts.training;
 using ares.scripts.ui.mission_monitor;
 using Ares.Systems.Audio;
+using Ares.Systems.Multiplayer;
 
 /// <summary>
 /// Gateway hub and four-room repair annex. Each annex room owns one of the
@@ -27,6 +28,7 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private TrainingStations _stations;
 	private Label _status;
+	private TeamSession _team;
 	public GatewayMissionControl MissionControl { get; private set; }
 	public bool CanSkipWithDevCode => IsInsideTree() && MissionControl != null &&
 		MissionState.Instance?.Ending == MissionEnding.None;
@@ -35,6 +37,7 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 	{
 		AudioManager.PlayMusic(SoundIds.TensionMusic, 1.5);
 		MissionState.Instance.Stage = MissionStage.Gateway;
+		_team = TeamSession.Instance;
 		var arrival = PracticeSession.Arrive(ScenePath);
 		if (arrival != null)
 		{
@@ -51,6 +54,12 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 		AddStation("Communications Bay", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
 		AddStation("Hull Access", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
 
+		if (IsTeamMission)
+		{
+			_team.TeamStateReceived += OnTeamStateReceived;
+			ApplyTeamTasks();
+			ReportAssignedTaskIfAlreadyComplete();
+		}
 
 		MissionControl = GD.Load<PackedScene>("res://scenes/gateway/MissionControlBox.tscn")
 			.Instantiate<GatewayMissionControl>();
@@ -63,7 +72,35 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private void AddStation(string name, Control zone, PracticeSession.Exercise exercise, string marker)
 		=> _stations.Targets.Add(new(name, zone, PracticeSession.SceneFor(exercise), marker,
-			exercise, RequiredCapability: ItemCapability.Repair));
+			exercise, Locked: () => IsTeamMission && AssignedTaskIndex != (int)exercise
+				? $"CREW ASSIGNMENT — PLAYER {(int)exercise + 1} OWNS THIS REPAIR."
+				: null, RequiredCapability: ItemCapability.Repair));
+
+	private bool IsTeamMission => _team?.Active == true && _team.MissionStarted;
+	private int AssignedTaskIndex => _team?.LocalSlot ?? -1;
+
+	private void ReportAssignedTaskIfAlreadyComplete()
+	{
+		if (AssignedTaskIndex is < 0 or > 3) return;
+		var exercise = (PracticeSession.Exercise)AssignedTaskIndex;
+		if (PracticeSession.CompletedIn(ScenePath, exercise))
+			_team.MarkGatewayTaskComplete(AssignedTaskIndex);
+	}
+
+	private void OnTeamStateReceived(string json)
+	{
+		if (!IsInsideTree()) return;
+		ApplyTeamTasks();
+		if (MissionControl != null)
+			foreach (string message in GatewayMission.ArrivalMessages()) MissionControl.Enqueue(message);
+	}
+
+	private void ApplyTeamTasks()
+	{
+		for (int slot = 0; slot < 4; slot++)
+			if (_team.IsGatewayTaskComplete(slot))
+				PracticeSession.CompleteForDeveloper(ScenePath, (PracticeSession.Exercise)slot);
+	}
 
 	public override void _Process(double delta)
 	{
@@ -102,7 +139,11 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 		Camera.GlobalPosition = Player.GlobalPosition;
 	}
 
-	public override void _ExitTree() => GetViewport().SizeChanged -= FitCamera;
+	public override void _ExitTree()
+	{
+		GetViewport().SizeChanged -= FitCamera;
+		if (_team != null) _team.TeamStateReceived -= OnTeamStateReceived;
+	}
 
 	public bool SkipWithDevCode()
 	{

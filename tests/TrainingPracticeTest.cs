@@ -596,6 +596,16 @@ public partial class TrainingPracticeTest : Node
         KeyPress(Key.E); await Frames(8);
         Check(Scene.SceneFilePath == PracticeSession.SceneFor(PracticeSession.Exercise.Wires),
             "Lab stations remain interactive after fallback arrival");
+
+        GetTree().ChangeSceneToFile(PracticeSession.LabScene); await Frames(8);
+        var devSkipLab = (TrainingLab)Scene;
+        Check(devSkipLab.SkipWithDevCode(), "Developer shortcut starts the real launch from the lab");
+        await Frames(8);
+        Check(Scene is RocketLaunch && mission.LaunchPadUnlocked && PracticeSession.PendingLaunch == null,
+            "Developer launch request survives lab cleanup and is consumed by the launch scene");
+        Check(Scene is RocketLaunch launch && launch.HasNode("TeamLaunchLobby") &&
+            !launch.GetNode<Label>("IntroUI/Panel/Margin/VBox/Text").Text.Contains("LOCKED"),
+            "Developer launch reaches an unlocked, interactive launch choice");
     }
 
     private async Task ScreenSizeChecks(string room)

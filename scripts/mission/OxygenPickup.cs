@@ -3,6 +3,7 @@ namespace ares.scripts.mission;
 using Godot;
 using ares.scripts.player;
 using Ares.Systems.Audio;
+using Ares.Systems.Multiplayer;
 
 /// <summary>World pickup that refills the suit reserve when the astronaut presses E nearby.</summary>
 public partial class OxygenPickup : Area2D
@@ -22,9 +23,13 @@ public partial class OxygenPickup : Area2D
 
 	private Label _prompt;
 	private Player _player;
+	private TeamSession _team;
+	private bool _claimPending;
+	private string TeamPickupId => $"{GetTree().CurrentScene?.SceneFilePath}:{GetPath()}";
 
 	public override void _Ready()
 	{
+		_team = TeamSession.Instance;
 		if (Sprite == null) Sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		_prompt = new Label { Name = "Prompt", Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
 		_prompt.AddThemeFontSizeOverride("font_size", 9);
@@ -34,6 +39,11 @@ public partial class OxygenPickup : Area2D
 		var font = GD.Load<FontFile>("res://art/fonts/PressStart2P-Regular.ttf");
 		if (font != null) _prompt.AddThemeFontOverride("font", font);
 		AddChild(_prompt);
+		if (_team?.Active == true && !RefillToFull)
+		{
+			_team.TeamStateReceived += OnTeamStateReceived;
+			if (_team.IsOxygenPickupClaimed(TeamPickupId)) Finish();
+		}
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -41,7 +51,7 @@ public partial class OxygenPickup : Area2D
 		_player ??= FindPlayer();
 		if (_player == null || !GodotObject.IsInstanceValid(_player)) return;
 		float distance = GlobalPosition.DistanceTo(_player.GlobalPosition);
-		bool nearby = distance <= InteractionRadius && !Collected;
+		bool nearby = distance <= InteractionRadius && !Collected && !_claimPending;
 		if (nearby == PlayerNearby) return;
 		PlayerNearby = nearby;
 		UpdatePrompt();
@@ -62,10 +72,48 @@ public partial class OxygenPickup : Area2D
 		if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
 		if (key.PhysicalKeycode != Key.E && key.Keycode != Key.E) return;
 		GetViewport().SetInputAsHandled();
-		string message = Collect();
+		if (_team?.Active == true && _team.MissionStarted && !RefillToFull)
+		{
+			RequestSharedCanister();
+			return;
+		}
+		ShowCollectionFeedback(Collect());
+	}
+
+	private void RequestSharedCanister()
+	{
+		var mission = MissionState.Instance;
+		if (Collected || _claimPending) return;
+		if (mission == null || mission.Oxygen.CapacitySeconds <= 0 ||
+			mission.Oxygen.IsDepleted || mission.Oxygen.IsFull)
+		{
+			ShowCollectionFeedback(Collect());
+			return;
+		}
+		_claimPending = true;
+		UpdatePrompt();
+		_team.RequestOxygenPickup(TeamPickupId, accepted =>
+		{
+			if (!GodotObject.IsInstanceValid(this)) return;
+			_claimPending = false;
+			string message = accepted ? Collect() : "OXYGEN CANISTER ALREADY CLAIMED BY THE CREW.";
+			if (!accepted) Finish();
+			ShowCollectionFeedback(message);
+			UpdatePrompt();
+		});
+	}
+
+	private void ShowCollectionFeedback(string message)
+	{
 		if (LastFeedback.StartsWith("OXYGEN", System.StringComparison.Ordinal))
 			AudioManager.PlaySfx(SoundIds.Enter);
 		MissionState.Instance?.SetOxygenMessage(message);
+	}
+
+	private void OnTeamStateReceived(string _)
+	{
+		if (!_claimPending && _team?.IsOxygenPickupClaimed(TeamPickupId) == true)
+			Finish();
 	}
 
 	/// <summary>Tries to take the oxygen. Returns the feedback message for the HUD.</summary>
@@ -119,9 +167,14 @@ public partial class OxygenPickup : Area2D
 	private void UpdatePrompt()
 	{
 		if (_prompt == null) return;
-		_prompt.Visible = PlayerNearby && !Collected;
+		_prompt.Visible = PlayerNearby && !Collected && !_claimPending;
 		if (!_prompt.Visible) return;
 		_prompt.Text = $"E — {PickupName}";
 		_prompt.Position = new Vector2(-48, -34);
+	}
+
+	public override void _ExitTree()
+	{
+		if (_team != null) _team.TeamStateReceived -= OnTeamStateReceived;
 	}
 }

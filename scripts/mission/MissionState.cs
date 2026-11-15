@@ -5,6 +5,7 @@ using Godot;
 using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.systems.items;
+using Ares.Systems.Multiplayer;
 
 // Single source of truth for the run. Registered as an autoload.
 // Every scene reads and writes here; nothing is duplicated locally.
@@ -82,6 +83,8 @@ public partial class MissionState : Node
 
 		_doorAccess[index] = on;
 		EmitSignal(SignalName.DoorAccessChanged, index, on);
+		if (on && TeamSession.Instance?.ApplyingRemoteState != true)
+			TeamSession.Instance?.MarkMarsTaskComplete(index + 3);
 		if (on && AllDoorAccessOn)
 			EmitSignal(SignalName.AllDoorAccessCompleted);
 	}
@@ -93,6 +96,8 @@ public partial class MissionState : Node
 
 		GeneratorRepaired = true;
 		EmitSignal(SignalName.GeneratorRepairedChanged, true);
+		if (TeamSession.Instance?.ApplyingRemoteState != true)
+			TeamSession.Instance?.MarkMarsTaskComplete(0);
 	}
 
 	public void MarkWireBoxRepaired()
@@ -102,6 +107,8 @@ public partial class MissionState : Node
 
 		WireBoxRepaired = true;
 		EmitSignal(SignalName.WireBoxRepairedChanged, true);
+		if (TeamSession.Instance?.ApplyingRemoteState != true)
+			TeamSession.Instance?.MarkMarsTaskComplete(1);
 	}
 
 	public void MarkSignalTableRepaired()
@@ -111,6 +118,8 @@ public partial class MissionState : Node
 
 		SignalTableRepaired = true;
 		EmitSignal(SignalName.SignalTableRepairedChanged, true);
+		if (TeamSession.Instance?.ApplyingRemoteState != true)
+			TeamSession.Instance?.MarkMarsTaskComplete(2);
 	}
 
 	public void MarkSecondBuildingBriefingShown()

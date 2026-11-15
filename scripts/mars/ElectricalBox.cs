@@ -17,6 +17,7 @@ public partial class ElectricalBox : Interactable
 	{
 		base._Ready();
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+		MissionState.Instance.WireBoxRepairedChanged += OnWireBoxRepairedChanged;
 		_solved = MissionState.Instance?.WireBoxRepaired ?? false;
 		_sprite.Play(_solved ? "open" : "closed");
 		if (_solved)
@@ -54,5 +55,21 @@ public partial class ElectricalBox : Interactable
 				ShowPrompt();
 			}
 		};
+	}
+
+	private void OnWireBoxRepairedChanged(bool repaired)
+	{
+		if (!repaired || _solved) return;
+		_solved = true;
+		_open = false;
+		Enabled = false;
+		_sprite.Play("open");
+		HidePrompt();
+	}
+
+	public override void _ExitTree()
+	{
+		if (MissionState.Instance != null)
+			MissionState.Instance.WireBoxRepairedChanged -= OnWireBoxRepairedChanged;
 	}
 }

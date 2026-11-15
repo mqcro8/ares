@@ -20,6 +20,7 @@ public partial class Generator : Interactable
 	{
 		base._Ready();
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+		MissionState.Instance.GeneratorRepairedChanged += OnGeneratorRepairedChanged;
 		_on = MissionState.Instance?.GeneratorRepaired ?? false;
 		Enabled = !_on;
 		if (_on)
@@ -56,5 +57,20 @@ public partial class Generator : Interactable
 		HidePrompt();
 		_sprite.Play("on");
 		MissionState.Instance?.MarkGeneratorRepaired();
+	}
+
+	private void OnGeneratorRepairedChanged(bool repaired)
+	{
+		if (!repaired || _on) return;
+		_on = true;
+		Enabled = false;
+		HidePrompt();
+		_sprite.Play("on");
+	}
+
+	public override void _ExitTree()
+	{
+		if (MissionState.Instance != null)
+			MissionState.Instance.GeneratorRepairedChanged -= OnGeneratorRepairedChanged;
 	}
 }

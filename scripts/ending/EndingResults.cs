@@ -3,6 +3,7 @@ namespace ares.scripts.ending;
 using Ares.Systems.Controllers;
 using Godot;
 using ares.scripts.mission;
+using Ares.Systems.Multiplayer;
 
 public partial class EndingResults : Control, IControllerCommandSink, IControllerContextSource
 {
@@ -17,6 +18,7 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 	private Label _total;
 	private Button _return;
 	private MissionState _state;
+	private TeamSession _team;
 
 	public override void _Ready()
 	{
@@ -39,6 +41,14 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 			SetScore(_energy, _energyValue, score.Launch);
 			SetScore(_missionBar, _missionValue, score.Overall);
 			_total.Text = $"{(score.Passed ? "MISSION PASS" : "MISSION FAILED")}  {score.Overall:0}%";
+			_team = TeamSession.Instance;
+			if (_team?.Active == true && _team.MissionStarted)
+			{
+				_team.TeamStateReceived += RefreshTeamResult;
+				_team.TeamChanged += RefreshTeamResult;
+				_team.SubmitTeamScore(score.Overall, score.Passed);
+				RefreshTeamResult();
+			}
 		}
 		else
 		{
@@ -68,6 +78,20 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 	private void ReturnToMenu() =>
 		GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn");
 
+	private void RefreshTeamResult(string _ = null) => RefreshTeamResult();
+
+	private void RefreshTeamResult()
+	{
+		if (_team?.Active != true || !_team.MissionStarted) return;
+		if (_team.AllTeamScoresSubmitted)
+		{
+			SetScore(_missionBar, _missionValue, _team.TeamAverageScore);
+		}
+		_total.Text = _team.AllTeamScoresSubmitted
+			? $"{(_team.TeamPassed ? "TEAM MISSION PASS" : "TEAM MISSION FAILED")}  {_team.TeamAverageScore:0}%"
+			: "CREW DEBRIEF — WAITING FOR TEAM SCORES";
+	}
+
 	public bool HandleControllerCommand(ControllerCommand command)
 	{
 		if (command.Name != ControllerCommands.EndingContinue) return false;
@@ -85,6 +109,11 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 
 	public override void _ExitTree()
 	{
+		if (_team != null)
+		{
+			_team.TeamStateReceived -= RefreshTeamResult;
+			_team.TeamChanged -= RefreshTeamResult;
+		}
 		ControllerCommandRouter.Unregister(this);
 		ControllerContext.End(this);
 	}

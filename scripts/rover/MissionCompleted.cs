@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using ares.scripts.rover;
+using Ares.Systems.Multiplayer;
 
 public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
@@ -8,9 +9,11 @@ public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSk
 	[Export] public string MainMenuScene { get; set; } = "res://scenes/main_menu/main_menu_take3.tscn";
 	private RoverResultDialogue _dialogue;
 	private Button _nextStage, _mainMenu;
+	private TeamSession _team;
 	internal Func<string, Error> SceneLoader { get; set; }
 	public bool CanSkipWithDevCode => IsInsideTree() &&
-		ares.scripts.mission.MissionState.Instance?.RoverStageCompleted == true;
+		ares.scripts.mission.MissionState.Instance?.RoverStageCompleted == true &&
+		(_team?.Active != true || !_team.MissionStarted || _team.AllRoversComplete);
 
 	public override void _Ready()
 	{
@@ -25,6 +28,13 @@ public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSk
 			Lines = new[] { "Rover recovered", "Well done!" }
 		};
 		AddChild(_dialogue);
+		_team = TeamSession.Instance;
+		if (_team != null)
+		{
+			_team.TeamStateReceived += RefreshTeamGate;
+			_team.TeamChanged += RefreshTeamGate;
+		}
+		RefreshTeamGate();
 	}
 
 	private void _on_continue_pressed() => _dialogue.Advance();
@@ -33,6 +43,11 @@ public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSk
 	{
 		var mission = ares.scripts.mission.MissionState.Instance;
 		if (mission?.RoverStageCompleted != true) return;
+		if (_team?.Active == true && _team.MissionStarted && !_team.AllRoversComplete)
+		{
+			_dialogue.Text.Text = "ROVER RECOVERED. WAITING FOR THE OTHER THREE ROVERS.";
+			return;
+		}
 		if (string.IsNullOrWhiteSpace(NextScenePath) || !ResourceLoader.Exists(NextScenePath))
 		{
 			_dialogue.Text.Text = "Rover recovered. The next Mars exploration scene is not available in this build yet.";
@@ -52,9 +67,26 @@ public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSk
 		return true;
 	}
 
+	private void RefreshTeamGate(string _ = null) => RefreshTeamGate();
+
+	private void RefreshTeamGate()
+	{
+		if (_nextStage == null) return;
+		bool waiting = _team?.Active == true && _team.MissionStarted && !_team.AllRoversComplete;
+		_nextStage.Disabled = waiting;
+		_nextStage.Text = waiting ? "WAITING FOR CREW ROVERS" : "CONTINUE TO MARS";
+	}
+
 	private void _on_main_menu_pressed()
 	{
 		var error = SceneLoader != null ? SceneLoader(MainMenuScene) : GetTree().ChangeSceneToFile(MainMenuScene);
 		if (error != Error.Ok) _dialogue.Text.Text = "Could not return to Mission Control.";
+	}
+
+	public override void _ExitTree()
+	{
+		if (_team == null) return;
+		_team.TeamStateReceived -= RefreshTeamGate;
+		_team.TeamChanged -= RefreshTeamGate;
 	}
 }

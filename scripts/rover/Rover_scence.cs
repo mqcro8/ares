@@ -7,6 +7,7 @@ using Godot;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
+using Ares.Systems.Multiplayer;
 
 public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.scripts.systems.IDevSceneSkipTarget
 {
@@ -746,6 +747,18 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.script
 	}
 	private async void GameOver()
 	{
+		var team = TeamSession.Instance;
+		if (team?.Active == true && team.MissionStarted)
+		{
+			_gameOver = true;
+			_engineSound?.Stop(0.25f);
+			AudioManager.StopMusic(0.75);
+			_label.Text = "ROVER LOST — RETRYING FOR THE CREW";
+			_label.Show();
+			if (!await WaitSeconds(1.8, allowResult: true)) return;
+			if (IsInsideTree()) GetTree().ReloadCurrentScene();
+			return;
+		}
 		if (MissionStateForRover?.FailRoverStage(_roverRunSequence) != true) return;
 		_gameOver = true;
 		_engineSound?.Stop(0.25f);
@@ -759,6 +772,9 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.script
 			return;
 		if (MissionStateForRover?.CompleteRoverStage(_roverRunSequence) != true)
 			return;
+		var team = TeamSession.Instance;
+		if (team?.Active == true && team.MissionStarted)
+			team.MarkRoverComplete(team.LocalSlot);
 
 		_victory = true;
 		_engineSound?.Stop(0.25f);

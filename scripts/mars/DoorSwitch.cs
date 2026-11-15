@@ -20,6 +20,7 @@ public partial class DoorSwitch : Interactable
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
 		CreateIndexLabel();
 		Apply(MissionState.Instance?.IsDoorAccessOn(SwitchIndex) ?? false);
+		MissionState.Instance.DoorAccessChanged += OnDoorAccessChanged;
 	}
 
 	protected override void Interact()
@@ -44,6 +45,17 @@ public partial class DoorSwitch : Interactable
 
 		if (_indexLabel != null)
 			_indexLabel.AddThemeColorOverride("font_color", on ? new Color("70ff8c") : Colors.White);
+	}
+
+	private void OnDoorAccessChanged(int index, bool on)
+	{
+		if (index == SwitchIndex) Apply(on);
+	}
+
+	public override void _ExitTree()
+	{
+		if (MissionState.Instance != null)
+			MissionState.Instance.DoorAccessChanged -= OnDoorAccessChanged;
 	}
 
 	private void CreateIndexLabel()

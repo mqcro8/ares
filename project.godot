@@ -30,6 +30,7 @@ AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
 ControllerRelay="*res://scripts/systems/input/ControllerRelay.cs"
 DevCheats="*res://scripts/systems/DevCheats.cs"
+TeamSession="*res://scripts/systems/multiplayer/TeamSession.cs"
 
 [display]
 
