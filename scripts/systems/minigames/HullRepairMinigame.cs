@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.training;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
 
 public partial class HullRepairMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -18,8 +19,8 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	// Fase 2: soldar
 	[Export] public float TorchSpeed { get; set; } = 140f;        // px/s
-	[Export] public float WeldTolerance { get; set; } = 14f;      // px
-	[Export] public float HeatOffSeam { get; set; } = 0.8f;       // calor/s fuera de la costura
+	[Export] public float WeldTolerance { get; set; } = ToolEffects.HullBaseWeldTolerance; // px
+	[Export] public float HeatOffSeam { get; set; } = ToolEffects.HullBaseHeatOffSeam; // calor/s fuera de la costura
 	[Export] public float HeatStill { get; set; } = 0.5f;         // calor/s si no avanza
 	[Export] public float MaxStillSeconds { get; set; } = 0.6f;
 	[Export] public float CoolOff { get; set; } = 0.5f;           // enfriamiento/s con soplete apagado
@@ -122,8 +123,11 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 	public override void _Ready()
 	{
-		if (MissionState.Instance?.HasEquipped("precision_welder") == true)
-			WeldTolerance = 18f;
+		if (MissionState.Instance?.HasEquipped(ToolEffects.PrecisionWelder) == true)
+		{
+			WeldTolerance = ToolEffects.HullPrecisionWeldTolerance;
+			HeatOffSeam = ToolEffects.HullPrecisionHeatOffSeam;
+		}
 		_frame = GetNode<Panel>("Frame");
 		_world = GetNode<Node2D>("Frame/World");
 		_hole = GetNode<Polygon2D>("Frame/World/Hole");

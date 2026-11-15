@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.training;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
 
 public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -42,7 +43,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		foreach (var c in lightsRow.GetChildren())
 			if (c is Panel p) _lights.Add(PreparePanel(p));
 
-		if (MissionState.Instance?.HasEquipped("spare_fuses") == true)
+		if (MissionState.Instance?.HasEquipped(ToolEffects.SpareFuses) == true)
 		{
 			var extra = (Panel)_lights[0].Duplicate();
 			extra.Name = "L5";
@@ -50,7 +51,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 			_lights.Add(PreparePanel(extra));
 			lightsRow.AddThemeConstantOverride("separation", 12);
 		}
-		_maxPresses = _lights.Count;
+		_maxPresses = ToolEffects.FusePressesFor(MissionState.Instance?.HasEquipped(ToolEffects.SpareFuses) == true);
 		_pending = new Timer { OneShot = true };
 		AddChild(_pending);
 		_pending.Timeout += ResolvePending;

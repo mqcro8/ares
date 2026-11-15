@@ -2,14 +2,15 @@ using Godot;
 using System.Collections.Generic;
 using ares.scripts.training;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
 
 public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
 
-	[Export] public float MatchThreshold { get; set; } = 0.9f;       // similitud mínima (0 a 1)
-	[Export] public float HoldSeconds { get; set; } = 0.35f;         // tiempo que debe mantenerse
+	[Export] public float MatchThreshold { get; set; } = ToolEffects.FrequencyBaseThreshold; // similitud mínima (0 a 1)
+	[Export] public float HoldSeconds { get; set; } = ToolEffects.FrequencyBaseHoldSeconds; // tiempo que debe mantenerse
 	[Export] public float KeyAdjustSpeed { get; set; } = 1f;          // valor/s con flechas (Shift = fino)
 	[Export] public string RevealWord { get; set; } = "";            // palabra que se muestra al completar
 	[Export] public Color TargetColor { get; set; } = new Color("3cdc50");
@@ -58,8 +59,11 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	public override void _Ready()
 	{
-		if (MissionState.Instance?.HasEquipped("frequency_analyzer") == true)
-			MatchThreshold = 0.85f;
+		if (MissionState.Instance?.HasEquipped(ToolEffects.FrequencyAnalyzer) == true)
+		{
+			MatchThreshold = ToolEffects.FrequencyBaseThreshold + ToolEffects.FrequencyThresholdDelta;
+			HoldSeconds = ToolEffects.FrequencyAnalyzerHoldSeconds;
+		}
 		_screen = GetNode<Panel>("Box/Screen");
 		_effects = GetNode<Node2D>("Effects");
 		_targetWave = GetNode<Line2D>("Box/Screen/TargetWave");

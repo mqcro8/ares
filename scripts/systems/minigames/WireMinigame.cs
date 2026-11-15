@@ -2,6 +2,8 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.training;
+using ares.scripts.mission;
+using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
 
 public partial class WireMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -26,6 +28,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 	private readonly List<ColorRect> _rightTerminals = new();
 	private readonly HashSet<ColorRect> _connected = new();
 	private int _connectedCount;
+	public int ConnectedCount => _connectedCount;
 
 	private Line2D _dragWire;
 	private Line2D _dragGlow;
@@ -69,6 +72,8 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 			_leftTerminals.Add(left);
 			_rightTerminals.Add(rightTerminal);
 		}
+		if (MissionState.Instance?.HasEquipped(ToolEffects.WirePliers) == true)
+			PreconnectOneWire();
 		ControllerCommandRouter.Register(this, this);
 		ControllerContext.Begin(this, ControllerContextMode.Wires);
 		PublishControllerContext();
@@ -145,6 +150,32 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 	private Vector2 Center(ColorRect t)
 		=> _wires.ToLocal(t.GetGlobalRect().GetCenter());
+
+	private void PreconnectOneWire()
+	{
+		if (!IsInsideTree() || _leftTerminals.Count == 0 || _rightTerminals.Count == 0) return;
+		ColorRect from = _leftTerminals[0];
+		ColorRect to = _rightTerminals.FirstOrDefault(terminal => terminal.Color == from.Color);
+		if (to == null || _connected.Contains(from) || _connected.Contains(to)) return;
+
+		var wire = new Line2D
+		{
+			Width = WireWidth,
+			DefaultColor = from.Color,
+			BeginCapMode = Line2D.LineCapMode.Round,
+			EndCapMode = Line2D.LineCapMode.Round,
+			Antialiased = true
+		};
+		wire.AddPoint(Vector2.Zero);
+		wire.AddPoint(Vector2.Zero);
+		_wires.AddChild(wire);
+		_links.Add((wire, null, from, to));
+		_connected.Add(from);
+		_connected.Add(to);
+		_connectedCount++;
+		Callable.From(RefreshWireLayout).CallDeferred();
+		PublishControllerContext();
+	}
 
 	// Bloque 4: crear cable
 	private void StartDrag(ColorRect t)
