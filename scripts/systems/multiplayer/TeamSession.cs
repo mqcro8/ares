@@ -31,8 +31,10 @@ public partial class TeamSession : Node
     private readonly Dictionary<string, Action<bool>> _pendingOxygenClaims = new(StringComparer.Ordinal);
     private bool _applyingRemoteState;
     private double _positionTimer;
+    private double _pingTimer;
     private readonly Dictionary<int, Godot.Collections.Dictionary> _remotePositions = new();
     private TeamPresence _presence;
+    private readonly HashSet<ulong> _pendingPings = new();
 
     [Signal] public delegate void TeamChangedEventHandler();
     [Signal] public delegate void TeamMessageEventHandler(string type, string json);
@@ -47,6 +49,7 @@ public partial class TeamSession : Node
     public string RelayUrl => _relayUrl;
     public string ReconnectToken => _token;
     public string Status { get; private set; } = "Offline";
+    public double LatencyMs { get; private set; } = -1;
     public Godot.Collections.Array<Godot.Collections.Dictionary> Players { get; private set; } = new();
     public bool EveryoneReady => Players.Count(player =>
         Get(player, "connected", false).AsBool() &&
@@ -101,6 +104,18 @@ public partial class TeamSession : Node
         if (!Active) return;
         ApplyDisconnectGate();
         PublishLocalPosition(delta);
+        _pingTimer -= delta;
+        if (_pingTimer <= 0 && _socket?.GetReadyState() == WebSocketPeer.State.Open)
+        {
+            ulong sentAt = Time.GetTicksMsec();
+            _pendingPings.Add(sentAt);
+            if (_pendingPings.Count > 10) _pendingPings.Remove(_pendingPings.Min());
+            Send(new Godot.Collections.Dictionary
+            {
+                ["type"] = "team_ping", ["sent_at"] = sentAt,
+            });
+            _pingTimer = 1;
+        }
         if (_socket == null)
         {
             _retry -= delta;
@@ -131,7 +146,7 @@ public partial class TeamSession : Node
         if (!_missionStarted || !IsParticipant(LocalSlot) || !EveryoneReady) return;
         _positionTimer -= delta;
         if (_positionTimer > 0) return;
-        _positionTimer = 0.1;
+        _positionTimer = 1.0 / 15.0;
         var player = GetTree()?.GetFirstNodeInGroup("player") as ares.scripts.player.Player;
         var scene = GetTree()?.CurrentScene;
         if (player == null || scene == null) return;
@@ -200,6 +215,8 @@ public partial class TeamSession : Node
         Active = false;
         _socket?.Close(1000, "Leaving team room");
         _socket = null;
+        LatencyMs = -1;
+        _pendingPings.Clear();
         LocalSlot = -1;
         Players = new();
         Status = "Offline";
@@ -521,6 +538,12 @@ public partial class TeamSession : Node
             };
             _presence?.SetRemote(slot, scene, position);
             EmitSignal(SignalName.TeamPositionReceived, slot, scene, position, facing, flip);
+        }
+        else if (type == "team_pong")
+        {
+            ulong sentAt = (ulong)Get(message, "sent_at", 0).AsInt64();
+            if (sentAt > 0 && _pendingPings.Remove(sentAt))
+                LatencyMs = Time.GetTicksMsec() >= sentAt ? Time.GetTicksMsec() - sentAt : 0;
         }
         else if (type == "team_start")
         {

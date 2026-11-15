@@ -322,6 +322,10 @@ export function createRelayServer({
       }
 
       if (role === "team_host") {
+        if (message?.type === "team_ping" && Number.isSafeInteger(message.sent_at)) {
+          sendJson(socket, { type: "team_pong", sent_at: message.sent_at });
+          return;
+        }
         if (room.teamStarted && message?.type === "team_position" &&
             message.slot === 0 && validTeamPosition(message)) {
           const position = { slot: 0, scene: message.scene, x: message.x, y: message.y,
@@ -387,7 +391,9 @@ export function createRelayServer({
       if (role === "player") {
         const player = room.players.get(socket.playerSlot);
         if (!player || player.socket !== socket) return;
-        if (message?.type === "team_ready") {
+        if (message?.type === "team_ping" && Number.isSafeInteger(message.sent_at)) {
+          sendJson(socket, { type: "team_pong", sent_at: message.sent_at });
+        } else if (message?.type === "team_ready") {
           player.ready = message.ready === true;
           broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
         } else if (room.teamStarted && message?.type === "team_position" && validTeamPosition(message)) {

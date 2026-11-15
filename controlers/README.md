@@ -74,6 +74,10 @@ personal suit; suits and loadouts are not transferred between players. The
 debrief waits for all participants and shows their mean mission score; the crew
 passes only if every participant's result passes.
 
+The in-game crew network label reports WebSocket round-trip latency and
+received position updates per second. Remote markers interpolate between 15 Hz
+position updates; this smooths movement display but cannot remove network delay.
+
 ## Pages
 
 The join link is `https://your-project.vercel.app/?room=ABCDE`. Without `?room=` the page shows

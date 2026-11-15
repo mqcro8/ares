@@ -277,6 +277,9 @@ test("team rooms have four fixed slots, retain reconnect tokens, and relay host 
   for (let i = 0; i < players.length; i++)
     players[i].send(JSON.stringify({ type: "team_ready", ready: true }));
   assert.equal((await lobby).players.length, 4);
+  const pong = nextMessage(players[0], (message) => message.type === "team_pong");
+  players[0].send(JSON.stringify({ type: "team_ping", sent_at: 123456 }));
+  assert.equal((await pong).sent_at, 123456);
   const starts = players.map((socket) => nextMessage(socket, (message) => message.type === "team_start"));
   host.send(JSON.stringify({ type: "team_start" }));
   assert.equal((await Promise.all(starts)).length, 3);
