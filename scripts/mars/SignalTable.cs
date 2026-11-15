@@ -1,16 +1,21 @@
 namespace ares.scripts.mars;
 
 using Godot;
+using ares.scripts.dialogue;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
 
 /// <summary>
 /// Large signal table in the third building. Opens the waveform/frequency
 /// calibration mini-game once; the completed state is stored in MissionState.
+/// Without a frequency analyzer the first successful run must be repeated.
 /// </summary>
 public partial class SignalTable : Interactable
 {
 	[Export(PropertyHint.File, "*.tscn")]
 	public string MinigameScene { get; set; } = "res://scenes/minigames/FrequencyBoxMinigame.tscn";
+
+	[Export] public DialogueSequence RetryDialogue { get; set; }
 
 	private AnimatedSprite2D _sprite;
 	private bool _open;
@@ -19,32 +24,39 @@ public partial class SignalTable : Interactable
 	public override void _Ready()
 	{
 		base._Ready();
+		RetryDialogue ??= GD.Load<DialogueSequence>("res://data/dialogue/mars_retry_frequency.tres");
 		_sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
 		_calibrated = MissionState.Instance?.SignalTableRepaired ?? false;
 		ApplyState();
 	}
 
-	protected override void Interact()
+	protected override void Interact() => BeginRepair(NearbyPlayer);
+
+	/// <summary>Starts the in-world calibration repair for the given player.</summary>
+	public void BeginRepair(Node2D player)
 	{
 		if (_open || _calibrated)
 			return;
 
-		var overlay = MinigameOverlay.Open(this, NearbyPlayer, MinigameScene, "SIGNAL CALIBRATION",
-			"Match the target waveform with the three knobs.  1/2/3 selects, arrows adjust.",
-			"Calibrated!");
-		if (overlay == null)
-			return;
-
 		_open = true;
 		HidePrompt();
-		overlay.Finished += solved =>
-		{
-			_open = false;
-			if (solved)
+		MarsRepairFlow.Begin(this, player,
+			MarsRepairTask.Frequency, ToolEffects.FrequencyAnalyzer,
+			MinigameScene, "SIGNAL CALIBRATION",
+			"Match the target waveform with the three knobs.  1/2/3 selects, arrows adjust.",
+			"Calibrated!", RetryDialogue,
+			onSolved: () =>
+			{
+				_open = false;
 				Calibrate();
-			else
+			},
+			onClosed: () =>
+			{
+				_open = false;
+				if (MissionState.Instance?.MarsRepairNeedsRetry(MarsRepairTask.Frequency) == true)
+					PromptText = "Press E to retry signal calibration";
 				ShowPrompt();
-		};
+			});
 	}
 
 	private void Calibrate()
@@ -68,6 +80,8 @@ public partial class SignalTable : Interactable
 			return;
 		}
 
+		if (MissionState.Instance?.MarsRepairNeedsRetry(MarsRepairTask.Frequency) == true)
+			PromptText = "Press E to retry signal calibration";
 		_sprite.Play("default");
 	}
 }

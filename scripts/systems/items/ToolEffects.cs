@@ -113,7 +113,9 @@ public static class ToolEffects
 	{
 		MaintenanceKit => "Unlocks all four repair practices. Drawback: uses cargo space.",
 		OxygenTank => $"Reserve: {Number(OxygenBaseSecondsPerTank)} s per tank. Drawback: uses cargo space.",
-		SpareFuses or FrequencyAnalyzer or PrecisionWelder or WirePliers or RoverBumper or RoverServos or OxygenRegulator =>
+		SpareFuses or FrequencyAnalyzer or WirePliers =>
+			$"{BenefitText(id)}; Mars repair: one successful run instead of two. Drawback: {DrawbackText(id)}.",
+		PrecisionWelder or RoverBumper or RoverServos or OxygenRegulator =>
 			$"{BenefitText(id)}. Drawback: {DrawbackText(id)}.",
 		_ => "No tool effect registered."
 	};
