@@ -1,6 +1,7 @@
 using Godot;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
+using Ares.Systems.Audio;
 
 // Attach to an Area2D with a CollisionShape2D child.
 // Use one with IsExit = false at a building's door, and one with IsExit = true inside.
@@ -43,6 +44,7 @@ public partial class SceneTrigger : Area2D
 
 		if (IsExit)
 		{
+			AudioManager.PlaySfx(SoundIds.OpenDoor);
 			Callable.From(() => SceneManager.Instance.Exit()).CallDeferred();
 			return;
 		}
@@ -59,6 +61,7 @@ public partial class SceneTrigger : Area2D
 			return;
 		}
 
+		AudioManager.PlaySfx(SoundIds.OpenDoor);
 		Vector2 returnPosition = GlobalPosition + ReturnOffset;
 		Callable.From(() => SceneManager.Instance.Enter(TargetScene, returnPosition)).CallDeferred();
 	}

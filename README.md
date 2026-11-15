@@ -31,7 +31,7 @@ Autoloads: `AudioManager`, `MissionState`, `PauseManager`, and `ControllerRelay`
 
 The phone controller is optional. Enable it from **Options → Controls & controller**, paste the relay address and scan the generated QR code. It reuses the same input actions plus a raw `E` for interaction. While a minigame is open the phone switches to a matching touch panel (wiring, fuse box, frequency, hull repair, launch), with a start/restart overlay for practice modes; the previous page returns when the mode ends. See [`controlers/README.md`](controlers/README.md) for the relay setup and message protocol.
 
-In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab. The supply locker is the single loadout point: press `E` to open it, take or store the maintenance kit, and pick up to four oxygen tanks at one cargo unit each. Every Mars scene uses `OxygenHud.tscn`: oxygen drains continuously across the surface and base interiors, canisters are collected with `E`, the lander refills the suit, the screen flashes red at 15%, a return warning appears when the reserve can no longer cover the walk back, and running out forces an emergency return. Mars repairs also depend on the loadout: carrying the matching tool (spare fuses, wire pliers or frequency analyzer) completes the generator, wiring or signal task in one successful run. Without it, the first success only reveals why the repair failed and starts one mandatory retry, costing extra oxygen.
+In the gym, small in-world prompts introduce movement, jumping near hurdles, and interaction beside usable stations. Launch practice shows the rocket's full ascent before returning to the lab. The supply locker is the single loadout point: press `E` to open it, take or store the maintenance kit, and pick up to four oxygen tanks at one cargo unit each. Every Mars scene uses `OxygenHud.tscn`: oxygen drains continuously across the surface and base interiors, canisters are collected with `E`, the lander refills the suit, the screen flashes red at 15%, a return warning appears when the reserve can no longer cover the walk back, and running out forces an emergency return. Mars repairs also depend on the loadout: carrying the matching tool (spare fuses, wire pliers or frequency analyzer) completes the generator, wiring or signal task in one successful run. Without it, the first success only reveals why the repair failed and starts one mandatory retry, costing extra oxygen. The Mars stage uses planet footsteps outside and metal footsteps indoors, interaction and minigame cues, oxygen warning sounds, tension music, and a looping wind ambience in `MarsBase.tscn`.
 
 Launching needs 25 taps within five seconds, but 22 taps (85%) still lift the rocket with ignition faults that become repair work after landing. The green hold band now moves to random positions along the gauge and narrows slightly as the hold progresses.
 
@@ -127,9 +127,10 @@ ares/
 │   └── tmp/                      scratch art: meowl.png, ominous_red_ball.png
 │
 ├── audio/
-│   ├── music/                    menu_test_music.mp3, rover_scene_ambient_wind.mp3
-│   └── sfx/                      rover_collision.wav, rover_explode.wav,
-│                                 rover_moving.mp3, rover_victory.wav
+│   ├── music/                    menu, training, tension, ending, adventure,
+│   │                             rover_scene_ambient_wind
+│   └── sfx/                      rover, door, enter, footsteps, welding,
+│                                 rocket takeoff/landing, system malfunction
 ├── controlers/                   phone controller page + Node relay (`npm start`)
 └── hardware/                     optional Arduino firmware, .gdignore + README.md
 ```

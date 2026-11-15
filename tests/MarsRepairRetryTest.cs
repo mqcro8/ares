@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using ares.scripts.dialogue;
 using ares.scripts.mars;
 using ares.scripts.mission;
+using ares.scripts.player;
 using ares.scripts.systems.items;
+using Ares.Systems.Audio;
 using Ares.Systems.Controllers;
 
 public partial class MarsRepairRetryTest : Node
@@ -31,6 +33,7 @@ public partial class MarsRepairRetryTest : Node
 		{
 			TestProgressState();
 			TestDialogueResources();
+			TestMarsAudioWiring();
 			await TestNoToolRetryForEachStation();
 			await TestToolCompletesInOneRun();
 			await TestCancelKeepsPendingRetry();
@@ -92,6 +95,40 @@ public partial class MarsRepairRetryTest : Node
 		Check(line.Speaker == "YOU" && text.Contains(tool) && text.Contains(reason) &&
 			text.Contains("again") && text.Contains("should have brought"),
 			$"Retry line names the missing tool and the reason for the redo: {path}");
+	}
+
+	private void TestMarsAudioWiring()
+	{
+		var mars = GD.Load<PackedScene>("res://scenes/mars/MarsBase.tscn").Instantiate<Node2D>();
+		var wind = mars.GetNodeOrNull<SfxEmitter2D>("Player/AmbientWind");
+		Check(wind != null && wind.SoundId == SoundIds.RoverWindSfx && wind.PlayOnReady,
+			"MarsBase has a looping wind emitter attached to the player");
+		Check(mars.GetNodeOrNull<Player>("Player")?.FootstepSoundId == SoundIds.FootstepsPlanet,
+			"Mars surface uses planet footsteps");
+		mars.Free();
+
+		foreach (string path in new[]
+		{
+			"res://scenes/mars/FirstBuilding.tscn",
+			"res://scenes/mars/SecondBuilding.tscn",
+			"res://scenes/mars/ThirdBuilding.tscn",
+		})
+		{
+			var building = GD.Load<PackedScene>(path).Instantiate<Node2D>();
+			Check(building.GetNodeOrNull<Player>("Player")?.FootstepSoundId == SoundIds.FootstepsMetal,
+				$"Mars interior uses metal footsteps: {path}");
+			building.Free();
+		}
+
+		Check(AudioManager.TryGetSfx(SoundIds.RoverWindSfx, out SoundDef windDef) &&
+			windDef.Loop && windDef.Stream != null,
+			"The ambient wind sound is a configured looping SFX");
+		foreach (string id in new[]
+		{
+			SoundIds.Enter, SoundIds.FootstepsPlanet, SoundIds.FootstepsMetal,
+			SoundIds.OpenDoor, SoundIds.RoverPowerUp, SoundIds.SystemMalfunction,
+		})
+			Check(AudioManager.TryGetSfx(id, out _), $"Mars sound id resolves: {id}");
 	}
 
 	private async Task TestNoToolRetryForEachStation()

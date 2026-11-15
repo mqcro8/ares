@@ -100,6 +100,7 @@ size = Vector2(94, 17)
 z_index = 1
 position = Vector2(975, 1033)
 script = ExtResource("1_6r1ql")
+FootstepSoundId = "footsteps_metal"
 TrainingMovement = NodePath("TrainingMovement")
 Hotbar = NodePath("HotbarLayer/Hotbar")
 

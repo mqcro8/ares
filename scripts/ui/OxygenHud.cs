@@ -3,6 +3,7 @@ namespace ares.scripts.ui;
 using System;
 using Godot;
 using ares.scripts.mission;
+using Ares.Systems.Audio;
 
 /// <summary>Surface-only oxygen display, return warning and emergency extraction presentation.</summary>
 public partial class OxygenHud : CanvasLayer
@@ -20,6 +21,7 @@ public partial class OxygenHud : CanvasLayer
 	private bool _failed;
 	private double _flashClock;
 	private double _messageClock;
+	private bool _wasCritical, _wasReturnLow;
 
 	[Export] public bool ActivateOnReady { get; set; } = true;
 	[Export] public string ExtractionScene { get; set; } = "res://scenes/main_menu/main_menu_take3.tscn";
@@ -45,7 +47,13 @@ public partial class OxygenHud : CanvasLayer
 		_mission.Oxygen.Changed += Refresh;
 		_mission.Oxygen.Depleted += OnDepleted;
 		_mission.OxygenMessageChanged += RefreshMessage;
-		if (ActivateOnReady) _mission.BeginMarsSurface();
+		if (ActivateOnReady)
+		{
+			if (_mission.Stage == MissionStage.Rover)
+				AudioManager.PlaySfx(SoundIds.RocketLanding);
+			_mission.BeginMarsSurface();
+		}
+		AudioManager.PlayMusic(SoundIds.TensionMusic, 1.5);
 		Refresh();
 		RefreshMessage();
 	}
@@ -191,6 +199,10 @@ public partial class OxygenHud : CanvasLayer
 		_oxygenText.Text = $"O2  {remaining.Minutes:D2}:{remaining.Seconds:D2} / {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({oxygen.Fraction:P0})";
 		_bar.Value = oxygen.Fraction * 100;
 		_barFill.BgColor = oxygen.IsCritical ? Red : oxygen.IsReturnReserveLow ? Amber : Cyan;
+		if (oxygen.IsCritical && !_wasCritical) AudioManager.PlaySfx(SoundIds.Enter, -5f, 0.7f);
+		else if (oxygen.IsReturnReserveLow && !_wasReturnLow) AudioManager.PlaySfx(SoundIds.Enter, -8f, 0.85f);
+		_wasCritical = oxygen.IsCritical;
+		_wasReturnLow = oxygen.IsReturnReserveLow;
 		_criticalText.Visible = oxygen.IsCritical;
 		if (oxygen.IsCritical)
 			_criticalText.Text = $"CRITICAL OXYGEN — {Math.Ceiling(oxygen.Fraction * 100):F0}%";
@@ -229,6 +241,8 @@ public partial class OxygenHud : CanvasLayer
 	{
 		if (_failed) return;
 		_failed = true;
+		AudioManager.StopMusic(0.6);
+		AudioManager.PlaySfx(SoundIds.SystemMalfunction);
 		_criticalFlash.Color = new Color(1, 0, 0, 0);
 		_criticalText.Visible = false;
 		_returnText.Visible = false;

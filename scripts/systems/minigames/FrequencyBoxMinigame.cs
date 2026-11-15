@@ -4,6 +4,7 @@ using ares.scripts.training;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
@@ -54,6 +55,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 	private float _time;
 	private bool _done;
 	private float _contextTimer;
+	private float _knobSoundClock;
 	public int SelectedKnob => _selectedKnob;
 	public float SelectedValue => _targetValue[_selectedKnob];
 
@@ -250,13 +252,21 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 		float dt = (float)delta;
 		_time += dt;
+		_knobSoundClock -= dt;
 
 		float dir = 0f;
 		if (Input.IsKeyPressed(Key.Left)) dir -= 1f;
 		if (Input.IsKeyPressed(Key.Right)) dir += 1f;
 		if (dir != 0f)
+		{
 			_targetValue[_selectedKnob] = Mathf.Clamp(
 				_targetValue[_selectedKnob] + dir * KeyAdjustSpeed * FineFactor() * dt, 0f, 1f);
+			if (_knobSoundClock <= 0f)
+			{
+				AudioManager.PlaySfx(SoundIds.Enter, -15f, 0.75f + _selectedKnob * 0.18f);
+				_knobSoundClock = 0.14f;
+			}
+		}
 
 		_contextTimer += dt;
 		if (dir != 0f || _contextTimer >= 0.2f)
@@ -280,6 +290,7 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 
 	private void Complete()
 	{
+		AudioManager.PlaySfx(SoundIds.RoverPowerUp, -7f);
 		_done = true;
 		_playerWave.DefaultColor = TargetColor;
 		_led.Color = LedOn;
