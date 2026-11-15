@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scripts/ending/Ending.cs" id="1_ending"]
 [ext_resource type="Resource" path="res://data/cinematics/ending_good.tres" id="2_good"]
 [ext_resource type="Resource" path="res://data/cinematics/ending_bad.tres" id="3_bad"]
-[ext_resource type="Texture2D" uid="uid://b7p7h72lg2kse" path="res://art/cinematics/ending_score_bg.png" id="4_results"]
 
 [node name="Ending" type="Control"]
 layout_mode = 3
@@ -15,4 +14,3 @@ grow_vertical = 2
 script = ExtResource("1_ending")
 GoodSequence = ExtResource("2_good")
 BadSequence = ExtResource("3_bad")
-ResultsBackground = ExtResource("4_results")

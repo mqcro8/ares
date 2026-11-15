@@ -256,20 +256,25 @@ public partial class ControllerInputTest : Node
 
     private void RelayUrls()
     {
-        Check(ControllerRelay.NormalizeRelayUrl("example.ngrok.app") == "wss://example.ngrok.app",
-            "Bare hosts default to wss");
-        Check(ControllerRelay.NormalizeRelayUrl("https://example.ngrok.app/") == "wss://example.ngrok.app",
-            "HTTPS relay URLs become wss");
+        Check(ControllerRelay.NormalizeRelayUrl("example.vercel.app") == "wss://example.vercel.app/api/relay",
+            "Bare hosts default to the secure Vercel WebSocket endpoint");
+        Check(ControllerRelay.NormalizeRelayUrl("https://example.vercel.app/") == "wss://example.vercel.app/api/relay",
+            "HTTPS site URLs become the secure WebSocket endpoint");
+        Check(ControllerRelay.NormalizeRelayUrl("https://ares-seven-fawn.vercel.app") ==
+            "wss://ares-seven-fawn.vercel.app/api/relay",
+            "The production Vercel URL maps to its WebSocket endpoint");
+        Check(ControllerRelay.NormalizeRelayUrl("wss://example.vercel.app/api/relay") == "wss://example.vercel.app/api/relay",
+            "Explicit WebSocket endpoints stay unchanged");
         Check(ControllerRelay.NormalizeRelayUrl("http://localhost:8000") == "ws://localhost:8000",
             "HTTP relay URLs become ws");
         Check(ControllerRelay.NormalizeRelayUrl("wss://host/path/") == "wss://host/path",
             "Trailing slashes are removed");
-        Check(ControllerRelay.NormalizeRelayUrl("wss://host/index.html") == "wss://host",
-            "index.html is stripped");
+        Check(ControllerRelay.NormalizeRelayUrl("wss://host/index.html") == "wss://host/api/relay",
+            "index.html is stripped to the secure relay endpoint");
         Check(ControllerRelay.NormalizeRelayUrl("ftp://host") == "", "Non-WebSocket schemes are rejected");
         Check(ControllerRelay.NormalizeRelayUrl("") == "", "Empty relay URLs stay empty");
 
-        Check(ControllerRelay.ToJoinUrl("wss://example.ngrok.app", "ABCDE") == "https://example.ngrok.app/?room=ABCDE",
+        Check(ControllerRelay.ToJoinUrl("wss://example.vercel.app/api/relay", "ABCDE") == "https://example.vercel.app/?room=ABCDE",
             "WSS relays produce HTTPS join links");
         Check(ControllerRelay.ToJoinUrl("ws://localhost:8000", "ABCDE") == "http://localhost:8000/?room=ABCDE",
             "WS relays produce HTTP join links");
@@ -321,7 +326,7 @@ public partial class ControllerInputTest : Node
 
     private void QrCodes()
     {
-        byte[] png = ControllerQr.CreatePng("https://example.ngrok.app/?room=ABCDE", 4, 2);
+        byte[] png = ControllerQr.CreatePng("https://example.vercel.app/?room=ABCDE", 4, 2);
         Check(png is { Length: > 100 }, "QR code generation returns a PNG");
         Check(png[0] == 0x89 && png[1] == 0x50 && png[2] == 0x4E && png[3] == 0x47,
             "QR output has a PNG signature");
