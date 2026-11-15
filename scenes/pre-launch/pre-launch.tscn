@@ -19,17 +19,17 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Earth" type="Sprite2D" parent="." unique_id=180896150]
-position = Vector2(576, 700)
-scale = Vector2(0.104, 0.104)
+position = Vector2(586.5, 634.9825)
+scale = Vector2(0.0865, 0.08649126)
 texture = ExtResource("3_earth")
 
 [node name="Mars" type="Sprite2D" parent="." unique_id=453109861]
-position = Vector2(576, 105)
+position = Vector2(575, 85)
 scale = Vector2(0.082, 0.082)
 texture = ExtResource("4_mars")
 
 [node name="Rocket" type="Sprite2D" parent="." unique_id=1497014185]
-position = Vector2(576, 558)
+position = Vector2(583.49994, 518.9825)
 scale = Vector2(0.035, 0.035)
 texture = ExtResource("5_rocket")
 
