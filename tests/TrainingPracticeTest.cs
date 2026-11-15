@@ -397,8 +397,10 @@ public partial class TrainingPracticeTest : Node
 
         await Enter(PracticeSession.Exercise.Frequency);
         var frequency = (FrequencyBoxMinigame)Scene;
-        Check(frequency.MatchThreshold <= 0.9f && frequency.HoldSeconds <= 0.35f && frequency.KeyAdjustSpeed >= 1f,
-            "Frequency calibration uses forgiving alignment and adjustment settings");
+        Check(Mathf.IsEqualApprox(frequency.MatchThreshold, ares.scripts.systems.items.ToolEffects.FrequencyBaseThreshold) &&
+            Mathf.IsEqualApprox(frequency.HoldSeconds, ares.scripts.systems.items.ToolEffects.FrequencyBaseHoldSeconds) &&
+            frequency.KeyAdjustSpeed >= 1f,
+            "Frequency calibration uses approved base threshold and hold time without analyzer");
         KeyPress(Key.Key3); await Frames();
         Check(frequency.SelectedKnob == 2, "Number keys select calibration controls directly");
         float phaseValue = frequency.SelectedValue;

@@ -14,7 +14,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	// Fase 1: parchar
 	[Export] public float PlateSpeed { get; set; } = 220f;        // px/s
 	[Export] public float PlateRotSpeed { get; set; } = 120f;     // grados/s
-	[Export] public float PlaceTolerance { get; set; } = 14f;     // px
+	[Export] public float PlaceTolerance { get; set; } = ToolEffects.HullBasePlaceTolerance; // px
 	[Export] public float AngleTolerance { get; set; } = 10f;     // grados
 
 	// Fase 2: soldar

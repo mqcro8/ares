@@ -62,7 +62,6 @@ public partial class FrequencyBoxMinigame : Control, IControllerCommandSink, ICo
 		if (MissionState.Instance?.HasEquipped(ToolEffects.FrequencyAnalyzer) == true)
 		{
 			MatchThreshold = ToolEffects.FrequencyBaseThreshold + ToolEffects.FrequencyThresholdDelta;
-			HoldSeconds = ToolEffects.FrequencyAnalyzerHoldSeconds;
 		}
 		_screen = GetNode<Panel>("Box/Screen");
 		_effects = GetNode<Node2D>("Effects");

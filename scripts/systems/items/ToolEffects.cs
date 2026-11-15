@@ -28,9 +28,9 @@ public static class ToolEffects
 	public const float FrequencyBaseThreshold = 0.95f;
 	public const float FrequencyThresholdDelta = -0.07f;
 	public const float FrequencyBaseHoldSeconds = 0.35f;
-	public const float FrequencyAnalyzerHoldSeconds = 0.35f;
 	public const float HullBaseWeldTolerance = 14f;
 	public const float HullPrecisionWeldTolerance = 20f;
+	public const float HullBasePlaceTolerance = 14f;
 	public const float HullBaseHeatOffSeam = 0.8f;
 	public const float HullWelderHeatFactor = 0.7f;
 	public const float HullPrecisionHeatOffSeam = HullBaseHeatOffSeam * HullWelderHeatFactor;
@@ -63,13 +63,13 @@ public static class ToolEffects
 	{
 		MaintenanceKit => "Acceso a las cuatro prácticas de reparación. Desventaja: ocupa carga.",
 		OxygenTank => $"Reserva: {Number(OxygenBaseSecondsPerTank)} s por tanque. Desventaja: ocupa carga.",
-		SpareFuses => $"Fusibles: {Number(FuseBasePresses)} pulsaciones base + {Number(FuseExtraPresses)} de margen ({Number(FusePressesFor(true))} disponibles). Solo caja de fusibles.",
-		FrequencyAnalyzer => $"Frecuencia: umbral {Number(FrequencyBaseThreshold)} → {Number(FrequencyAnalyzerThreshold)}; sostén {Number(FrequencyBaseHoldSeconds)} s (sin cambio). Solo frecuencias.",
-		PrecisionWelder => $"Casco: soldadura {Number(HullBaseWeldTolerance)} → {Number(HullPrecisionWeldTolerance)} px; calor fuera de costura {Number(HullBaseHeatOffSeam)} → {Number(HullPrecisionHeatOffSeam)}/s. Solo casco.",
-		WirePliers => $"Cables: {Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} conexiones lista al iniciar; quedan {Number(WireConnectionsFor(true))}. No hay temporizador. Solo cables.",
-		RoverBumper => $"Rover: daño máximo {Number(RoverBaseDamageLimit)} → {Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}; carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s. Más lento.",
-		RoverServos => $"Rover: carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)} px/s; daño por choque {Number(RoverBaseDamagePerCollision)} → {Number(RoverServoDamagePerCollision)}. Cada choque resta más vidas.",
-		OxygenRegulator => $"Con {Number(OxygenRegulatorMinimumTanks)}+ tanques: {Number(OxygenBaseSecondsPerTank)} → {Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s por tanque (+{Number((OxygenRegulatorTankFactor - 1) * 100)}%). Sin efecto con menos tanques.",
+		SpareFuses => $"Fusibles: {Number(FuseBasePresses)} pulsaciones base + {Number(FuseExtraPresses)} de margen ({Number(FusePressesFor(true))} disponibles). Desventaja: ocupa carga y solo cubre fusibles.",
+		FrequencyAnalyzer => $"Frecuencia: umbral {Number(FrequencyBaseThreshold)} → {Number(FrequencyAnalyzerThreshold)}; sostén sin cambio ({Number(FrequencyBaseHoldSeconds)} s). Desventaja: ocupa carga y solo cubre frecuencias.",
+		PrecisionWelder => $"Casco: soldadura {Number(HullBaseWeldTolerance)} → {Number(HullPrecisionWeldTolerance)} px; calor fuera de costura {Number(HullBaseHeatOffSeam)} → {Number(HullPrecisionHeatOffSeam)}/s. Desventaja: ocupa más carga y solo cubre casco.",
+		WirePliers => $"Cables: {Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} conexiones lista al iniciar; quedan {Number(WireConnectionsFor(true))}. Sin temporizador. Desventaja: ocupa carga y solo cubre cables.",
+		RoverBumper => $"Rover: daño máximo {Number(RoverBaseDamageLimit)} → {Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}; carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s. Desventaja: rover más lento.",
+		RoverServos => $"Rover: carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)} px/s; daño por choque {Number(RoverBaseDamagePerCollision)} → {Number(RoverServoDamagePerCollision)}. Desventaja: cada choque resta más vidas.",
+		OxygenRegulator => $"Con {Number(OxygenRegulatorMinimumTanks)}+ tanques: {Number(OxygenBaseSecondsPerTank)} → {Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s por tanque (+{Number((OxygenRegulatorTankFactor - 1) * 100)}%). Desventaja: ocupa carga y no sirve con menos tanques.",
 		_ => "Sin efecto de herramienta registrado."
 	};
 
