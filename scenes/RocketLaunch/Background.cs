@@ -2,16 +2,17 @@ using Godot;
 
 public partial class Background : Sprite2D
 {
-	private static readonly Vector2 LaunchSocket = new(280, 1814);
 	private float initialY;
 	private float _scrollOffset;
 	[Export] public Texture2D PracticeTexture { get; set; }
-	private Vector2 _launchSocket = LaunchSocket;
+	[Export] public Vector2 LaunchSocket { get; set; } = new(254, 1814);
+	public float ScrollOffset => _scrollOffset;
+	public float MaximumScrollOffset => Texture == null ? 0 :
+		Mathf.Max(0, Texture.GetHeight() * Scale.Y - GetViewportRect().Size.Y);
 	public void Configure(bool practice)
 	{
 		if (practice && PracticeTexture != null)
 			Texture = PracticeTexture;
-		_launchSocket = LaunchSocket;
 		ResetScroll();
 		Resize();
 	}
@@ -21,11 +22,7 @@ public partial class Background : Sprite2D
 	{
 		if (Texture == null) return;
 
-		float viewportHeight = GetViewportRect().Size.Y;
-		float imageHeight = Texture.GetHeight() * Scale.Y;
-		float maxScroll = Mathf.Max(0, imageHeight - viewportHeight);
-
-		_scrollOffset = Mathf.Clamp(offset, 0, maxScroll);
+		_scrollOffset = Mathf.Clamp(offset, 0, MaximumScrollOffset);
 		Position = new Vector2(Position.X, initialY + _scrollOffset);
 	}
 
@@ -37,8 +34,8 @@ public partial class Background : Sprite2D
 	}
 
 	public Vector2 LaunchGround => new Vector2(Position.X, initialY) +
-		new Vector2(_launchSocket.X - Texture.GetWidth() / 2f,
-			_launchSocket.Y - Texture.GetHeight() / 2f) * Scale;
+		new Vector2(LaunchSocket.X - Texture.GetWidth() / 2f,
+			LaunchSocket.Y - Texture.GetHeight() / 2f) * Scale;
 
 	public override void _Ready()
 	{

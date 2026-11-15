@@ -66,7 +66,7 @@ public partial class TrainingCompletionDialog : CanvasLayer
         sequence ??= GD.Load<DialogueSequence>("res://data/dialogue/training_completion.tres");
         return sequence != null && sequence.Lines.Count > 0
             ? sequence.Lines[0]
-            : new DialogueLine { Speaker = "MISSION CONTROL", Text = "All training is complete." };
+            : new DialogueLine { Speaker = "MISSION CONTROL", Text = "Mandatory training complete. Launch pad authorized." };
 	}
 
 	private void FitPanel() => DialoguePanelStyle.FitBottom(_panel, GetViewport().GetVisibleRect().Size);

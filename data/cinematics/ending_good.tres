@@ -10,7 +10,7 @@
 script = ExtResource("2_beat")
 Image = ExtResource("3_departure")
 Speaker = "MISSION CONTROL"
-Text = "Ares, your signal is clear. You are cleared to depart Mars."
+Text = "Gateway's Earth uplink is restored. The preliminary report is queued for transmission."
 HoldSeconds = 5.0
 CrossfadeSeconds = 0.8
 
@@ -18,7 +18,7 @@ CrossfadeSeconds = 0.8
 script = ExtResource("2_beat")
 Image = ExtResource("4_earth")
 Speaker = "ASTRONAUT"
-Text = "Earth is in sight. Bringing the mission home."
+Text = "Earth is in sight. Bringing the findings home."
 HoldSeconds = 5.0
 CrossfadeSeconds = 0.8
 
@@ -26,7 +26,7 @@ CrossfadeSeconds = 0.8
 script = ExtResource("2_beat")
 Image = ExtResource("5_control")
 Speaker = "MISSION CONTROL"
-Text = "Welcome home, Ares. Mission accomplished."
+Text = "Welcome home, Ares. We'll review the findings—and everything the mission cost."
 HoldSeconds = 5.5
 CrossfadeSeconds = 0.8
 

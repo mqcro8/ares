@@ -27,6 +27,8 @@ public partial class OxygenSystemTest : Node
 		{
 			TestSupplyModel();
 			TestCanisterCollection();
+			await TestWorldInteractionPrompt();
+			await TestGreenhouseCollisions();
 			await TestPickupInteraction();
 			await TestMarsBaseWiring();
 			await TestHudAndMissionFailure();
@@ -189,6 +191,54 @@ public partial class OxygenSystemTest : Node
 		pickup.QueueFree();
 		await Frames();
 		mission.ResetEquipment();
+	}
+
+	private async Task TestWorldInteractionPrompt()
+	{
+		var mission = MissionState.Instance;
+		mission.ResetPuzzleProgress();
+		var player = new ares.scripts.player.Player { Name = "Player" };
+		player.AddChild(new CollisionShape2D
+		{
+			Shape = new CircleShape2D { Radius = 8 },
+		});
+		var generator = GD.Load<PackedScene>("res://scenes/mars/Generator.tscn").Instantiate<Generator>();
+		AddChild(generator);
+		AddChild(player);
+		player.GlobalPosition = generator.GlobalPosition + new Vector2(0, -32);
+		await Frames(6);
+		var prompt = generator.GetNode<PanelContainer>("InteractionPromptLayer/InteractionPrompt");
+		Check(prompt.Visible &&
+			prompt.GetNode<Label>("Margin/Row/Keycap/Key").Text == "E" &&
+			prompt.GetNode<Label>("Margin/Row/Message").Text == "RESTORE GENERATOR",
+			"Mars repair device shows a contextual E prompt near the machine");
+		var rect = prompt.GetGlobalRect();
+		Check(GetViewport().GetVisibleRect().Encloses(rect), "World interaction prompt stays inside the viewport");
+		generator.QueueFree();
+		player.QueueFree();
+		await Frames();
+	}
+
+	private async Task TestGreenhouseCollisions()
+	{
+		var building = GD.Load<PackedScene>("res://scenes/mars/SecondBuilding.tscn").Instantiate<Node2D>();
+		var player = building.GetNode<ares.scripts.player.Player>("Player");
+		var movement = player.GetNode<Node>("TrainingMovement");
+		player.RemoveChild(movement);
+		movement.Free();
+		player.TrainingMovement = null;
+		AddChild(building);
+		await Frames(3);
+		var beds = building.GetNode<StaticBody2D>("GreenhouseBedCollisions");
+		var colliders = beds.GetChildren().OfType<CollisionShape2D>().ToArray();
+		Check(colliders.Length == 12 && colliders.All(collider => collider.Shape is RectangleShape2D && !collider.Disabled),
+			"Each greenhouse planter has an enabled collision box");
+		player.SetPhysicsProcess(false);
+		player.GlobalPosition = new Vector2(86, -5);
+		Check(player.MoveAndCollide(Vector2.Up * 30) != null,
+			"Greenhouse planter blocks the player instead of allowing passage through the bed");
+		building.QueueFree();
+		await Frames();
 	}
 
 	private async Task TestHudAndMissionFailure()

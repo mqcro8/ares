@@ -110,6 +110,9 @@ size = Vector2(59.625, 12)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u6byl"]
 size = Vector2(73, 19)
 
+[sub_resource type="RectangleShape2D" id="GreenhouseBedCollision"]
+size = Vector2(44, 12)
+
 [node name="BaseCamp" type="Node2D" unique_id=1679263356]
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=470353977 node_paths=PackedStringArray("TrainingMovement", "Hotbar") groups=["player"]]
@@ -401,6 +404,57 @@ texture = ExtResource("27_qgopl")
 position = Vector2(86, -57)
 scale = Vector2(1.5, 1.5)
 texture = ExtResource("26_hu7ri")
+
+[node name="GreenhouseBedCollisions" type="StaticBody2D" parent="."]
+position = Vector2(0, -42)
+
+[node name="Leafy1" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-298, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Sprouts" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-68, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Tomato1" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(224, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Wheat1" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(132, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Empty" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-114, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Leafy2" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-252, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Leafy3" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-206, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Leafy4" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(-160, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Wheat2" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(178, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Tomato2" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(270, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Wheat3" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(316, 0)
+shape = SubResource("GreenhouseBedCollision")
+
+[node name="Tomato3" type="CollisionShape2D" parent="GreenhouseBedCollisions"]
+position = Vector2(86, 0)
+shape = SubResource("GreenhouseBedCollision")
 
 [node name="ObjectiveDialogue" parent="." unique_id=1838437084 instance=ExtResource("29_objective")]
 ShowSecondBuildingBriefing = true

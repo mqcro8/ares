@@ -150,7 +150,7 @@ public partial class PreLaunch : Node2D, ares.scripts.systems.IDevSceneSkipTarge
 		State = FlightState.Won;
 		_wonAngle = (_flightPosition - MarsPosition).Angle();
 		FlightVelocity = Vector2.Zero;
-		_message.Text = "ORBIT REACHED!";
+		_message.Text = "MARS ORBIT REACHED — GATEWAY TRACKING ACQUIRED";
 		_wonDelay = 1f;
 	}
 

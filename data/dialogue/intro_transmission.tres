@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "Gateway went dark fourteen days ago."
+Text = "Gateway Surface Base has been silent for fourteen days."
 
 [sub_resource type="Resource" id="Line1"]
 script = ExtResource("2_line")
@@ -16,7 +16,7 @@ Text = "And the probes?"
 [sub_resource type="Resource" id="Line2"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "They went in. They didn't come back."
+Text = "Both probes stopped transmitting during approach."
 
 [sub_resource type="Resource" id="Line3"]
 script = ExtResource("2_line")
@@ -26,12 +26,12 @@ Text = "I designed both."
 [sub_resource type="Resource" id="Line4"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "Then you know what we're dealing with."
+Text = "You know their approach profiles better than anyone."
 
 [sub_resource type="Resource" id="Line5"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "No. That's why I'm going."
+Text = "Not the cause. That's why I'm going."
 
 [resource]
 script = ExtResource("1_sequence")

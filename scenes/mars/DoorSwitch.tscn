@@ -28,7 +28,7 @@ size = Vector2(56, 56)
 
 [node name="DoorSwitch" type="Area2D"]
 script = ExtResource("1_script")
-PromptText = "Press E to interact"
+PromptText = "ACTIVATE SWITCH"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)

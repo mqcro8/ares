@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="CinematicSequence" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/ending/CinematicSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/ending/CinematicBeat.cs" id="2_beat"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_pass_1.png" id="3_departure"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_pass_2.png" id="4_earth"]
+[ext_resource type="Texture2D" path="res://art/cinematics/ending_pass_3.png" id="5_control"]
+
+[sub_resource type="Resource" id="BeatDeparture"]
+script = ExtResource("2_beat")
+Image = ExtResource("3_departure")
+Speaker = "MISSION CONTROL"
+Text = "Gateway's Earth uplink is restored. The preliminary report is queued for transmission."
+HoldSeconds = 5.0
+CrossfadeSeconds = 0.8
+
+[sub_resource type="Resource" id="BeatEarth"]
+script = ExtResource("2_beat")
+Image = ExtResource("4_earth")
+Speaker = "YOU"
+Text = "Opportunity is lost. The rover objective failed. I'm bringing the remaining findings home."
+HoldSeconds = 5.0
+CrossfadeSeconds = 0.8
+
+[sub_resource type="Resource" id="BeatControl"]
+script = ExtResource("2_beat")
+Image = ExtResource("5_control")
+Speaker = "MISSION CONTROL"
+Text = "Welcome home, Ares. Gateway is restored. We'll review the rover loss and the returned data."
+HoldSeconds = 5.5
+CrossfadeSeconds = 0.8
+
+[resource]
+script = ExtResource("1_sequence")
+Id = "rover_lost_return"
+Beats = Array[ExtResource("2_beat")]([SubResource("BeatDeparture"), SubResource("BeatEarth"), SubResource("BeatControl")])

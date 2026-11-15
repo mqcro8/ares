@@ -29,7 +29,7 @@ public partial class SignalTable : Interactable
 		if (_open || _calibrated)
 			return;
 
-		var overlay = MinigameOverlay.Open(this, NearbyPlayer, MinigameScene, "SIGNAL CALIBRATION",
+		var overlay = MinigameOverlay.Open(this, NearbyPlayer, MinigameScene, "EARTH UPLINK CALIBRATION",
 			"Match the target waveform with the three knobs.  1/2/3 selects, arrows adjust.",
 			"Calibrated!");
 		if (overlay == null)

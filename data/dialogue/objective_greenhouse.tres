@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "Power is back. The greenhouse is further up and to the right. I need to bring all four access panels online."
+Text = "The generator and wiring are back. The greenhouse is above and right; I need to bring four access panels online."
 
 [resource]
 script = ExtResource("1_sequence")

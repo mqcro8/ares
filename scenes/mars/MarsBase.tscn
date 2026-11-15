@@ -138,6 +138,7 @@ size = Vector2(67, 31.5)
 z_index = 2
 position = Vector2(-2, 435)
 script = ExtResource("1_hv47d")
+Speed = 120.0
 FootstepSoundId = "footsteps_planet"
 Hotbar = NodePath("HotbarLayer/Hotbar")
 

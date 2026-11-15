@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.cs" id="2_line"]
+
+[sub_resource type="Resource" id="Line0"]
+script = ExtResource("2_line")
+Speaker = "GATEWAY ARCHIVE"
+Text = "Earth uplink restored. Archived inspections show a pale film on connectors inside a warm, humid service enclosure."
+
+[sub_resource type="Resource" id="Line1"]
+script = ExtResource("2_line")
+Speaker = "GATEWAY ARCHIVE"
+Text = "Preliminary analysis indicates microbial activity. Chemical by-products likely accelerated circuit corrosion. Pressure-control faults worsened separate seal leaks."
+
+[sub_resource type="Resource" id="Line2"]
+script = ExtResource("2_line")
+Speaker = "GATEWAY ARCHIVE"
+Text = "The pattern appears in Mars-material records, but not archived controls. A Martian origin is possible. Terrestrial contamination remains unexcluded."
+
+[sub_resource type="Resource" id="Line3"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "Possible Martian life. Not proof—not yet. Keep the affected compartments isolated. Send the records, not the material."
+
+[resource]
+script = ExtResource("1_sequence")
+Lines = Array[ExtResource("2_line")]([SubResource("Line0"), SubResource("Line1"), SubResource("Line2"), SubResource("Line3")])

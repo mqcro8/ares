@@ -63,6 +63,8 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		_mission.Stage = MissionStage.Ending;
 		_sequence = Outcome switch
 		{
+			MissionEnding.Good when _mission.RoverStageResolved && !_mission.RoverStageCompleted =>
+				GD.Load<CinematicSequence>("res://data/cinematics/ending_rover_lost.tres"),
 			MissionEnding.Good => GoodSequence ?? GD.Load<CinematicSequence>("res://data/cinematics/ending_good.tres"),
 			MissionEnding.Bad => BadSequence ?? GD.Load<CinematicSequence>("res://data/cinematics/ending_bad.tres"),
 			_ => null,

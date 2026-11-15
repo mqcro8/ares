@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "Everything seems to be shut off... Strange. I need to restore base power. The storage and electrical building is the first one on the left."
+Text = "Gateway's main power is offline. The electrical building is first on the left."
 
 [resource]
 script = ExtResource("1_sequence")

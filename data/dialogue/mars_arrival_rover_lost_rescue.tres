@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.cs" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.cs" id="2_line"]
+
+[sub_resource type="Resource" id="Line0"]
+script = ExtResource("2_line")
+Speaker = "YOU"
+Text = "Opportunity is lost. I'm down at Gateway. A rescue oxygen reserve is active; the base still needs repairs."
+
+[resource]
+script = ExtResource("1_sequence")
+Lines = Array[ExtResource("2_line")]([SubResource("Line0")])

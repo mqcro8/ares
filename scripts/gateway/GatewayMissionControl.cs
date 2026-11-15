@@ -12,6 +12,7 @@ public partial class GatewayMissionControl : CanvasLayer
     private readonly Queue<string> _messages = new();
     private readonly TrainingPlayerLock _playerLock = new();
     private PanelContainer _panel;
+    private ScrollContainer _bodyScroll;
     private Label _text;
     private Button _continue;
     private Player _player;
@@ -26,11 +27,15 @@ public partial class GatewayMissionControl : CanvasLayer
     public int EndingFrame { get; private set; }
     public bool IsOpen => _panel?.Visible == true || EndingFrame > 0;
     public string Message => _text?.Text ?? "";
+    public float PanelHeight => _panel?.Size.Y ?? 0;
+    public float PanelWidth => _panel?.Size.X ?? 0;
+    public float MaximumPanelHeight { get; private set; }
 
     public override void _Ready()
     {
         _panel = GetNode<PanelContainer>("Panel");
-        _text = GetNode<Label>("Panel/Margin/VBox/Text");
+        _bodyScroll = GetNode<ScrollContainer>("Panel/Margin/VBox/BodyScroll");
+        _text = GetNode<Label>("Panel/Margin/VBox/BodyScroll/Text");
         _continue = GetNode<Button>("Panel/Margin/VBox/Continue");
         _finalScenes = GetNode<Control>("FinalScenes");
         _finalImage = GetNode<TextureRect>("FinalScenes/Image");
@@ -39,6 +44,8 @@ public partial class GatewayMissionControl : CanvasLayer
         _imageContinue.Pressed += Advance;
         _finalScenes.Hide();
         _panel.Hide();
+        GetViewport().SizeChanged += FitPanel;
+        FitPanel();
     }
 
     public void Bind(Player player, TrainingStations stations)
@@ -70,6 +77,7 @@ public partial class GatewayMissionControl : CanvasLayer
             _imageContinue.ReleaseFocus();
             _text.Text = GatewayMission.ConnectionRecovered;
             _panel.Show();
+            FitPanel();
             _continue.GrabFocus();
             return;
         }
@@ -83,6 +91,7 @@ public partial class GatewayMissionControl : CanvasLayer
                 _text.Text = "Unable to transfer control to the rover. Continue to retry.";
                 _continue.Text = "Retry transfer";
                 _panel.Show();
+                FitPanel();
                 _continue.GrabFocus();
                 return;
             }
@@ -129,8 +138,73 @@ public partial class GatewayMissionControl : CanvasLayer
         _text.Text = _messages.Dequeue();
         _completionPending = _text.Text == GatewayMission.Complete;
         _panel.Show();
+        FitPanel();
         _continue.GrabFocus();
     }
 
-    public override void _ExitTree() => _playerLock.Release();
+    private void FitPanel()
+    {
+        if (_panel == null || _bodyScroll == null || _text == null || _continue == null) return;
+        Vector2 viewport = GetViewport().GetVisibleRect().Size;
+        if (viewport.X <= 0 || viewport.Y <= 0) return;
+
+        float width = Mathf.Min(viewport.X - 32f, Mathf.Min(800f, viewport.X * 0.84f));
+        width = Mathf.Max(240f, width);
+        _panel.AnchorLeft = _panel.AnchorRight = 0.5f;
+        _panel.AnchorTop = _panel.AnchorBottom = 1f;
+        _panel.OffsetLeft = -width / 2f;
+        _panel.OffsetRight = width / 2f;
+
+        const float fixedContentHeight = 112f;
+		MaximumPanelHeight = Mathf.Min(viewport.Y - 32f, viewport.Y * 0.55f);
+		MaximumPanelHeight = Mathf.Max(150f, MaximumPanelHeight);
+		float maxBodyHeight = Mathf.Max(32f, MaximumPanelHeight - fixedContentHeight);
+        float maxTextWidth = Mathf.Max(120f, width - 40f);
+        int maxCharacters = Mathf.Max(18, Mathf.FloorToInt(maxTextWidth / 11.5f));
+        int estimatedLines = EstimateWrappedLines(_text.Text, maxCharacters);
+        float bodyContentHeight = Mathf.Max(24f, estimatedLines * 24f);
+        float visibleBodyHeight = Mathf.Min(bodyContentHeight, maxBodyHeight);
+		float panelHeight = Mathf.Min(MaximumPanelHeight, fixedContentHeight + visibleBodyHeight);
+
+        _bodyScroll.CustomMinimumSize = new Vector2(0, visibleBodyHeight);
+        _bodyScroll.CustomMaximumSize = new Vector2(-1, maxBodyHeight);
+        _text.CustomMinimumSize = new Vector2(0, bodyContentHeight);
+        _text.CustomMaximumSize = new Vector2(maxTextWidth, -1);
+        _text.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _continue.SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd;
+        _panel.CustomMinimumSize = new Vector2(0, panelHeight);
+        _panel.OffsetTop = -panelHeight - 16f;
+        _panel.OffsetBottom = -16f;
+    }
+
+    private static int EstimateWrappedLines(string text, int maximumCharacters)
+    {
+        if (string.IsNullOrEmpty(text)) return 1;
+        int lines = 0;
+        foreach (string paragraph in text.Split('\n'))
+        {
+            if (string.IsNullOrWhiteSpace(paragraph)) { lines++; continue; }
+            int lineLength = 0;
+            foreach (string word in paragraph.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                int wordLength = word.Length;
+                if (lineLength == 0) lineLength = wordLength;
+                else if (lineLength + 1 + wordLength <= maximumCharacters) lineLength += 1 + wordLength;
+                else { lines++; lineLength = wordLength; }
+                while (lineLength > maximumCharacters)
+                {
+                    lines++;
+                    lineLength -= maximumCharacters;
+                }
+            }
+            if (lineLength > 0) lines++;
+        }
+        return Mathf.Max(1, lines);
+    }
+
+    public override void _ExitTree()
+    {
+        if (GetViewport() != null) GetViewport().SizeChanged -= FitPanel;
+        _playerLock.Release();
+    }
 }

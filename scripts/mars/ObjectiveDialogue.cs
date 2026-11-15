@@ -17,6 +17,7 @@ public partial class ObjectiveDialogue : CanvasLayer
 	private MissionState _state;
 	private MissionObjective _lastObjective;
 	private bool _showing;
+	private bool _arrivalBriefing;
 	private double _remaining;
 
 	public override void _Ready()
@@ -27,6 +28,14 @@ public partial class ObjectiveDialogue : CanvasLayer
 			return;
 
 		_lastObjective = _state.CurrentObjective;
+		if (_state.GatewayDiscoveryPending) return;
+		if (!_state.MarsArrivalBriefingShown)
+		{
+			_state.MarkMarsArrivalBriefingShown();
+			_arrivalBriefing = true;
+			ShowSequence(MarsArrivalSequence());
+			return;
+		}
 
 		if (ShowSecondBuildingBriefing && !_state.SecondBuildingBriefingShown)
 		{
@@ -46,6 +55,13 @@ public partial class ObjectiveDialogue : CanvasLayer
 		if (_state != null)
 		{
 			MissionObjective current = _state.CurrentObjective;
+			if (_state.GatewayDiscoveryPending)
+			{
+				_lastObjective = current;
+				_state.MarkObjectiveAnnounced(current);
+				HideMessage();
+				return;
+			}
 			if (current != _lastObjective)
 			{
 				_lastObjective = current;
@@ -63,7 +79,19 @@ public partial class ObjectiveDialogue : CanvasLayer
 	}
 
 	/// <summary>Lets higher-priority scene messages (such as the ending gate) take the screen.</summary>
-	public void Dismiss() => HideMessage();
+	public void Dismiss()
+	{
+		_arrivalBriefing = false;
+		HideMessage();
+	}
+
+	public void ResumeAfterGatewayDiscovery()
+	{
+		if (_state == null || _state.GatewayDiscoveryPending) return;
+		_lastObjective = _state.CurrentObjective;
+		_state.MarkObjectiveAnnounced(_lastObjective);
+		ShowObjective(_lastObjective);
+	}
 
 	/// <summary>Shows a one-off gate message without changing objective progress.</summary>
 	public void ShowBlocked(DialogueSequence sequence) => ShowSequence(sequence);
@@ -77,6 +105,16 @@ public partial class ObjectiveDialogue : CanvasLayer
 			MissionObjective.RestoreCommunications => "res://data/dialogue/objective_communications.tres",
 			_ => "res://data/dialogue/objective_return.tres",
 		});
+	}
+
+	private string MarsArrivalSequence()
+	{
+		if (_state.RoverStageCompleted) return "res://data/dialogue/mars_arrival_rover_recovered.tres";
+		if (_state.RoverStageResolved)
+			return _state.Oxygen.IsEmergencyReserve
+				? "res://data/dialogue/mars_arrival_rover_lost_rescue.tres"
+				: "res://data/dialogue/mars_arrival_rover_lost.tres";
+		return "res://data/dialogue/mars_arrival_default.tres";
 	}
 
 	private void ShowSequence(string path)
@@ -96,7 +134,14 @@ public partial class ObjectiveDialogue : CanvasLayer
 
 	private void HideMessage()
 	{
+		bool showObjective = _arrivalBriefing;
+		_arrivalBriefing = false;
 		_showing = false;
 		_dialogue?.Clear();
+		if (showObjective && _state != null && !_state.GatewayDiscoveryPending)
+		{
+			_state.MarkObjectiveAnnounced(_lastObjective);
+			ShowObjective(_lastObjective);
+		}
 	}
 }

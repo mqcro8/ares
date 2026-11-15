@@ -203,16 +203,16 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.script
 		switch (_line)
 		{
 			case 1:
-				_text.Text = "Bring it back to the operations headquarters";
+				_text.Text = "Guide Opportunity to Gateway's surface landing zone.";
 			break;
 
 			case 2:
-				_text.Text = "Be careful. You might find obstacles along the way.";
+				_text.Text = "You are controlling it remotely from Ares. Watch the obstacles.";
 			break;
 
 			case 3:
 				_Speaker.Text = "YOU";
-				_text.Text = "Roger that. Will do";
+				_text.Text = "Understood. I'll guide it in from orbit.";
 			break;
 
 			case 4:
@@ -775,10 +775,8 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.script
 		}
 		_spawnedObstacles.Clear();
 
-		_label.Text = "Mission complete";
-		_label.Show();
-
-		await FadeAndChangeScene("res://scenes/rover/MissionCompleted.tscn");
+		_label.Hide();
+		await FadeAndChangeScene("res://scenes/mars/MarsBase.tscn");
 	}
 
 	/// <summary>Developer shortcut: skip only this rover stage through its normal success screen.</summary>

@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="28_objective"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="29_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="30_hotbar_slot"]
+[ext_resource type="Script" path="res://scripts/mars/GatewayDiscovery.cs" id="31_discovery"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -229,3 +230,6 @@ position = Vector2(1, -36)
 texture = ExtResource("26_6xexp")
 
 [node name="ObjectiveDialogue" parent="." instance=ExtResource("28_objective")]
+
+[node name="GatewayDiscovery" type="CanvasLayer" parent="."]
+script = ExtResource("31_discovery")

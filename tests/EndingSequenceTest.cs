@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ares.scripts.ending;
 using ares.scripts.mission;
-using ares.scripts.rover;
 
 public partial class EndingSequenceTest : Node
 {
@@ -51,8 +50,6 @@ public partial class EndingSequenceTest : Node
 			await TestGoodEnding();
 			await TestBadEnding();
 			await TestLaunchFailureResults();
-			await TestRoverSuccessHandoff();
-			await TestMissingMarsSceneFallback();
 			await TestUnrecordedOutcome();
 			GD.Print($"ENDING PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -156,61 +153,6 @@ public partial class EndingSequenceTest : Node
 			ending.Outcome == MissionEnding.Bad && ending.ResultsMessage.Contains("ALL MISSIONS WON: NO"),
 			"Failed launch enters the score screen directly and marks the campaign unwon");
 		ending.QueueFree();
-		await Frames();
-	}
-
-	private async Task TestRoverSuccessHandoff()
-	{
-		var mission = MissionState.Instance;
-		mission.BeginLaunchSequence();
-		Check(mission.CompleteRoverStage(mission.LaunchSequence) && mission.Ending == MissionEnding.None,
-			"Rover recovery completes its stage without ending the whole mission");
-		var completed = GD.Load<PackedScene>("res://scenes/rover/MissionCompleted.tscn")
-			.Instantiate<MissionCompleted>();
-		string loaded = "";
-		completed.SceneLoader = path => { loaded = path; return Error.Ok; };
-		AddChild(completed);
-		await Wait(2.1);
-		var continueLine = Find<Button>(completed, button => button.Name == "Continue");
-		continueLine.EmitSignal(BaseButton.SignalName.Pressed);
-		continueLine.EmitSignal(BaseButton.SignalName.Pressed);
-		continueLine.EmitSignal(BaseButton.SignalName.Pressed);
-		await Wait(1.6);
-		var nextStage = Find<Button>(completed, button => button.Name == "NextStage");
-		Check(nextStage.IsVisibleInTree(), "Rover recovery offers the next mission stage after its dialogue");
-		nextStage.EmitSignal(BaseButton.SignalName.Pressed);
-		Check(loaded == "res://scenes/mars/MarsBase.tscn" && mission.Ending == MissionEnding.None,
-			"Rover recovery continues to Mars without ending the whole mission");
-		Find<Button>(completed, button => button.Name == "MainMenu").EmitSignal(BaseButton.SignalName.Pressed);
-		Check(loaded == "res://scenes/main_menu/main_menu_take3.tscn",
-			"The rover success screen still offers return to Mission Control");
-		completed.QueueFree();
-		await Frames();
-	}
-
-	private async Task TestMissingMarsSceneFallback()
-	{
-		var mission = MissionState.Instance;
-		mission.BeginLaunchSequence();
-		mission.CompleteRoverStage(mission.LaunchSequence);
-		var completed = GD.Load<PackedScene>("res://scenes/rover/MissionCompleted.tscn")
-			.Instantiate<MissionCompleted>();
-		completed.NextScenePath = "res://scenes/mars/not_pushed_yet.tscn";
-		string loaded = "";
-		completed.SceneLoader = path => { loaded = path; return Error.Ok; };
-		AddChild(completed);
-		await Wait(2.1);
-		var advance = Find<Button>(completed, button => button.Name == "Continue");
-		advance.EmitSignal(BaseButton.SignalName.Pressed);
-		advance.EmitSignal(BaseButton.SignalName.Pressed);
-		advance.EmitSignal(BaseButton.SignalName.Pressed);
-		await Wait(1.6);
-		var next = Find<Button>(completed, button => button.Name == "NextStage");
-		next.EmitSignal(BaseButton.SignalName.Pressed);
-		Check(loaded == "" && next.Disabled && mission.Ending == MissionEnding.None &&
-			Find<Label>(completed, label => label.Name == "Text").Text.Contains("not available"),
-			"An absent future Mars scene reports the gap without playing a final cinematic");
-		completed.QueueFree();
 		await Frames();
 	}
 

@@ -123,9 +123,10 @@ public partial class TrainingControlsGuide : CanvasLayer
 		{
 			MouseFilter = Control.MouseFilterEnum.Ignore,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			CustomMinimumSize = new Vector2(115, 0),
+			CustomMinimumSize = new Vector2(0, 0),
 			VerticalAlignment = VerticalAlignment.Center
 		};
+		_message.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		_message.AddThemeColorOverride("font_color", Colors.White);
 		_message.AddThemeFontSizeOverride("font_size", 8);
 		if (_font != null) _message.AddThemeFontOverride("font", _font);
@@ -146,10 +147,14 @@ public partial class TrainingControlsGuide : CanvasLayer
 		CurrentKeys = keys;
 		CurrentMessage = message;
 		_bubble.Visible = true;
-		_bubble.Size = _bubble.GetCombinedMinimumSize();
-
 		Vector2 screenAnchor = GetViewport().GetCanvasTransform() * worldAnchor;
 		Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
+		float maximumBubbleWidth = Mathf.Max(120f, viewportSize.X - 16f);
+		float maximumMessageWidth = Mathf.Max(80f, maximumBubbleWidth - 84f);
+		_message.CustomMinimumSize = new Vector2(Mathf.Min(115f, maximumMessageWidth), 0);
+		_message.CustomMaximumSize = new Vector2(maximumMessageWidth, -1);
+		_bubble.CustomMaximumSize = new Vector2(maximumBubbleWidth, -1);
+		_bubble.Size = _bubble.GetCombinedMinimumSize();
 		Vector2 position = screenAnchor - new Vector2(_bubble.Size.X / 2, _bubble.Size.Y + 8);
 		position.X = Mathf.Clamp(position.X, 8, Mathf.Max(8, viewportSize.X - _bubble.Size.X - 8));
 		position.Y = Mathf.Clamp(position.Y, 8, Mathf.Max(8, viewportSize.Y - _bubble.Size.Y - 8));

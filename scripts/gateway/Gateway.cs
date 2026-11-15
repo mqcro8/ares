@@ -50,7 +50,12 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 		AddStation("Power Distribution Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
 		AddStation("Communications Bay", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
 		AddStation("Hull Access", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
-
+		AddChild(new TrainingControlsGuide
+		{
+			Name = "ContextControlsGuide",
+			Player = Player,
+			Stations = _stations,
+		});
 
 		MissionControl = GD.Load<PackedScene>("res://scenes/gateway/MissionControlBox.tscn")
 			.Instantiate<GatewayMissionControl>();
@@ -63,7 +68,8 @@ public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 
 	private void AddStation(string name, Control zone, PracticeSession.Exercise exercise, string marker)
 		=> _stations.Targets.Add(new(name, zone, PracticeSession.SceneFor(exercise), marker,
-			exercise, RequiredCapability: ItemCapability.Repair));
+			exercise, RequiredCapability: ItemCapability.Repair,
+			MissingCapabilityPrompt: "REPAIR KIT NOT IN MISSION LOADOUT"));
 
 	public override void _Process(double delta)
 	{

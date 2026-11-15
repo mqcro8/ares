@@ -35,6 +35,9 @@ public partial class MissionState : Node
 	public bool GeneratorRepaired { get; private set; }
 	public bool WireBoxRepaired { get; private set; }
 	public bool SignalTableRepaired { get; private set; }
+	public bool GatewayDiscoveryPending { get; private set; }
+	public bool GatewayDiscoveryAcknowledged { get; private set; }
+	public bool MarsArrivalBriefingShown { get; private set; }
 	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && SignalTableRepaired && AllDoorAccessOn;
 	public bool SecondBuildingBriefingShown { get; private set; }
 	public MissionObjective? LastAnnouncedObjective { get; private set; }
@@ -110,13 +113,25 @@ public partial class MissionState : Node
 			return;
 
 		SignalTableRepaired = true;
+		GatewayDiscoveryPending = true;
+		GatewayDiscoveryAcknowledged = false;
 		EmitSignal(SignalName.SignalTableRepairedChanged, true);
+	}
+
+	public bool AcknowledgeGatewayDiscovery()
+	{
+		if (!GatewayDiscoveryPending) return false;
+		GatewayDiscoveryPending = false;
+		GatewayDiscoveryAcknowledged = true;
+		return true;
 	}
 
 	public void MarkSecondBuildingBriefingShown()
 	{
 		SecondBuildingBriefingShown = true;
 	}
+
+	public void MarkMarsArrivalBriefingShown() => MarsArrivalBriefingShown = true;
 
 	public void MarkObjectiveAnnounced(MissionObjective objective)
 	{
@@ -128,7 +143,10 @@ public partial class MissionState : Node
 		GeneratorRepaired = false;
 		WireBoxRepaired = false;
 		SignalTableRepaired = false;
+		GatewayDiscoveryPending = false;
+		GatewayDiscoveryAcknowledged = false;
 		SecondBuildingBriefingShown = false;
+		MarsArrivalBriefingShown = false;
 		LastAnnouncedObjective = null;
 		for (int i = 0; i < _doorAccess.Length; i++)
 			_doorAccess[i] = false;
@@ -377,6 +395,7 @@ public partial class MissionState : Node
 	/// <summary>Records completion of the whole campaign, not an intermediate rover stage.</summary>
 	public bool TryCompleteMission()
 	{
+		if (GatewayDiscoveryPending) return false;
 		if (!Outcome.TryComplete(LaunchSequence)) return false;
 		Scoring.RecordRun(this);
 		return true;

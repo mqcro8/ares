@@ -5,8 +5,8 @@
 
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
-Speaker = "MISSION CONTROL"
-Text = "You can't go back yet. Finish the remaining repairs first."
+Speaker = "YOU"
+Text = "Some repairs remain. Gateway isn't ready to leave unattended."
 
 [resource]
 script = ExtResource("1_sequence")
