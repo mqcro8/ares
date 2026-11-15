@@ -25,6 +25,7 @@ room_code=""
 
 MissionState="*res://scripts/mission/MissionState.cs"
 SceneManager="*uid://b4v2hsojp1mr2"
+SceneTransition="*res://scripts/systems/SceneTransition.cs"
 AudioManager="*res://scripts/systems/audio/AudioManager.cs"
 PauseManager="*res://scripts/systems/PauseManager.cs"
 ControllerRelay="*res://scripts/systems/input/ControllerRelay.cs"

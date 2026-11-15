@@ -1,11 +1,13 @@
 namespace ares.scripts.prelaunch;
 
 using Godot;
+using ares.scripts.gateway;
 
 /// <summary>Small one-shot orbital transfer game. One scene, one controller, no external state.</summary>
 public partial class PreLaunch : Node2D
 {
 	public enum FlightState { Orbiting, Launching, Won, Lost }
+	public const string ScenePath = "res://scenes/pre-launch/pre-launch.tscn";
 
 	[Export] public Vector2 EarthPosition { get; set; } = new(576, 700);
 	[Export] public Vector2 MarsPosition { get; set; } = new(576, 105);
@@ -38,6 +40,8 @@ public partial class PreLaunch : Node2D
 	private float _slowMotionRemaining;
 	private Vector2 _flightPosition;
 	private bool _inputReleased = true;
+	private float _wonDelay = -1f;
+	private bool _transitioning;
 
 	public override void _Ready()
 	{
@@ -144,6 +148,7 @@ public partial class PreLaunch : Node2D
 		_wonAngle = (_flightPosition - MarsPosition).Angle();
 		FlightVelocity = Vector2.Zero;
 		_message.Text = "ORBIT REACHED!";
+		_wonDelay = 1f;
 	}
 
 	private void ProcessWon(float delta)
@@ -151,6 +156,15 @@ public partial class PreLaunch : Node2D
 		_wonAngle += OrbitSpeed * 0.25f * delta;
 		_rocket.Position = MarsPosition + Vector2.FromAngle(_wonAngle) * (MarsRadius + 32f);
 		_rocket.Rotation = _wonAngle + Mathf.Pi / 2f;
+		if (_slowMotionRemaining <= 0f && _wonDelay >= 0f)
+		{
+			_wonDelay -= delta;
+			if (_wonDelay <= 0f && !_transitioning)
+			{
+				_transitioning = true;
+				SceneTransition.Instance?.GoTo(Gateway.ScenePath);
+			}
+		}
 	}
 
 	private void SetLost()
@@ -169,6 +183,8 @@ public partial class PreLaunch : Node2D
 		_orbitAngle = -Mathf.Pi / 2f;
 		_flightPosition = EarthPosition + Vector2.FromAngle(_orbitAngle) * OrbitRadius;
 		_message.Text = "";
+		_wonDelay = -1f;
+		_transitioning = false;
 		_rocket.Position = _flightPosition;
 		_rocket.Rotation = 0f;
 	}
