@@ -44,6 +44,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private bool accessDenied;
 	private bool ignitionFailed;
 	private bool practiceReturnPending;
+	private bool malfunctionTransitionFailed;
 	private PauseManager pauseManager;
 	internal Func<string, Error> SceneLoader { get; set; }
 	private Vector2 returnPosition;
@@ -161,6 +162,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	private void Back()
 	{
+		if (malfunctionTransitionFailed) { TransferToMalfunctionCutscene(); return; }
 		if (fromTraining) { ReturnToLab(); return; }
 		if (GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn") != Error.Ok)
 		{
@@ -177,6 +179,18 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		PracticeSession.Abort();
 		practiceReturnPending = false;
 		backError = "Unable to return to the lab. Please try again.";
+		Refresh();
+	}
+
+	private void TransferToMalfunctionCutscene()
+	{
+		if (!IsInsideTree() || Practice || MissionState.Instance?.LaunchRecord == null) return;
+		var error = SceneLoader != null
+			? SceneLoader(ares.scripts.stages.RocketMalfunction.ScenePath)
+			: GetTree().ChangeSceneToFile(ares.scripts.stages.RocketMalfunction.ScenePath);
+		malfunctionTransitionFailed = error != Error.Ok;
+		if (!malfunctionTransitionFailed) return;
+		backError = "Unable to start the launch cinematic. Press Retry transfer.";
 		Refresh();
 	}
 
@@ -371,9 +385,10 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 					practiceReturnPending = false;
 					Callable.From(ReturnToLab).CallDeferred();
 				}
-				else if (!Practice && GetTree().CurrentScene == this)
+				else if (!Practice && MissionState.Instance?.LaunchRecord != null &&
+					(GetTree().CurrentScene == this || SceneLoader != null))
 				{
-					Callable.From(() => GetTree().ChangeSceneToFile("res://scenes/cinematics/RocketMalfunction.tscn")).CallDeferred();
+					Callable.From(TransferToMalfunctionCutscene).CallDeferred();
 				}
 			}
 		}
@@ -586,7 +601,8 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		back.Visible = Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
 		pause.Text = Paused ? "Resume" : "Pause";
-		back.Text = fromTraining ? "Return to lab" : "Back to main menu";
+		back.Text = malfunctionTransitionFailed ? "Retry launch cinematic" :
+			fromTraining ? "Return to lab" : "Back to main menu";
 		LayoutGauge();
 	}
 

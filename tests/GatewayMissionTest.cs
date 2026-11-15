@@ -86,8 +86,10 @@ public partial class GatewayMissionTest : Node
     private async Task PanelAndMovement()
     {
         var gateway = GD.Load<PackedScene>(Gateway.ScenePath).Instantiate<Gateway>();
+        string nextScene = "";
         AddChild(gateway);
         var panel = gateway.MissionControl;
+        panel.SceneLoader = path => { nextScene = path; return Error.Ok; };
         var stations = gateway.GetNode<TrainingStations>("GatewayStations");
         Check(panel.IsOpen && panel.Message == GatewayMission.Start, "Gateway opens mission start panel");
         Check(!gateway.Player.IsPhysicsProcessing() && stations.InteractionLocked, "Transmission locks movement and station interaction");
@@ -162,6 +164,8 @@ public partial class GatewayMissionTest : Node
         panel.Advance();
         Check(image.IsVisibleInTree() && !panel.GetNode<Control>("Panel").Visible,
             "Final Continue leaves second image visible");
+        Check(nextScene == "res://scenes/rover/rover.tscn",
+            "Gateway completion routes to the rover scene");
         Check(!gateway.Player.IsPhysicsProcessing() && stations.InteractionLocked && panel.IsOpen,
             "Gameplay stays locked behind the final image");
         panel.Advance();

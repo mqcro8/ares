@@ -105,7 +105,7 @@ text = "WASD move  |  E interact  |  Space jump  |  1-5 hotbar  |  Esc pause"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Spacer" type="Control" parent="Panel/Panel2" index="4"]
+[node name="ControlsScroll" type="ScrollContainer" parent="Panel/Panel2" index="4"]
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2

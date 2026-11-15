@@ -32,6 +32,7 @@ public partial class Gateway : Node2D
     public override void _Ready()
     {
         AudioManager.PlayMusic(SoundIds.TensionMusic, 1.5);
+        MissionState.Instance.Stage = MissionStage.Gateway;
         var arrival = PracticeSession.Arrive(ScenePath);
         if (arrival != null)
         {

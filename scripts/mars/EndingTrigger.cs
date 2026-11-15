@@ -121,6 +121,12 @@ public partial class EndingTrigger : Area2D
 	private void BeginEnding()
 	{
 		var mission = MissionState.Instance;
+		if (mission?.Oxygen.CapacitySeconds <= 0 ||
+			mission.Oxygen.RemainingSeconds < mission.Oxygen.ReturnReserveSeconds)
+		{
+			ShowReturnReserveMessage();
+			return;
+		}
 		if (mission?.TryCompleteMission() != true)
 		{
 			if (IsInstanceValid(_player))
@@ -132,6 +138,19 @@ public partial class EndingTrigger : Area2D
 		_player?.SetPhysicsProcess(false);
 		mission.Stage = MissionStage.Ending;
 		Callable.From(ChangeToEnding).CallDeferred();
+	}
+
+	private void ShowReturnReserveMessage()
+	{
+		if (_dialogue == null) return;
+		_showing = true;
+		_remaining = Mathf.Max(2f, MessageSeconds);
+		_dialogue.ShowLine(new DialogueLine
+		{
+			Speaker = "MISSION CONTROL",
+			Text = "OXYGEN RESERVE TOO LOW — refill before attempting Earth return."
+		});
+		_player?.SetPhysicsProcess(false);
 	}
 
 	private void ChangeToEnding()

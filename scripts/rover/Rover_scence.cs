@@ -6,6 +6,7 @@ using Ares.Systems.Audio;
 using Godot;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
+using ares.scripts.systems.items;
 
 public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 {
@@ -81,7 +82,11 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	public override void _Ready()
 	{
 		if (MissionState.Instance != null)
+		{
 			MissionState.Instance.RoverImpacts = MissionState.Instance.RoverCollisions = 0;
+			MissionState.Instance.RoverDamageLimit = ToolEffects.RoverBaseDamageLimit +
+				(MissionState.Instance.HasEquipped(ToolEffects.RoverBumper) ? ToolEffects.RoverBumperExtraDamageLimit : 0);
+		}
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("CharacterBody2D/AnimatedSprite2D");
 		_rover = GetNodeOrNull<Rover>("CharacterBody2D");
 		_label = GetNodeOrNull<Label>("Label");
