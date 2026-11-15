@@ -16,4 +16,7 @@ public static class SoundIds
 	public const string Whoosh = "whoosh";
 	public const string RoverPowerUp = "rover_power_up";
 	public const string OpenDoor = "open_door";
+	public const string TrainingMusic = "training";
+	public const string endingMusic = "ending";
+	public const string TensionMusic ="tension";
 }
