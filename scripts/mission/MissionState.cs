@@ -9,14 +9,14 @@ using ares.scripts.systems.items;
 // Every scene reads and writes here; nothing is duplicated locally.
 public partial class MissionState : Node
 {
-	public const int OxygenTankCargoCost = 1;
+	public const int OxygenTankCargoCost = ToolEffects.OxygenTankCargoCost;
 	public static MissionState Instance { get; private set; }
 
 	public MissionStage Stage { get; set; } = MissionStage.MainMenu;
 	public double MissionTime { get; set; }
 	public Inventory PlayerInventory { get; private set; }
 	public Inventory LockerInventory { get; private set; }
-	public int CargoCapacity { get; set; } = 6;
+	public int CargoCapacity { get; set; } = ToolEffects.CargoCapacity;
 	public bool LoadoutConfirmed { get; set; }
 	public OxygenSupply Oxygen { get; } = new();
 	public int OxygenTankCount => Oxygen.TankCount;
@@ -80,7 +80,7 @@ public partial class MissionState : Node
 	{
 		PlayerInventory = null;
 		LockerInventory = null;
-		CargoCapacity = 6;
+		CargoCapacity = ToolEffects.CargoCapacity;
 		LoadoutConfirmed = false;
 		Oxygen.Reset();
 	}
@@ -137,6 +137,7 @@ public partial class MissionState : Node
 		LaunchSequence++;
 		LaunchRecord = null; // Deliberately preserve existing resource values.
 		PendingLaunchFaults = 0;
+		RoverImpacts = RoverCollisions = 0;
 		TrainingCourseComplete = TrainingWiresComplete = TrainingFusesComplete = false;
 		TrainingFrequencyComplete = TrainingHullRepairComplete = TrainingLaunchPracticeComplete = false;
 		TrainingCompletionPending = TrainingCompletionShown = false;

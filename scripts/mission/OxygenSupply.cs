@@ -1,18 +1,20 @@
 namespace ares.scripts.mission;
 
 using System;
+using ares.scripts.systems.items;
 
 /// <summary>Mission oxygen reserve. It drains only while a Mars-surface scene is active.</summary>
 public sealed class OxygenSupply
 {
 	public const int MaxTanks = 4;
-	public const double DefaultSecondsPerTank = 180.0;
+	public const double DefaultSecondsPerTank = ToolEffects.OxygenBaseSecondsPerTank;
 	public const double CriticalFraction = 0.15;
 	/// <summary>Reserve below which the astronaut must head back to the lander.</summary>
 	public const double ReturnReserveFraction = 0.25;
 
 	public int TankCount { get; private set; }
-	public double SecondsPerTank { get; }
+	private readonly double _baseSecondsPerTank;
+	public double SecondsPerTank => _baseSecondsPerTank * RegulatorFactor;
 	public double CapacitySeconds => TankCount * SecondsPerTank;
 	public double RemainingSeconds { get; private set; }
 	public double Fraction => CapacitySeconds > 0 ? RemainingSeconds / CapacitySeconds : 0;
@@ -36,7 +38,19 @@ public sealed class OxygenSupply
 	{
 		if (!double.IsFinite(secondsPerTank) || secondsPerTank <= 0)
 			throw new ArgumentOutOfRangeException(nameof(secondsPerTank));
-		SecondsPerTank = secondsPerTank;
+		_baseSecondsPerTank = secondsPerTank;
+	}
+
+	private double RegulatorFactor => TankCount >= ToolEffects.OxygenRegulatorMinimumTanks &&
+		MissionState.Instance?.HasEquipped(ToolEffects.OxygenRegulator) == true
+			? ToolEffects.OxygenRegulatorTankFactor : 1.0;
+
+	/// <summary>Refills pre-surface reserve when loadout equipment changes capacity.</summary>
+	public void RefreshLoadout()
+	{
+		if (HasStartedSurface || IsDepleted) return;
+		RemainingSeconds = CapacitySeconds;
+		Changed?.Invoke();
 	}
 
 	public bool TrySetTankCount(int count, out string error)
