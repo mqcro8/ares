@@ -118,10 +118,16 @@ public partial class EquipmentPanel : CanvasLayer
 			Name = "ToolScroll",
 			CustomMinimumSize = new Vector2(0, 150),
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			FollowFocus = true,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
 		};
 		column.AddChild(toolScroll);
-		var toolColumn = new VBoxContainer { Name = "ToolRows" };
+		var toolColumn = new VBoxContainer
+		{
+			Name = "ToolRows",
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+		};
 		toolColumn.AddThemeConstantOverride("separation", 3);
 		toolScroll.AddChild(toolColumn);
 		foreach (ItemData tool in Locker?.Tools ?? Array.Empty<ItemData>())
@@ -129,30 +135,39 @@ public partial class EquipmentPanel : CanvasLayer
 			if (tool == null) continue;
 			var row = new HBoxContainer { Name = tool.Id + "Row" };
 			row.AddThemeConstantOverride("separation", 5);
+			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 			toolColumn.AddChild(row);
 			row.AddChild(MakeIcon(tool.Icon, tool.Id + "Icon"));
-			var identity = new VBoxContainer { Name = "Identity", CustomMinimumSize = new Vector2(112, 0) };
+			var identity = new VBoxContainer { Name = "Identity", CustomMinimumSize = new Vector2(96, 0) };
 			identity.AddThemeConstantOverride("separation", 2);
-			var name = MakeLabel(tool.DisplayName.ToUpperInvariant(), Colors.White, 7);
+			var name = MakeLabel(ToolEffects.ShortName(tool.Id), Colors.White, 6);
 			name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			name.ClipText = false;
+			name.TooltipText = tool.DisplayName;
 			identity.AddChild(name);
 			identity.AddChild(MakeLabel($"{tool.CargoCost} CARGA", new Color(0.65f, 0.77f, 0.82f), 6));
 			row.AddChild(identity);
-			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(60, 24) };
+			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(56, 24) };
 			Action handler = () => ToggleTool(tool);
 			button.Pressed += handler;
 			row.AddChild(button);
 			_tools.Add((tool, button, handler));
-			var indicators = new VBoxContainer { Name = tool.Id + "Tradeoff", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+			var indicators = new VBoxContainer
+			{
+				Name = tool.Id + "Tradeoff",
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				CustomMinimumSize = new Vector2(0, 32),
+			};
 			indicators.AddThemeConstantOverride("separation", 2);
 			indicators.TooltipText = ToolEffects.Describe(tool.Id);
 			row.AddChild(indicators);
 			var benefitRow = new HBoxContainer { Name = "Benefit" };
 			benefitRow.AddThemeConstantOverride("separation", 4);
-			benefitRow.AddChild(MakeLabel("VENTAJA REL.", new Color("70ffb0"), 5));
-			benefitRow.AddChild(MakeMeter(ToolEffects.BenefitFraction(tool.Id), new Color("42d98b")));
-			var benefit = MakeLabel(ToolEffects.BenefitText(tool.Id), Colors.White, 6);
+			benefitRow.AddChild(MakeLabel("MEJORA", new Color("70ffb0"), 5));
+			var benefitMeter = MakeMeter(ToolEffects.BenefitFraction(tool.Id), new Color("42d98b"));
+			benefitMeter.TooltipText = ToolEffects.Describe(tool.Id);
+			benefitRow.AddChild(benefitMeter);
+			var benefit = MakeLabel(ToolEffects.BenefitText(tool.Id), Colors.White, 5);
 			benefit.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			benefit.ClipText = false;
 			benefit.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -161,10 +176,11 @@ public partial class EquipmentPanel : CanvasLayer
 			var drawbackRow = new HBoxContainer { Name = "Drawback" };
 			drawbackRow.AddThemeConstantOverride("separation", 4);
 			drawbackRow.AddChild(MakeLabel("COSTE", new Color("ffb24a"), 5));
-			drawbackRow.AddChild(MakeMeter(tool.CargoCost / (float)ToolEffects.MaximumToolCargoCost,
-				new Color("e79a35")));
+			var cargoMeter = MakeMeter(tool.CargoCost / (float)ToolEffects.MaximumToolCargoCost, new Color("e79a35"));
+			cargoMeter.TooltipText = $"{tool.CargoCost} de {ToolEffects.MaximumToolCargoCost} cargas máximas por herramienta.";
+			drawbackRow.AddChild(cargoMeter);
 			var drawback = MakeLabel($"{tool.CargoCost}/{ToolEffects.MaximumToolCargoCost} CARGA · {ToolEffects.DrawbackText(tool.Id)}",
-				new Color(1f, 0.78f, 0.52f), 6);
+				new Color(1f, 0.78f, 0.52f), 5);
 			drawback.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			drawback.ClipText = false;
 			drawback.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;

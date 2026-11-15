@@ -274,6 +274,13 @@ public partial class LoadoutTest : Node
             "Zero-tank warning stays hidden while carrying oxygen");
         Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Text == "GUARDAR",
             "Equipment screen shows carried tool and provides a store action");
+        var fuseRow = equipmentPanel.GetNode<HBoxContainer>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow");
+        var fuseButton = fuseRow.GetNode<Button>("spare_fusesButton");
+        var fuseTradeoff = fuseRow.GetNode<VBoxContainer>("spare_fusesTradeoff");
+        Check(fuseTradeoff.GetIndex() > fuseButton.GetIndex() &&
+            fuseTradeoff.GetNode<HBoxContainer>("Benefit").GetChildren().OfType<ProgressBar>().Single().Value > 0 &&
+            fuseTradeoff.GetNode<HBoxContainer>("Drawback").GetChildren().OfType<ProgressBar>().Single().Value > 0,
+            "Benefit and cargo bars sit to the right of each item row");
         Check(mission.TrySetOxygenTankCount(0, out tankError), "Zero tanks remain an allowed choice");
         equipmentPanel.Refresh();
         Check(equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,

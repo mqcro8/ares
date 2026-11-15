@@ -76,24 +76,36 @@ public static class ToolEffects
 
 	public static string BenefitText(string id) => id switch
 	{
-		SpareFuses => $"{Number(FuseBasePresses)} → {Number(FusePressesFor(true))} pulsaciones",
-		FrequencyAnalyzer => $"Umbral {Number(FrequencyBaseThreshold)} → {Number(FrequencyAnalyzerThreshold)}",
-		PrecisionWelder => $"{Number(HullBaseWeldTolerance)} → {Number(HullPrecisionWeldTolerance)} px; calor {Number(HullBaseHeatOffSeam)} → {Number(HullPrecisionHeatOffSeam)}/s",
-		WirePliers => $"{Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} cables listo",
-		RoverBumper => $"Daño máximo {Number(RoverBaseDamageLimit)} → {Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}",
-		RoverServos => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)} px/s",
-		OxygenRegulator => $"{Number(OxygenBaseSecondsPerTank)} → {Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s/tanque",
+		SpareFuses => $"+{Number(FuseExtraPresses)} margen: {Number(FuseBasePresses)}→{Number(FusePressesFor(true))} pulsaciones",
+		FrequencyAnalyzer => $"Umbral {Number(FrequencyBaseThreshold)}→{Number(FrequencyAnalyzerThreshold)}; sostén {Number(FrequencyBaseHoldSeconds)} s",
+		PrecisionWelder => $"Soldadura {Number(HullBaseWeldTolerance)}→{Number(HullPrecisionWeldTolerance)} px; calor {Number(HullBaseHeatOffSeam)}→{Number(HullPrecisionHeatOffSeam)}/s",
+		WirePliers => $"{Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} cables conectado",
+		RoverBumper => $"Impactos {Number(RoverBaseDamageLimit)}→{Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}",
+		RoverServos => $"Carril {Number(RoverBaseLaneChangeSpeed)}→{Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)}; daño {Number(RoverBaseDamagePerCollision)}→{Number(RoverServoDamagePerCollision)}",
+		OxygenRegulator => $"{Number(OxygenBaseSecondsPerTank)}→{Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s/tanque",
 		_ => "",
+	};
+
+	public static string ShortName(string id) => id switch
+	{
+		SpareFuses => "FUSIBLES",
+		FrequencyAnalyzer => "ANALIZADOR",
+		PrecisionWelder => "SOLDADOR",
+		WirePliers => "ALICATES",
+		RoverBumper => "PARACHOQUES",
+		RoverServos => "SERVOS",
+		OxygenRegulator => "REGULADOR",
+		_ => id
 	};
 
 	public static string DrawbackText(string id) => id switch
 	{
 		SpareFuses => "Solo fusibles",
-		FrequencyAnalyzer => $"Solo frecuencias; sostén {Number(FrequencyBaseHoldSeconds)} s sin cambio",
+		FrequencyAnalyzer => "Solo frecuencias",
 		PrecisionWelder => "Solo casco",
 		WirePliers => "Sin temporizador; solo cables",
 		RoverBumper => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s",
-		RoverServos => $"Daño por choque {Number(RoverBaseDamagePerCollision)} → {Number(RoverServoDamagePerCollision)}",
+		RoverServos => "Cada choque resta doble",
 		OxygenRegulator => $"Solo funciona con {Number(OxygenRegulatorMinimumTanks)}+ tanques",
 		_ => "",
 	};
