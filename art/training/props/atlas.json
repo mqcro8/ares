@@ -1,0 +1,655 @@
+{
+  "origen": "base_assets.zip/mars_base_assets/mars_base_atlas.png",
+  "sprites": [
+    {
+      "nombre": "sci_microscope_bench",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_microscope_bench.png"
+    },
+    {
+      "nombre": "sci_centrifuge",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_centrifuge.png"
+    },
+    {
+      "nombre": "sci_sample_cabinet",
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_sample_cabinet.png"
+    },
+    {
+      "nombre": "sci_spectrometer",
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_spectrometer.png"
+    },
+    {
+      "nombre": "sci_sample_fridge",
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_sample_fridge.png"
+    },
+    {
+      "nombre": "sci_chem_bench",
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "categoria": "1_science",
+      "uso_sugerido": "laboratorio de entrenamiento",
+      "archivo": "art/training/props/sci_chem_bench.png"
+    },
+    {
+      "nombre": "gh_floor_grate",
+      "x": 0,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_floor_grate.png"
+    },
+    {
+      "nombre": "gh_bed_empty",
+      "x": 32,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_bed_empty.png"
+    },
+    {
+      "nombre": "gh_bed_sprouts",
+      "x": 64,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_bed_sprouts.png"
+    },
+    {
+      "nombre": "gh_bed_leafy",
+      "x": 96,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_bed_leafy.png"
+    },
+    {
+      "nombre": "gh_bed_tomato",
+      "x": 128,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_bed_tomato.png"
+    },
+    {
+      "nombre": "gh_bed_wheat",
+      "x": 160,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_bed_wheat.png"
+    },
+    {
+      "nombre": "gh_hydro_tray",
+      "x": 192,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_hydro_tray.png"
+    },
+    {
+      "nombre": "gh_grow_light",
+      "x": 224,
+      "y": 32,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_grow_light.png"
+    },
+    {
+      "nombre": "gh_water_tank",
+      "x": 0,
+      "y": 64,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_water_tank.png"
+    },
+    {
+      "nombre": "gh_o2_scrubber",
+      "x": 32,
+      "y": 64,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_o2_scrubber.png"
+    },
+    {
+      "nombre": "gh_pipe_h",
+      "x": 64,
+      "y": 64,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_pipe_h.png"
+    },
+    {
+      "nombre": "gh_pipe_v",
+      "x": 96,
+      "y": 64,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_pipe_v.png"
+    },
+    {
+      "nombre": "gh_pipe_corner_wb",
+      "x": 128,
+      "y": 64,
+      "w": 32,
+      "h": 32,
+      "categoria": "2_greenhouse",
+      "uso_sugerido": "laboratorio y reparaci?n del casco",
+      "archivo": "art/training/props/gh_pipe_corner_wb.png"
+    },
+    {
+      "nombre": "elec_box_closed",
+      "x": 0,
+      "y": 96,
+      "w": 32,
+      "h": 32,
+      "categoria": "3_electrical",
+      "uso_sugerido": "laboratorio y minijuego de fusibles o cables",
+      "archivo": "art/training/props/elec_box_closed.png"
+    },
+    {
+      "nombre": "elec_box_open",
+      "x": 32,
+      "y": 96,
+      "w": 32,
+      "h": 32,
+      "categoria": "3_electrical",
+      "uso_sugerido": "laboratorio y minijuego de fusibles o cables",
+      "archivo": "art/training/props/elec_box_open.png"
+    },
+    {
+      "nombre": "elec_generator_off",
+      "x": 64,
+      "y": 96,
+      "w": 32,
+      "h": 32,
+      "categoria": "3_electrical",
+      "uso_sugerido": "laboratorio y minijuego de fusibles o cables",
+      "archivo": "art/training/props/elec_generator_off.png"
+    },
+    {
+      "nombre": "elec_generator_on_f0",
+      "x": 96,
+      "y": 96,
+      "w": 32,
+      "h": 32,
+      "categoria": "3_electrical",
+      "uso_sugerido": "laboratorio y minijuego de fusibles o cables",
+      "archivo": "art/training/props/elec_generator_on_f0.png"
+    },
+    {
+      "nombre": "elec_generator_on_f1",
+      "x": 128,
+      "y": 96,
+      "w": 32,
+      "h": 32,
+      "categoria": "3_electrical",
+      "uso_sugerido": "laboratorio y minijuego de fusibles o cables",
+      "archivo": "art/training/props/elec_generator_on_f1.png"
+    },
+    {
+      "nombre": "sig_desk_f0",
+      "x": 0,
+      "y": 128,
+      "w": 64,
+      "h": 32,
+      "categoria": "4_signals",
+      "uso_sugerido": "laboratorio y minijuego de frecuencias",
+      "archivo": "art/training/props/sig_desk_f0.png"
+    },
+    {
+      "nombre": "sig_desk_f1",
+      "x": 64,
+      "y": 128,
+      "w": 64,
+      "h": 32,
+      "categoria": "4_signals",
+      "uso_sugerido": "laboratorio y minijuego de frecuencias",
+      "archivo": "art/training/props/sig_desk_f1.png"
+    },
+    {
+      "nombre": "sig_console",
+      "x": 128,
+      "y": 128,
+      "w": 32,
+      "h": 32,
+      "categoria": "4_signals",
+      "uso_sugerido": "laboratorio y minijuego de frecuencias",
+      "archivo": "art/training/props/sig_console.png"
+    },
+    {
+      "nombre": "sig_radio",
+      "x": 160,
+      "y": 128,
+      "w": 32,
+      "h": 32,
+      "categoria": "4_signals",
+      "uso_sugerido": "laboratorio y minijuego de frecuencias",
+      "archivo": "art/training/props/sig_radio.png"
+    },
+    {
+      "nombre": "door_panel_idle_16",
+      "x": 8,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_panel_idle_16.png"
+    },
+    {
+      "nombre": "door_panel_granted_16",
+      "x": 40,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_panel_granted_16.png"
+    },
+    {
+      "nombre": "door_panel_denied_16",
+      "x": 72,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_panel_denied_16.png"
+    },
+    {
+      "nombre": "door_closed",
+      "x": 96,
+      "y": 160,
+      "w": 32,
+      "h": 32,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_closed.png"
+    },
+    {
+      "nombre": "door_half",
+      "x": 128,
+      "y": 160,
+      "w": 32,
+      "h": 32,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_half.png"
+    },
+    {
+      "nombre": "door_open",
+      "x": 160,
+      "y": 160,
+      "w": 32,
+      "h": 32,
+      "categoria": "5_door_access",
+      "uso_sugerido": "puertas interiores",
+      "archivo": "art/training/props/door_open.png"
+    },
+    {
+      "nombre": "in_floor_metal",
+      "x": 0,
+      "y": 192,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_floor_metal.png"
+    },
+    {
+      "nombre": "in_floor_hazard",
+      "x": 32,
+      "y": 192,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_floor_hazard.png"
+    },
+    {
+      "nombre": "in_wall_panel",
+      "x": 64,
+      "y": 192,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_wall_panel.png"
+    },
+    {
+      "nombre": "in_wall_window_mars",
+      "x": 96,
+      "y": 192,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_wall_window_mars.png"
+    },
+    {
+      "nombre": "in_crate_big",
+      "x": 128,
+      "y": 192,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_crate_big.png"
+    },
+    {
+      "nombre": "in_crate_small_16",
+      "x": 168,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_crate_small_16.png"
+    },
+    {
+      "nombre": "in_oxygen_tank_16x32",
+      "x": 200,
+      "y": 192,
+      "w": 16,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_oxygen_tank_16x32.png"
+    },
+    {
+      "nombre": "in_chair_16",
+      "x": 232,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_chair_16.png"
+    },
+    {
+      "nombre": "in_potted_plant_16x32",
+      "x": 8,
+      "y": 224,
+      "w": 16,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_potted_plant_16x32.png"
+    },
+    {
+      "nombre": "in_locker",
+      "x": 32,
+      "y": 224,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_locker.png"
+    },
+    {
+      "nombre": "in_bunk_bed",
+      "x": 64,
+      "y": 224,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_bunk_bed.png"
+    },
+    {
+      "nombre": "in_table",
+      "x": 96,
+      "y": 224,
+      "w": 32,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_table.png"
+    },
+    {
+      "nombre": "in_wall_screen_32x16",
+      "x": 128,
+      "y": 240,
+      "w": 32,
+      "h": 16,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_wall_screen_32x16.png"
+    },
+    {
+      "nombre": "in_floor_lamp_16x32",
+      "x": 168,
+      "y": 224,
+      "w": 16,
+      "h": 32,
+      "categoria": "6_decor_indoor",
+      "uso_sugerido": "cuartos de entrenamiento",
+      "archivo": "art/training/props/in_floor_lamp_16x32.png"
+    },
+    {
+      "nombre": "mars_ground_a",
+      "x": 0,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/mars_ground_a.png"
+    },
+    {
+      "nombre": "mars_ground_b_pebbles",
+      "x": 32,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/mars_ground_b_pebbles.png"
+    },
+    {
+      "nombre": "mars_ground_c_ripples",
+      "x": 64,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/mars_ground_c_ripples.png"
+    },
+    {
+      "nombre": "mars_ground_d_cracked",
+      "x": 96,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/mars_ground_d_cracked.png"
+    },
+    {
+      "nombre": "out_rock_small_16",
+      "x": 136,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_rock_small_16.png"
+    },
+    {
+      "nombre": "out_rock_boulder",
+      "x": 160,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_rock_boulder.png"
+    },
+    {
+      "nombre": "out_rock_cluster",
+      "x": 192,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_rock_cluster.png"
+    },
+    {
+      "nombre": "out_crater",
+      "x": 224,
+      "y": 256,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_crater.png"
+    },
+    {
+      "nombre": "out_dune",
+      "x": 0,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_dune.png"
+    },
+    {
+      "nombre": "out_ice_patch",
+      "x": 32,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_ice_patch.png"
+    },
+    {
+      "nombre": "out_rover_tracks",
+      "x": 64,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_rover_tracks.png"
+    },
+    {
+      "nombre": "out_solar_panel",
+      "x": 96,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_solar_panel.png"
+    },
+    {
+      "nombre": "out_dish",
+      "x": 128,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_dish.png"
+    },
+    {
+      "nombre": "out_rover",
+      "x": 160,
+      "y": 288,
+      "w": 32,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_rover.png"
+    },
+    {
+      "nombre": "out_flag_16x32",
+      "x": 200,
+      "y": 288,
+      "w": 16,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_flag_16x32.png"
+    },
+    {
+      "nombre": "out_beacon_off_16x32",
+      "x": 232,
+      "y": 288,
+      "w": 16,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_beacon_off_16x32.png"
+    },
+    {
+      "nombre": "out_beacon_on_16x32",
+      "x": 8,
+      "y": 320,
+      "w": 16,
+      "h": 32,
+      "categoria": "7_decor_outdoor",
+      "uso_sugerido": "Marte y exteriores",
+      "archivo": "art/training/props/out_beacon_on_16x32.png"
+    }
+  ]
+}

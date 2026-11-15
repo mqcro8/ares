@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Ares.Systems.Audio;
 using Godot;
 using ares.scripts.dialogue;
+using ares.scripts.mission;
 
 public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 {
@@ -70,6 +71,8 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	public float VictoryTime { get; set; } = 100f;
 	public override void _Ready()
 	{
+		if (MissionState.Instance != null)
+			MissionState.Instance.RoverImpacts = MissionState.Instance.RoverCollisions = 0;
 		_roverAnimation = GetNodeOrNull<RoverAnimation>("CharacterBody2D/AnimatedSprite2D");
 		_rover = GetNodeOrNull<Rover>("CharacterBody2D");
 		_label = GetNodeOrNull<Label>("Label");
@@ -107,6 +110,7 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 			_roverRunSequence = ares.scripts.mission.MissionState.Instance.LaunchSequence;
 			ares.scripts.mission.MissionState.Instance.Stage = ares.scripts.mission.MissionStage.Rover;
 		}
+		_hud.ConfigureMaxImpactPoints(_rover.MaxImpactPoints);
 
 		_ = ShowPanel();
 

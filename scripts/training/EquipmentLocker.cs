@@ -1,5 +1,6 @@
 namespace ares.scripts.training;
 
+using System;
 using Godot;
 using ares.scripts.mission;
 using ares.scripts.player;
@@ -20,12 +21,24 @@ public partial class EquipmentLocker : Node2D
 
     public Inventory Contents { get; private set; }
     public EquipmentPanel Panel { get; private set; }
+    public ItemData[] Tools { get; private set; } = Array.Empty<ItemData>();
+    public ItemData DormantOxygenRegulator { get; private set; }
 
     public override void _Ready()
     {
         if (Sprite == null) Sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
         if (FrontZone == null) FrontZone = GetNodeOrNull<Control>("FrontZone");
-        Contents = MissionState.Instance?.GetOrCreateLocker(Slots, StarterKit);
+        Tools = new[]
+        {
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.SpareFuses}.tres"),
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.FrequencyAnalyzer}.tres"),
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.PrecisionWelder}.tres"),
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.WirePliers}.tres"),
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.RoverBumper}.tres"),
+            GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.RoverServos}.tres"),
+        };
+        DormantOxygenRegulator = GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.OxygenRegulator}.tres");
+        Contents = MissionState.Instance?.GetOrCreateLocker(Math.Max(Slots, Tools.Length + 1), StarterKit, Tools);
         Refresh();
     }
 
@@ -85,12 +98,37 @@ public partial class EquipmentLocker : Node2D
         if (!Contents.Contains(StarterKit)) return "SUPPLY LOCKER EMPTY.";
 
         if (!InventoryTransferService.TryTransfer(Contents, player.Inventory, StarterKit, 1,
-                mission?.CargoCapacity ?? 6, out string takeError,
+                mission?.CargoCapacity ?? ToolEffects.CargoCapacity, out string takeError,
                 mission?.OxygenCargoUsed ?? 0))
             return "CANNOT TAKE KIT — " + takeError;
 
         Refresh();
-        return $"MAINTENANCE KIT ACQUIRED — SELECT IT WITH 1  (CARGO {mission?.CargoUsed ?? 0}/{mission?.CargoCapacity ?? 6})";
+        return $"MAINTENANCE KIT ACQUIRED — SELECT IT WITH 1  (CARGO {mission?.CargoUsed ?? 0}/{mission?.CargoCapacity ?? ToolEffects.CargoCapacity})";
+    }
+
+    public string ToggleTool(Player player, ItemData tool)
+    {
+        var mission = MissionState.Instance;
+        if (player?.Inventory == null || Contents == null || tool == null || mission == null)
+            return "TOOL UNAVAILABLE.";
+        if (mission.LoadoutConfirmed || mission.Oxygen.HasStartedSurface)
+            return "LOADOUT LOCKED — the launch is confirmed.";
+
+        if (player.Inventory.Contains(tool))
+        {
+            if (!InventoryTransferService.TryTransfer(player.Inventory, Contents, tool, 1,
+                    int.MaxValue, out string storeError))
+                return "CANNOT STORE TOOL — " + storeError;
+            mission.Oxygen.RefreshLoadout();
+            return $"{tool.DisplayName.ToUpperInvariant()} STORED.";
+        }
+
+        if (!Contents.Contains(tool)) return "TOOL UNAVAILABLE.";
+        if (!InventoryTransferService.TryTransfer(Contents, player.Inventory, tool, 1,
+                mission.CargoCapacity, out string takeError, mission.OxygenCargoUsed))
+            return "CANNOT TAKE TOOL — " + takeError;
+        mission.Oxygen.RefreshLoadout();
+        return $"{tool.DisplayName.ToUpperInvariant()} ACQUIRED.";
     }
 
     public void Refresh()

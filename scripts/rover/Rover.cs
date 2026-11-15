@@ -4,6 +4,8 @@ namespace ares.scripts.rover;
 using Ares.Systems.Audio;
 using Godot;
 using System;
+using ares.scripts.mission;
+using ares.scripts.systems.items;
 
 // Top-down rover with delayed controls: every command takes LagSeconds to reach the wheels.
 // Movement and impact detection only. Counting impacts and changing LagSeconds is the stage's job.
@@ -15,12 +17,14 @@ public partial class Rover : CharacterBody2D
 	private float _blinkTimer;
 	private bool _isDimmed;
 	private Color _normalModulate;
-	private const int MaxCollisions = 5;
 	private const float LagPerCollision = 0.2f;
-	private int _collisionCount = 0;
-	public int RemainingLives => Math.Max(0, MaxCollisions - _collisionCount);
-	public int Collisions => _collisionCount;
-	private float InputLag => _collisionCount * LagPerCollision;
+	public int MaxImpactPoints { get; private set; } = ToolEffects.RoverBaseDamageLimit;
+	public int DamagePerCollision { get; private set; } = ToolEffects.RoverBaseDamagePerCollision;
+	public float EffectiveLaneChangeSpeed { get; private set; } = ToolEffects.RoverBaseLaneChangeSpeed;
+	public int DamagePoints => MissionState.Instance?.RoverImpacts ?? 0;
+	public int RemainingLives => Math.Max(0, MaxImpactPoints - DamagePoints);
+	public int Collisions => MissionState.Instance?.RoverCollisions ?? 0;
+	private float InputLag => Collisions * LagPerCollision;
 	public event Action<int> CollisionRegistered;
 	private bool _gameOver = false;
 	public bool IsGameOver => _gameOver;
@@ -36,7 +40,15 @@ public partial class Rover : CharacterBody2D
 			return;
 		}
 		_normalModulate = _roverAnimation.Modulate;
-		_collisionCount = 0;
+		bool hasBumper = MissionState.Instance?.HasEquipped(ToolEffects.RoverBumper) == true;
+		bool hasServos = MissionState.Instance?.HasEquipped(ToolEffects.RoverServos) == true;
+		MaxImpactPoints = ToolEffects.RoverBaseDamageLimit +
+			(hasBumper ? ToolEffects.RoverBumperExtraDamageLimit : 0);
+		DamagePerCollision = hasServos ? ToolEffects.RoverServoDamagePerCollision :
+			ToolEffects.RoverBaseDamagePerCollision;
+		EffectiveLaneChangeSpeed = LaneChangeSpeed *
+			(hasBumper ? ToolEffects.RoverBumperSpeedFactor : 1f) /
+			(hasServos ? ToolEffects.RoverServoControlTimeFactor : 1f);
 
 	}
 
@@ -49,7 +61,7 @@ public partial class Rover : CharacterBody2D
 	public int CurrentLaneIndex => (int)_currentLane;
 	public bool IsChangingLane => !Mathf.IsEqualApprox(Position.X, LanePositions[(int)_currentLane]);
 
-	[Export] public float LaneChangeSpeed { get; set; } = 600.0f;
+	[Export] public float LaneChangeSpeed { get; set; } = ToolEffects.RoverBaseLaneChangeSpeed;
 	public override void _PhysicsProcess(double delta)
 	{
 		if(!CanMove) return;
@@ -60,7 +72,7 @@ public partial class Rover : CharacterBody2D
 
 		Vector2 position = Position;
 
-		position.X = Mathf.MoveToward(position.X, targetX, LaneChangeSpeed * (float)delta);
+		position.X = Mathf.MoveToward(position.X, targetX, EffectiveLaneChangeSpeed * (float)delta);
 
 		Position = position;
 	}
@@ -135,12 +147,17 @@ public partial class Rover : CharacterBody2D
 		
 		if (TutorialEnded)
 		{
-			_collisionCount++;
+			if (MissionState.Instance != null)
+			{
+				MissionState.Instance.RoverCollisions++;
+				MissionState.Instance.RoverImpacts = Math.Min(MaxImpactPoints,
+					MissionState.Instance.RoverImpacts + DamagePerCollision);
+			}
 		}
-		CollisionRegistered?.Invoke(_collisionCount);
+		CollisionRegistered?.Invoke(DamagePoints);
 		
 
-		if (_collisionCount >= MaxCollisions)
+		if (DamagePoints >= MaxImpactPoints)
 		{
 			LoseRover();
 			return;
@@ -156,8 +173,8 @@ public partial class Rover : CharacterBody2D
 		
 		_roverAnimation.Play("walk");
 
-		GD.Print($"Collisions: {_collisionCount}");
-		GD.Print($"Input lag: {InputLag:F1}s");
+		GD.Print($"Collisions: {Collisions}");
+		GD.Print($"Lane change speed: {EffectiveLaneChangeSpeed:F0}px/s; input lag: {InputLag:F1}s");
 	}
 
 	private void LoseRover()

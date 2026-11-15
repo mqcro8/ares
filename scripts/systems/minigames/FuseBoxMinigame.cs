@@ -2,6 +2,8 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.training;
+using ares.scripts.mission;
+using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
 
 public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
@@ -37,10 +39,19 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 			if (c is Panel p) _switches.Add(PreparePanel(p));
 		foreach (var c in GetNode("Box/BottomRow").GetChildren())
 			if (c is Panel p) _switches.Add(PreparePanel(p));
-		foreach (var c in GetNode("Box/Lights").GetChildren())
+		var lightsRow = GetNode<HBoxContainer>("Box/Lights");
+		foreach (var c in lightsRow.GetChildren())
 			if (c is Panel p) _lights.Add(PreparePanel(p));
 
-		_maxPresses = _lights.Count;
+		if (MissionState.Instance?.HasEquipped(ToolEffects.SpareFuses) == true)
+		{
+			var extra = (Panel)_lights[0].Duplicate();
+			extra.Name = "L5";
+			lightsRow.AddChild(extra);
+			_lights.Add(PreparePanel(extra));
+			lightsRow.AddThemeConstantOverride("separation", 12);
+		}
+		_maxPresses = ToolEffects.FusePressesFor(MissionState.Instance?.HasEquipped(ToolEffects.SpareFuses) == true);
 		_pending = new Timer { OneShot = true };
 		AddChild(_pending);
 		_pending.Timeout += ResolvePending;
