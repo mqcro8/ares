@@ -29,6 +29,8 @@
 [ext_resource type="Texture2D" uid="uid://cif6wamu7dkiy" path="res://art/mars/mars_base_assets/2_greenhouse/gh_bed_wheat.png" id="27_qgopl"]
 [ext_resource type="Texture2D" uid="uid://dkhwrmqibimg6" path="res://art/mars/mars_base_assets/2_greenhouse/gh_bed_empty.png" id="28_f45xc"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="29_objective"]
+[ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="30_hotbar"]
+[ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="31_hotbar_slot"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -110,11 +112,12 @@ size = Vector2(73, 19)
 
 [node name="BaseCamp" type="Node2D" unique_id=1679263356]
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=470353977 node_paths=PackedStringArray("TrainingMovement") groups=["player"]]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=470353977 node_paths=PackedStringArray("TrainingMovement", "Hotbar") groups=["player"]]
 z_index = 1
 position = Vector2(8, 110)
 script = ExtResource("1_54i23")
 TrainingMovement = NodePath("TrainingMovement")
+Hotbar = NodePath("HotbarLayer/Hotbar")
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=1543321411]
 process_physics_priority = 10
@@ -149,6 +152,24 @@ shape = SubResource("RectangleShape2D_nsnbt")
 
 [node name="HandEquip" type="Node" parent="Player" unique_id=660053881]
 script = ExtResource("14_s37mp")
+
+[node name="HotbarLayer" type="CanvasLayer" parent="Player"]
+layer = 10
+
+[node name="Hotbar" type="HBoxContainer" parent="Player/HotbarLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+offset_bottom = -8.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+script = ExtResource("30_hotbar")
+SlotScene = ExtResource("31_hotbar_slot")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1060414451]
 position = Vector2(121, 100)

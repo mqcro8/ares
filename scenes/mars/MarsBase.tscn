@@ -31,9 +31,9 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="30_oxygen_hud"]
 [ext_resource type="PackedScene" path="res://scenes/mars/OxygenCanister.tscn" id="31_oxygen_canister"]
 [ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
-[ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="30_oxygen_hud"]
-[ext_resource type="PackedScene" path="res://scenes/mars/OxygenCanister.tscn" id="31_oxygen_canister"]
-[ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
+[ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="33_hotbar"]
+[ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="34_hotbar_slot"]
+[ext_resource type="Script" uid="uid://wo0u0n44evvi" path="res://scripts/mars/MarsBaseDebug.cs" id="35_mars_debug"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_7lra3"]
 animations = [{
@@ -134,11 +134,13 @@ animations = [{
 size = Vector2(67, 31.5)
 
 [node name="MarsBase" type="Node2D" unique_id=895941075]
+script = ExtResource("35_mars_debug")
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=690492024 groups=["player"]]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=690492024 node_paths=PackedStringArray("Hotbar") groups=["player"]]
 z_index = 2
 position = Vector2(-2, 435)
 script = ExtResource("1_hv47d")
+Hotbar = NodePath("HotbarLayer/Hotbar")
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=430553522 node_paths=PackedStringArray("TileMapLayer")]
 process_physics_priority = 10
@@ -166,6 +168,24 @@ shape = SubResource("RectangleShape2D_15e4b")
 
 [node name="HandEquip" type="Node" parent="Player" unique_id=1502189849]
 script = ExtResource("14_pwwc4")
+
+[node name="HotbarLayer" type="CanvasLayer" parent="Player"]
+layer = 10
+
+[node name="Hotbar" type="HBoxContainer" parent="Player/HotbarLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+offset_bottom = -8.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+script = ExtResource("33_hotbar")
+SlotScene = ExtResource("34_hotbar_slot")
 
 [node name="Building 1" type="StaticBody2D" parent="." unique_id=1971836360]
 position = Vector2(78, 110)
@@ -409,11 +429,6 @@ grow_vertical = 0
 script = ExtResource("28_dialogue")
 
 [node name="ObjectiveDialogue" parent="." unique_id=497977403 instance=ExtResource("29_objective")]
-
-[node name="OxygenHud" parent="." instance=ExtResource("30_oxygen_hud")]
-
-[node name="LanderOxygenStation" parent="." instance=ExtResource("32_oxygen_station")]
-position = Vector2(28, 435)
 
 [node name="SurfaceOxygenCanisterWest" parent="." instance=ExtResource("31_oxygen_canister")]
 position = Vector2(-145, 270)

@@ -1,13 +1,10 @@
 namespace ares.scripts.systems.items;
 
 using System;
-using System.Globalization;
 
 /// <summary>Single source for tool identifiers, game effects and player-facing trade-offs.</summary>
 public static class ToolEffects
 {
-	private static readonly CultureInfo Spanish = CultureInfo.GetCultureInfo("es-MX");
-
 	public const string MaintenanceKit = "maintenance_kit";
 	public const string OxygenTank = "oxygen_tank";
 	public const string SpareFuses = "spare_fuses";
@@ -38,12 +35,12 @@ public static class ToolEffects
 	public const float HullPrecisionHeatOffSeam = HullBaseHeatOffSeam * HullWelderHeatFactor;
 	public const int WireConnectionCount = 4;
 	public const int WirePreconnectedCount = 1;
-	public const string FuseFailure = "Caja de fusibles";
-	public const string FrequencyFailure = "Frecuencias";
-	public const string HullFailure = "Casco";
-	public const string WireFailure = "Cables";
+	public const string FuseFailure = "Fuse box";
+	public const string FrequencyFailure = "Frequency calibration";
+	public const string HullFailure = "Hull repair";
+	public const string WireFailure = "Wiring";
 	public const string RoverFailure = "Rover";
-	public const string OxygenFailure = "Oxígeno";
+	public const string OxygenFailure = "Oxygen";
 	public static readonly string[] FailureCategories =
 	{
 		FuseFailure, FrequencyFailure, HullFailure, WireFailure, RoverFailure, OxygenFailure
@@ -78,47 +75,47 @@ public static class ToolEffects
 
 	public static string BenefitText(string id) => id switch
 	{
-		SpareFuses => $"+{Number(FuseExtraPresses)} margen: {Number(FuseBasePresses)}→{Number(FusePressesFor(true))} pulsaciones",
-		FrequencyAnalyzer => $"Umbral {Number(FrequencyBaseThreshold)}→{Number(FrequencyAnalyzerThreshold)}; sostén {Number(FrequencyBaseHoldSeconds)} s",
-		PrecisionWelder => $"Soldadura {Number(HullBaseWeldTolerance)}→{Number(HullPrecisionWeldTolerance)} px; calor {Number(HullBaseHeatOffSeam)}→{Number(HullPrecisionHeatOffSeam)}/s",
-		WirePliers => $"{Number(WirePreconnectedCount)} de {Number(WireConnectionCount)} cables conectado",
-		RoverBumper => $"Impactos {Number(RoverBaseDamageLimit)}→{Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}",
-		RoverServos => $"Carril {Number(RoverBaseLaneChangeSpeed)}→{Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)}; daño {Number(RoverBaseDamagePerCollision)}→{Number(RoverServoDamagePerCollision)}",
-		OxygenRegulator => $"{Number(OxygenBaseSecondsPerTank)}→{Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s/tanque",
+		SpareFuses => $"+{Number(FuseExtraPresses)} extra press: {Number(FuseBasePresses)}→{Number(FusePressesFor(true))} total presses",
+		FrequencyAnalyzer => $"Threshold {Number(FrequencyBaseThreshold)}→{Number(FrequencyAnalyzerThreshold)}; hold {Number(FrequencyBaseHoldSeconds)} s",
+		PrecisionWelder => $"Weld tolerance {Number(HullBaseWeldTolerance)}→{Number(HullPrecisionWeldTolerance)} px; off-seam heat {Number(HullBaseHeatOffSeam)}→{Number(HullPrecisionHeatOffSeam)}/s",
+		WirePliers => $"{Number(WirePreconnectedCount)} of {Number(WireConnectionCount)} cables preconnected",
+		RoverBumper => $"Impact limit {Number(RoverBaseDamageLimit)}→{Number(RoverBaseDamageLimit + RoverBumperExtraDamageLimit)}",
+		RoverServos => $"Lane speed {Number(RoverBaseLaneChangeSpeed)}→{Number(RoverBaseLaneChangeSpeed / RoverServoControlTimeFactor)}; damage {Number(RoverBaseDamagePerCollision)}→{Number(RoverServoDamagePerCollision)}",
+		OxygenRegulator => $"{Number(OxygenBaseSecondsPerTank)}→{Number(OxygenBaseSecondsPerTank * OxygenRegulatorTankFactor)} s per tank",
 		_ => "",
 	};
 
 	public static string ShortName(string id) => id switch
 	{
-		SpareFuses => "FUSIBLES",
-		FrequencyAnalyzer => "ANALIZADOR",
-		PrecisionWelder => "SOLDADOR",
-		WirePliers => "ALICATES",
-		RoverBumper => "PARACHOQUES",
-		RoverServos => "SERVOS",
-		OxygenRegulator => "REGULADOR",
+		SpareFuses => "SPARE FUSES",
+		FrequencyAnalyzer => "ANALYZER",
+		PrecisionWelder => "PRECISION WELDER",
+		WirePliers => "WIRE PLIERS",
+		RoverBumper => "ROVER BUMPER",
+		RoverServos => "ROVER SERVOS",
+		OxygenRegulator => "OXYGEN REGULATOR",
 		_ => id
 	};
 
 	public static string DrawbackText(string id) => id switch
 	{
-		SpareFuses => "Solo fusibles",
-		FrequencyAnalyzer => "Solo frecuencias",
-		PrecisionWelder => "Solo casco",
-		WirePliers => "Sin temporizador; solo cables",
-		RoverBumper => $"Carril {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s",
-		RoverServos => "Cada choque resta doble; permite acelerar",
-		OxygenRegulator => $"Solo funciona con {Number(OxygenRegulatorMinimumTanks)}+ tanques",
+		SpareFuses => "Fuse box only",
+		FrequencyAnalyzer => "Frequency calibration only",
+		PrecisionWelder => "Hull repair only",
+		WirePliers => "No timer; wiring only",
+		RoverBumper => $"Lane speed {Number(RoverBaseLaneChangeSpeed)} → {Number(RoverBaseLaneChangeSpeed * RoverBumperSpeedFactor)} px/s",
+		RoverServos => "Each collision deals double damage",
+		OxygenRegulator => $"Requires {Number(OxygenRegulatorMinimumTanks)} or more tanks",
 		_ => "",
 	};
 
 	public static string Describe(string id) => id switch
 	{
-		MaintenanceKit => "Acceso a las cuatro prácticas de reparación. Desventaja: ocupa cargo.",
-		OxygenTank => $"Reserva: {Number(OxygenBaseSecondsPerTank)} s por tanque. Desventaja: ocupa cargo.",
+		MaintenanceKit => "Unlocks all four repair practices. Drawback: uses cargo space.",
+		OxygenTank => $"Reserve: {Number(OxygenBaseSecondsPerTank)} s per tank. Drawback: uses cargo space.",
 		SpareFuses or FrequencyAnalyzer or PrecisionWelder or WirePliers or RoverBumper or RoverServos or OxygenRegulator =>
-			$"{BenefitText(id)}. Desventaja: {DrawbackText(id)}.",
-		_ => "Sin efecto de herramienta registrado."
+			$"{BenefitText(id)}. Drawback: {DrawbackText(id)}.",
+		_ => "No tool effect registered."
 	};
 
 	public static string CoveredFailure(string id) => id switch
@@ -132,5 +129,5 @@ public static class ToolEffects
 		_ => ""
 	};
 
-	private static string Number(double value) => value.ToString("0.##", Spanish);
+	private static string Number(double value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 }

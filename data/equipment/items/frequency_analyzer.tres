@@ -6,9 +6,9 @@
 [resource]
 script = ExtResource("1_item")
 Id = "frequency_analyzer"
-DisplayName = "Analizador de frecuencia"
+DisplayName = "Frequency Analyzer"
 Icon = ExtResource("2_icon")
-HotbarLabel = "FR"
+HotbarLabel = "FA"
 MaxStackSize = 1
 CargoCost = 1
 metadata/_custom_type_script = "res://scripts/systems/items/ItemData.cs"

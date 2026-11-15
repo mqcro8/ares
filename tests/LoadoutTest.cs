@@ -259,7 +259,7 @@ public partial class LoadoutTest : Node
         var testSlot = GD.Load<PackedScene>("res://scripts/hotbar_scene.tscn").Instantiate<HotbarSlot>();
         AddChild(testSlot);
         testSlot.SetStack(astronaut.Inventory.GetStack(1));
-        Check(testSlot.GetNode<Label>("Abbreviation").Text == "FU" &&
+        Check(testSlot.GetNode<Label>("Abbreviation").Text == "SF" &&
             testSlot.GetNode<Label>("Abbreviation").Visible,
             "Hotbar displays abbreviation over tool icon");
         RemoveChild(testSlot);
