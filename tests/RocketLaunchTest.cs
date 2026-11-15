@@ -360,6 +360,8 @@ public partial class RocketLaunchTest : Node
         await WaitFor(RocketLaunch.Phase.Ascending);
         float ascentStartY = launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y;
         launch.SetProcess(true);
+        await ToSignal(GetTree().CreateTimer(.6), SceneTreeTimer.SignalName.Timeout);
+        await Capture("ascent");
         await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
         var backgroundEndY = launch.GetNode<Background>("Background").Position.Y;
         Check(launch.IsInsideTree() && launch.State == RocketLaunch.Phase.Complete &&
