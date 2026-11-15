@@ -125,6 +125,12 @@ public partial class AudioManager : Node
 		if (EnsureReady()) Instance.PlaySfxInternal(id, volumeDb, pitchScale);
 	}
 
+	/// <summary>Interface cues remain audible during pause, on the SFX bus.</summary>
+	public static void PlayUi(string id)
+	{
+		if (EnsureReady()) Instance.PlaySfxInternal(id, 0f, 1f, true);
+	}
+
 	public static void PlaySfx2D(string id, Vector2 globalPosition, float volumeDb = 0f, float pitchScale = 1f)
 	{
 		if (EnsureReady()) Instance.PlaySfx2DInternal(id, globalPosition, volumeDb, pitchScale);
@@ -274,12 +280,13 @@ public partial class AudioManager : Node
 	// SFX
 	// ---------------------------------------------------------------------
 
-	private void PlaySfxInternal(string id, float volumeDb, float pitchScale)
+	private void PlaySfxInternal(string id, float volumeDb, float pitchScale, bool duringPause = false)
 	{
 		if (!TryGetDef(_sfxDefs, id, out var def))
 			return;
 
 		var player = NextVoice(_sfxVoices, ref _nextSfxVoice);
+		player.ProcessMode = duringPause ? ProcessModeEnum.Always : ProcessModeEnum.Inherit;
 		player.Stream = def.Stream;
 		player.Bus = SfxBusName;
 		player.VolumeDb = def.VolumeDb + volumeDb;

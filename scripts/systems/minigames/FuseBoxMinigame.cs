@@ -10,6 +10,7 @@ using Ares.Systems.Audio;
 public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
 	[Signal] public delegate void CompletedEventHandler();
+	private readonly FeedbackSounds _feedbackSounds = new();
 
 	[Export] public Color OnColor { get; set; } = new Color("3cdc50");
 	[Export] public Color OffColor { get; set; } = new Color("d62828");
@@ -161,7 +162,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		if (_busy || i < 0 || i >= _switches.Count) return;
 
 		Toggle(i);
-		AudioManager.PlaySfx(SoundIds.Enter, -7f, 0.9f + i * 0.035f);
+		_feedbackSounds.Play(SoundIds.UiConfirm);
 
 		// Spend one press.
 		_pressesLeft--;
@@ -174,7 +175,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		// Check whether all switches are on.
 		if (_state.All(s => s))
 		{
-			AudioManager.PlaySfx(SoundIds.RoverPowerUp, -8f);
+			_feedbackSounds.Play(SoundIds.RelayEngage);
 			// Emit completed after the success animation.
 			_busy = true;
 			foreach (var sw in _switches) Sparks(sw, OnColor);
@@ -194,7 +195,11 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 	private void ResolvePending()
 	{
 		if (!ares.scripts.training.PracticeReturn.CanPlay(this)) return;
-		if (_state.All(s => s)) EmitSignal(SignalName.Completed);
+		if (_state.All(s => s))
+		{
+			_feedbackSounds.Play(SoundIds.ObjectiveComplete);
+			EmitSignal(SignalName.Completed);
+		}
 		else ResetBox();
 		PublishControllerContext();
 	}
@@ -250,6 +255,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 
 	private void ResetBox()
 	{
+		_feedbackSounds.Play(SoundIds.ElectricalFault, 300);
 		_state = (bool[])_initial.Clone();
 		_pressesLeft = _maxPresses;
 		Refresh();

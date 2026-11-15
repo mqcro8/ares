@@ -43,11 +43,10 @@ The `DevCheats` autoload listens for secret codes typed with **Shift** held, so 
 
 | Code | Effect |
 | --- | --- |
-| `Shift+A R E S` | Completes every training exercise and unlocks the launch pad. |
+| `Shift+A R E S` | Skips the active scene through its normal exit; also completes training requirements. |
 | `Shift+E R A S E` | Clears the training progress again. |
-| `Shift+O R B I T` | Skips only the active rover stage through its normal recovery screen. |
 
-Training codes work in any scene. `ORBIT` only works during an unfinished rover stage. Each successful code shows an on-screen message.
+`Shift+ARES` works across menu, briefing, training, launch, pre-launch, Gateway, rover, Mars and ending scenes. It uses the active scene's normal exit and also marks training complete. `Shift+ERASE` resets training. Each successful code shows an on-screen message.
 
 ## Architecture
 

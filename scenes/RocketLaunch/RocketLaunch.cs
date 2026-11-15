@@ -9,12 +9,14 @@ using Ares.Systems.Audio;
 using ares.scripts.prelaunch;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
-public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource
+public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource, IDevSceneSkipTarget
 {
 	public enum Phase { Ready, Ignition, Active, Result, Ascending, Complete }
 	public Phase State { get; private set; }
 	public bool Paused { get; private set; }
 	public bool Practice { get; private set; }
+	public bool CanSkipWithDevCode => IsInsideTree() && !Paused && State is not Phase.Ascending and not Phase.Complete &&
+		MissionState.Instance?.Ending == ares.scripts.mission.MissionEnding.None;
 	public LaunchHoldModel Model { get; private set; } = new();
 	public LaunchIgnitionModel Ignition { get; private set; } = new();
 
@@ -46,6 +48,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private bool ignitionFailed;
 	private bool practiceReturnPending;
 	private bool malfunctionTransitionFailed;
+	private bool scoreTransitionFailed;
 	private PauseManager pauseManager;
 	internal Func<string, Error> SceneLoader { get; set; }
 	private Vector2 returnPosition;
@@ -163,6 +166,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	private void Back()
 	{
+		if (scoreTransitionFailed) { TransferToScore(); return; }
 		if (malfunctionTransitionFailed) { TransferToMalfunctionCutscene(); return; }
 		if (fromTraining) { ReturnToLab(); return; }
 		if (GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn") != Error.Ok)
@@ -198,6 +202,16 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private void TransferToPreLaunch()
 	{
 		if (!IsInsideTree() || Practice || MissionState.Instance?.LaunchRecord == null) return;
+		if (SceneLoader != null)
+		{
+			var testError = SceneLoader(PreLaunch.ScenePath);
+			if (testError != Error.Ok)
+			{
+				backError = "Unable to start pre-launch transfer.";
+				Refresh();
+			}
+			return;
+		}
 		if (SceneTransition.Instance != null)
 		{
 			SceneTransition.Instance.GoTo(PreLaunch.ScenePath);
@@ -209,6 +223,29 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 			backError = "Unable to start pre-launch transfer.";
 			Refresh();
 		}
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		var mission = MissionState.Instance;
+		if (Practice)
+		{
+			mission.TrainingLaunchPracticeComplete = true;
+			mission.EvaluateTrainingCompletion();
+			practiceReturnPending = true;
+			State = Phase.Result;
+			ReturnToLab();
+			return true;
+		}
+		if (mission.LaunchRecord == null &&
+			!mission.RecordLaunch(sequence, new LaunchResult(10, 10, IgnitionConfig.TargetClicks,
+				IgnitionConfig.TargetClicks, 0))) return false;
+		RunResult = mission.LaunchRecord;
+		State = Phase.Complete;
+		rocket.LaunchSuccess();
+		TransferToPreLaunch();
+		return true;
 	}
 
 	private void BeginIgnitionFromReady()
@@ -224,8 +261,22 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 
 	private void RetryIgnition()
 	{
-		if (!launchAllowed || State != Phase.Result || !ignitionFailed) return;
+		if (!Practice || !launchAllowed || State != Phase.Result || !ignitionFailed) return;
 		BeginIgnition();
+	}
+
+	private void TransferToScore()
+	{
+		if (!IsInsideTree() || MissionState.Instance?.Ending != ares.scripts.mission.MissionEnding.Bad) return;
+		var error = SceneLoader != null
+			? SceneLoader("res://scenes/ending/ending.tscn")
+			: GetTree().ChangeSceneToFile("res://scenes/ending/ending.tscn");
+		scoreTransitionFailed = error != Error.Ok;
+		if (scoreTransitionFailed)
+		{
+			backError = "Launch failed. Press Retry score transfer.";
+			Refresh();
+		}
 	}
 
 	private void BeginIgnition()
@@ -287,6 +338,16 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		holding = false;
 		State = Phase.Result;
 		rocket.LaunchFailed();
+		if (!Practice)
+		{
+			if (MissionState.Instance?.FailLaunch(sequence) == true)
+				Callable.From(TransferToScore).CallDeferred();
+			else
+			{
+				launchAllowed = false;
+				accessDenied = true;
+			}
+		}
 		Refresh();
 	}
 
@@ -438,7 +499,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 				return true;
 
 			case ControllerCommands.LaunchRetry:
-				if (!Paused) RetryIgnition();
+				if (!Paused && Practice) RetryIgnition();
 				return true;
 
 			default:
@@ -466,7 +527,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 			["inBand"] = Model.InBand,
 			["centered"] = Mathf.Snapped((float)Model.Progress, 0.001f),
 			["canStart"] = launchAllowed && State == Phase.Ready && !Paused,
-			["canRetry"] = launchAllowed && State == Phase.Result && ignitionFailed && !Paused,
+			["canRetry"] = Practice && launchAllowed && State == Phase.Result && ignitionFailed && !Paused,
 		});
 	}
 
@@ -617,8 +678,11 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		pause.Visible = State == Phase.Ignition || State == Phase.Active || (Paused && State == Phase.Ascending);
 		back.Visible = Paused || (!practiceReturnPending &&
 			(State == Phase.Result || State == Phase.Ascending || State == Phase.Complete));
+		if (!Practice && MissionState.Instance?.Ending == ares.scripts.mission.MissionEnding.Bad && !scoreTransitionFailed)
+			back.Visible = false;
 		pause.Text = Paused ? "Resume" : "Pause";
-		back.Text = malfunctionTransitionFailed ? "Retry launch cinematic" :
+		back.Text = scoreTransitionFailed ? "Retry score transfer" :
+			malfunctionTransitionFailed ? "Retry launch cinematic" :
 			fromTraining ? "Return to lab" : "Back to main menu";
 		LayoutGauge();
 	}

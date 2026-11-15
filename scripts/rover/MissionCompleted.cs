@@ -2,13 +2,15 @@ using Godot;
 using System;
 using ares.scripts.rover;
 
-public partial class MissionCompleted : Node2D
+public partial class MissionCompleted : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	[Export] public string NextScenePath { get; set; } = "";
 	[Export] public string MainMenuScene { get; set; } = "res://scenes/main_menu/main_menu_take3.tscn";
 	private RoverResultDialogue _dialogue;
 	private Button _nextStage, _mainMenu;
 	internal Func<string, Error> SceneLoader { get; set; }
+	public bool CanSkipWithDevCode => IsInsideTree() &&
+		ares.scripts.mission.MissionState.Instance?.RoverStageCompleted == true;
 
 	public override void _Ready()
 	{
@@ -41,6 +43,13 @@ public partial class MissionCompleted : Node2D
 		var error = SceneLoader != null ? SceneLoader(NextScenePath) : GetTree().ChangeSceneToFile(NextScenePath);
 		if (error == Error.Ok) return;
 		_dialogue.Text.Text = "Rover recovered. Could not open the next Mars area.";
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		_on_continue_to_mars_pressed();
+		return true;
 	}
 
 	private void _on_main_menu_pressed()

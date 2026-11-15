@@ -4,8 +4,9 @@ using Godot;
 
 namespace Ares.Ui.MainMenu;
 
-public partial class ControlsMenu : Control
+public partial class ControlsMenu : Control, ares.scripts.systems.IDevSceneSkipTarget
 {
+	public bool CanSkipWithDevCode => IsInsideTree();
 	private ControllerRelay _relay;
 	private CheckButton _toggle;
 	private Label _status;
@@ -19,10 +20,12 @@ public partial class ControlsMenu : Control
 	private string _qrUrl = "";
 	private ImageTexture _qrTexture;
 	private bool _refreshing;
+	private readonly FeedbackSounds _sounds = new();
 
 	public override void _Ready()
 	{
 		AudioManager.PlayMusic(SoundIds.MenuMusic);
+		UiNavigationSounds.Attach(this);
 
 		_toggle = GetNodeOrNull<CheckButton>("Panel/Panel2/Controller/PhoneRow/PhoneToggle");
 		_status = GetNodeOrNull<Label>("Panel/Panel2/Controller/PhoneRow/Status");
@@ -55,13 +58,22 @@ public partial class ControlsMenu : Control
 
 	public void OnBackPressed()
 	{
-		GetTree().ChangeSceneToFile("res://scenes/main_menu/Options.tscn");
+		_sounds.Play(GetTree().ChangeSceneToFile("res://scenes/main_menu/Options.tscn") == Error.Ok
+			? SoundIds.UiBack : SoundIds.UiDenied, 300, true);
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		OnBackPressed();
+		return true;
 	}
 
 	private void OnToggle(bool pressed)
 	{
 		if (_refreshing || _relay == null) return;
 		_relay.SetEnabled(pressed);
+		_sounds.Play(SoundIds.UiConfirm, 100, true);
 		Refresh();
 	}
 
@@ -72,6 +84,7 @@ public partial class ControlsMenu : Control
 		string normalized = ControllerRelay.NormalizeRelayUrl(_relayInput.Text);
 		if (string.IsNullOrEmpty(normalized))
 		{
+			_sounds.Play(SoundIds.UiDenied, 300, true);
 			_hint!.Text = "Use a ws:// or wss:// address, for example wss://your-name.ngrok.app";
 			_relayInput.GrabFocus();
 			return;
@@ -79,11 +92,13 @@ public partial class ControlsMenu : Control
 
 		_relayInput.Text = normalized;
 		_relay.SetRelayUrl(normalized);
+		_sounds.Play(SoundIds.UiConfirm, 100, true);
 		Refresh();
 	}
 
 	private void OnNewCodePressed()
 	{
+		if (_relay != null) _sounds.Play(SoundIds.UiConfirm, 100, true);
 		_relay?.NewRoomCode();
 		Refresh();
 	}

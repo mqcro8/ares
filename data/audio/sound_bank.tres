@@ -22,6 +22,12 @@
 [ext_resource type="AudioStream" path="res://audio/sfx/Cohete despegue_vuelo .wav" id="16_takeoff"]
 [ext_resource type="AudioStream" path="res://audio/sfx/Cohete aterriza .wav" id="17_landing"]
 [ext_resource type="AudioStream" path="res://audio/sfx/system-malfunction-sound-effects.wav" id="18_malfunction"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/switch_a.wav" id="19_switch_a"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/switch_b.wav" id="20_switch_b"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/latch.wav" id="21_latch"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/relay.wav" id="22_relay"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/electrical_fault.wav" id="23_fault"]
+[ext_resource type="AudioStream" path="res://audio/sfx/cc0/objective_complete.wav" id="24_objective"]
 
 [sub_resource type="Resource" id="SoundDef_menu"]
 script = ExtResource("2_def")
@@ -161,7 +167,82 @@ Id = "system_malfunction"
 Stream = ExtResource("18_malfunction")
 VolumeDb = -5.0
 
+[sub_resource type="Resource" id="SoundDef_ui_navigate"]
+script = ExtResource("2_def")
+Id = "ui_navigate"
+Stream = ExtResource("19_switch_a")
+VolumeDb = -16.0
+
+[sub_resource type="Resource" id="SoundDef_ui_confirm"]
+script = ExtResource("2_def")
+Id = "ui_confirm"
+Stream = ExtResource("20_switch_b")
+VolumeDb = -9.0
+
+[sub_resource type="Resource" id="SoundDef_ui_back"]
+script = ExtResource("2_def")
+Id = "ui_back"
+Stream = ExtResource("19_switch_a")
+VolumeDb = -9.0
+
+[sub_resource type="Resource" id="SoundDef_ui_denied"]
+script = ExtResource("2_def")
+Id = "ui_denied"
+Stream = ExtResource("23_fault")
+VolumeDb = -13.0
+
+[sub_resource type="Resource" id="SoundDef_panel_open"]
+script = ExtResource("2_def")
+Id = "panel_open"
+Stream = ExtResource("21_latch")
+VolumeDb = -12.0
+
+[sub_resource type="Resource" id="SoundDef_panel_close"]
+script = ExtResource("2_def")
+Id = "panel_close"
+Stream = ExtResource("20_switch_b")
+VolumeDb = -7.0
+
+[sub_resource type="Resource" id="SoundDef_equipment_take"]
+script = ExtResource("2_def")
+Id = "equipment_take"
+Stream = ExtResource("21_latch")
+VolumeDb = -10.0
+PitchVariation = 0.025
+
+[sub_resource type="Resource" id="SoundDef_equipment_store"]
+script = ExtResource("2_def")
+Id = "equipment_store"
+Stream = ExtResource("21_latch")
+VolumeDb = -7.0
+PitchVariation = 0.025
+
+[sub_resource type="Resource" id="SoundDef_connector_snap"]
+script = ExtResource("2_def")
+Id = "connector_snap"
+Stream = ExtResource("20_switch_b")
+VolumeDb = -5.0
+PitchVariation = 0.025
+
+[sub_resource type="Resource" id="SoundDef_electrical_fault"]
+script = ExtResource("2_def")
+Id = "electrical_fault"
+Stream = ExtResource("23_fault")
+VolumeDb = -8.0
+
+[sub_resource type="Resource" id="SoundDef_relay_engage"]
+script = ExtResource("2_def")
+Id = "relay_engage"
+Stream = ExtResource("22_relay")
+VolumeDb = -9.0
+
+[sub_resource type="Resource" id="SoundDef_objective_complete"]
+script = ExtResource("2_def")
+Id = "objective_complete"
+Stream = ExtResource("24_objective")
+VolumeDb = -7.0
+
 [resource]
 script = ExtResource("1_bank")
 Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind"), SubResource("Resource_o1k5s"), SubResource("Resource_t2b07"), SubResource("Resource_2hs1k"), SubResource("Resource_2obti")])
-Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5"), SubResource("SoundDef_enter"), SubResource("SoundDef_planet_steps"), SubResource("SoundDef_metal_steps"), SubResource("SoundDef_welding"), SubResource("SoundDef_takeoff"), SubResource("SoundDef_landing"), SubResource("SoundDef_rover_wind_sfx"), SubResource("SoundDef_malfunction")])
+Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5"), SubResource("SoundDef_enter"), SubResource("SoundDef_planet_steps"), SubResource("SoundDef_metal_steps"), SubResource("SoundDef_welding"), SubResource("SoundDef_takeoff"), SubResource("SoundDef_landing"), SubResource("SoundDef_rover_wind_sfx"), SubResource("SoundDef_malfunction"), SubResource("SoundDef_ui_navigate"), SubResource("SoundDef_ui_confirm"), SubResource("SoundDef_ui_back"), SubResource("SoundDef_ui_denied"), SubResource("SoundDef_panel_open"), SubResource("SoundDef_panel_close"), SubResource("SoundDef_equipment_take"), SubResource("SoundDef_equipment_store"), SubResource("SoundDef_connector_snap"), SubResource("SoundDef_electrical_fault"), SubResource("SoundDef_relay_engage"), SubResource("SoundDef_objective_complete")])

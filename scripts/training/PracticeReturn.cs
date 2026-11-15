@@ -2,14 +2,18 @@ namespace ares.scripts.training;
 using Godot;
 using Ares.Systems.Controllers;
 using ares.scripts.dialogue;
+using Ares.Systems.Audio;
 
 /// <summary>Instructions inside the real minigame, with standalone completion signals intact.</summary>
-public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
+public partial class PracticeReturn : CanvasLayer, IControllerCommandSink, ares.scripts.systems.IDevSceneSkipTarget
 {
     private Control _game;
     private long _ticket, _session;
     private bool _finished, _starting, _active, _returnRequested, _completed;
     private bool _returnFailed;
+    private readonly FeedbackSounds _sounds = new();
+    private bool HasFeedback => _game is WireMinigame or FuseBoxMinigame;
+    public bool CanSkipWithDevCode => IsInsideTree() && _ticket != 0 && !_finished && !_completed;
     // Per-instance loader seam permits deterministic IO-failure regression tests.
     internal System.Func<string, Error> SceneLoader { get; set; }
     private PanelContainer _instructions;
@@ -98,6 +102,11 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
         // Tell the phone the instructions overlay is up even for minigames that
         // do not otherwise publish per-frame state.
         NotifyGame();
+        if (HasFeedback && _ticket != 0)
+        {
+            UiNavigationSounds.Attach(this);
+            _sounds.Play(SoundIds.PanelOpen);
+        }
     }
     private void FitLayout()
     {
@@ -186,6 +195,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     {
         if (_active || _completed) return;
         _starting = false; SetBoardActive(true); _overlay.Hide(); _back.Show();
+        if (HasFeedback) _sounds.Play(SoundIds.PanelClose);
         NotifyGame();
     }
 
@@ -225,15 +235,28 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
     private void Cancel()
     {
         if (_returnFailed) { _returnFailed = false; Callable.From(Return).CallDeferred(); return; }
-        if (_ticket == 0) { GetTree().ReloadCurrentScene(); return; }
+        if (_ticket == 0)
+        {
+            var error = GetTree().ReloadCurrentScene();
+            if (HasFeedback) _sounds.Play(error == Error.Ok ? SoundIds.UiBack : SoundIds.UiDenied, 300);
+            return;
+        }
         Finish(false);
     }
     private void Finish(bool success)
     {
         if (_finished || !PracticeSession.Finish(_session, _ticket, success)) return;
+        if (!success && HasFeedback) _sounds.Play(SoundIds.PanelClose);
         _finished = true; _starting = false; _completed = true; SetBoardActive(false);
         ControllerContext.End(_game);
         Callable.From(Return).CallDeferred();
+    }
+
+    public bool SkipWithDevCode()
+    {
+        if (!CanSkipWithDevCode) return false;
+        Finish(true);
+        return _finished;
     }
     private void Return()
     {
@@ -242,6 +265,7 @@ public partial class PracticeReturn : CanvasLayer, IControllerCommandSink
         string returnScene = PracticeSession.ExerciseOriginScene ?? PracticeSession.LabScene;
         var error = SceneLoader != null ? SceneLoader(returnScene) : GetTree().ChangeSceneToFile(returnScene);
         if (error == Error.Ok) return;
+        if (HasFeedback) _sounds.Play(SoundIds.UiDenied, 300);
         _returnRequested = false;
         _returnFailed = true;
         _overlay.Hide();

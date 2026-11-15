@@ -33,7 +33,6 @@
 [ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="33_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="34_hotbar_slot"]
-[ext_resource type="Script" uid="uid://wo0u0n44evvi" path="res://scripts/mars/MarsBaseDebug.cs" id="35_mars_debug"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_7lra3"]
 animations = [{
@@ -134,13 +133,12 @@ animations = [{
 size = Vector2(67, 31.5)
 
 [node name="MarsBase" type="Node2D" unique_id=895941075]
-script = ExtResource("35_mars_debug")
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=690492024 node_paths=PackedStringArray("Hotbar") groups=["player"]]
-FootstepSoundId = "footsteps_planet"
 z_index = 2
 position = Vector2(-2, 435)
 script = ExtResource("1_hv47d")
+FootstepSoundId = "footsteps_planet"
 Hotbar = NodePath("HotbarLayer/Hotbar")
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=430553522 node_paths=PackedStringArray("TileMapLayer")]

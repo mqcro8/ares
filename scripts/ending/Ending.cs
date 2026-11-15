@@ -10,7 +10,7 @@ using ares.scripts.systems;
 using Ares.Systems.Audio;
 
 /// <summary>Plays the latched good/bad ending and shows an honest results placeholder.</summary>
-public partial class Ending : Control, IControllerCommandSink, IControllerContextSource
+public partial class Ending : Control, IControllerCommandSink, IControllerContextSource, IDevSceneSkipTarget
 {
 	private enum PlaybackPhase { Unavailable, InitialFade, Crossfade, Dialogue, FinalFade, Results }
 
@@ -26,6 +26,7 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 	public int CurrentBeat => _beatIndex;
 	public bool IsResultsVisible => _phase == PlaybackPhase.Results;
 	public bool IsPaused => _pauseManager?.IsOpen == true;
+	public bool CanSkipWithDevCode => IsInsideTree() && _phase is not PlaybackPhase.Results and not PlaybackPhase.Unavailable;
 	public string ResultsMessage { get; private set; } = "";
 
 	private MissionState _mission;
@@ -59,7 +60,6 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		}
 
 		Outcome = _mission.Ending;
-		AudioManager.PlayMusic(Outcome == MissionEnding.Good ? SoundIds.endingMusic : SoundIds.TensionMusic, 1.5);
 		_mission.Stage = MissionStage.Ending;
 		_sequence = Outcome switch
 		{
@@ -67,6 +67,16 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 			MissionEnding.Bad => BadSequence ?? GD.Load<CinematicSequence>("res://data/cinematics/ending_bad.tres"),
 			_ => null,
 		};
+		if (_mission.ShowScoreImmediately)
+		{
+			ControllerCommandRouter.Register(this, this);
+			ControllerContext.Begin(this, ControllerContextMode.Ending);
+			if (_pauseManager != null) _pauseManager.PauseChanged += OnPauseChanged;
+			AudioManager.StopMusic(1.0);
+			ShowResults();
+			return;
+		}
+		AudioManager.PlayMusic(Outcome == MissionEnding.Good ? SoundIds.endingMusic : SoundIds.TensionMusic, 1.5);
 		if (_sequence?.Beats == null || _sequence.Beats.Count == 0 ||
 			_sequence.Beats.Any(beat => beat?.Image == null || string.IsNullOrWhiteSpace(beat.Text)))
 		{
@@ -327,13 +337,15 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		_skipButton.Hide();
 		_pauseButton.Hide();
 		var score = _mission.Scoring;
-		string status = Outcome == MissionEnding.Good
-			? score.Passed ? "MISSION COMPLETE — PASS" : "MISSION COMPLETE — BELOW 80%"
-			: "MISSION FAILED";
+		string status = Outcome == MissionEnding.Bad
+			? "MISSION FAILED — SCORE RECORDED"
+			: !score.AllMissionsWon ? "MISSION COMPLETE — NOT ALL MISSIONS WON"
+			: score.Passed ? "MISSION COMPLETE — PASS" : "MISSION COMPLETE — BELOW 80%";
 		ResultsMessage = $"{status}\n" +
 			$"OVERALL {score.Overall:0}% (PASS: {MissionScoring.PassingGrade:0}%)\n" +
 			$"TRAINING {score.Training:0}%  LAUNCH {score.Launch:0}%  REPAIRS {score.Repairs:0}%\n" +
 			$"ROVER {score.Rover:0}%  RESOURCES {score.Resources:0}%\n" +
+			$"ALL MISSIONS WON: {(score.AllMissionsWon ? "YES" : "NO")}\n" +
 			$"OXYGEN RETURN RESERVE: {score.FinalOxygenSeconds:0}s / " +
 			$"{_mission.Oxygen.ReturnReserveSeconds:0}s " +
 			(score.HasReturnReserve ? "SECURED" : "FAILED");
@@ -359,6 +371,12 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 	}
 
 	public void SkipToResults() => BeginFinalFade();
+	public bool SkipWithDevCode()
+	{
+		if (IsResultsVisible || _phase == PlaybackPhase.Unavailable) return false;
+		SkipToResults();
+		return true;
+	}
 
 	private void TogglePause()
 	{

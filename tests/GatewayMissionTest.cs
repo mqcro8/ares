@@ -24,6 +24,7 @@ public partial class GatewayMissionTest : Node
         {
             SessionMessages();
             await PanelAndMovement();
+            await DeveloperSkip();
             GD.Print($"GATEWAY MISSION PASS ({_assertions} assertions)");
             GetTree().Quit();
         }
@@ -216,5 +217,22 @@ public partial class GatewayMissionTest : Node
         RemoveChild(roverScene);
         roverScene.Free();
         gateway.QueueFree();
+    }
+
+    private async Task DeveloperSkip()
+    {
+        PracticeSession.Clear();
+        var gateway = GD.Load<PackedScene>(Gateway.ScenePath).Instantiate<Gateway>();
+        AddChild(gateway);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        string destination = "";
+        gateway.MissionControl.SceneLoader = path => { destination = path; return Error.Ok; };
+        Check(gateway.SkipWithDevCode() && destination == "res://scenes/rover/rover.tscn" &&
+            Enum.GetValues<PracticeSession.Exercise>().All(exercise =>
+                PracticeSession.CompletedIn(Gateway.ScenePath, exercise)),
+            "ARES completes Gateway repairs and skips to Rover");
+        gateway.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        PracticeSession.Clear();
     }
 }

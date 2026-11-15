@@ -22,6 +22,10 @@ public partial class PreLaunchTest : Node
             scene.GetNode<Label>("HUD/Message").Text = "";
             Check(scene.GetNode<Sprite2D>("Rocket").Position.DistanceTo(scene.EarthPosition) > scene.EarthRadius,
                 "Rocket starts outside Earth core");
+            string destination = "";
+            scene.SceneLoader = path => { destination = path; return Error.Ok; };
+            Check(scene.SkipWithDevCode() && destination == ares.scripts.gateway.Gateway.ScenePath,
+                "ARES skips pre-launch directly to Gateway");
             scene.QueueFree();
             GD.Print($"PRE-LAUNCH PASS ({_assertions} assertions)");
             GetTree().Quit();

@@ -19,6 +19,13 @@ public static class PracticeSession
     private static readonly Dictionary<string, HashSet<Exercise>> CompletedExercises = new();
     public static bool CompletedIn(string scene, Exercise exercise)
         => CompletedExercises.TryGetValue(scene, out var exercises) && exercises.Contains(exercise);
+    public static void CompleteForDeveloper(string scene, Exercise exercise)
+    {
+        if (string.IsNullOrEmpty(scene)) return;
+        if (!CompletedExercises.TryGetValue(scene, out var exercises))
+            CompletedExercises[scene] = exercises = new();
+        exercises.Add(exercise);
+    }
     public static Snapshot Saved { get; set; }
     public static Travel Pending { get; private set; }
     public static long SessionId { get; private set; }

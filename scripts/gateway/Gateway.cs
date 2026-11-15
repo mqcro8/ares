@@ -1,5 +1,6 @@
 namespace ares.scripts.gateway;
 
+using System.Linq;
 using Godot;
 using ares.scripts.mission;
 using ares.scripts.player;
@@ -13,7 +14,7 @@ using Ares.Systems.Audio;
 /// training exercises, while the interaction and inventory rules stay shared
 /// with the Training Lab.
 /// </summary>
-public partial class Gateway : Node2D
+public partial class Gateway : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	public const string ScenePath = "res://scenes/gateway/Gateway.tscn";
 	[Export] public Player Player { get; set; }
@@ -22,20 +23,13 @@ public partial class Gateway : Node2D
 	[Export] public Control FusesZone { get; set; }
 	[Export] public Control FrequencyZone { get; set; }
 	[Export] public Control HullRepairZone { get; set; }
-	[Export] public EquipmentLocker Locker { get; set; }
 	[Export] public MissionMonitorView Monitor { get; set; }
-    public const string ScenePath = "res://scenes/gateway/Gateway.tscn";
-    [Export] public Player Player { get; set; }
-    [Export] public Camera2D Camera { get; set; }
-    [Export] public Control WiresZone { get; set; }
-    [Export] public Control FusesZone { get; set; }
-    [Export] public Control FrequencyZone { get; set; }
-    [Export] public Control HullRepairZone { get; set; }
-    [Export] public MissionMonitorView Monitor { get; set; }
 
 	private TrainingStations _stations;
 	private Label _status;
 	public GatewayMissionControl MissionControl { get; private set; }
+	public bool CanSkipWithDevCode => IsInsideTree() && MissionControl != null &&
+		MissionState.Instance?.Ending == MissionEnding.None;
 
 	public override void _Ready()
 	{
@@ -56,15 +50,7 @@ public partial class Gateway : Node2D
 		AddStation("Power Distribution Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
 		AddStation("Communications Bay", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
 		AddStation("Hull Access", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
-		if (Locker != null)
-			_stations.Targets.Add(new("Supply locker", Locker.FrontZone, null, null,
-				Interact: () => Locker.Open(Player), Prompt: () => Locker.InteractionPrompt(Player)));
-        _stations = new TrainingStations { Name = "GatewayStations", Player = Player };
-        AddChild(_stations);
-        AddStation("Electrical Bay", WiresZone, PracticeSession.Exercise.Wires, "gateway.wires.return");
-        AddStation("Power Distribution Room", FusesZone, PracticeSession.Exercise.Fuses, "gateway.fuses.return");
-        AddStation("Communications Bay", FrequencyZone, PracticeSession.Exercise.Frequency, "gateway.frequency.return");
-        AddStation("Hull Access", HullRepairZone, PracticeSession.Exercise.HullRepair, "gateway.hull.return");
+
 
 		MissionControl = GD.Load<PackedScene>("res://scenes/gateway/MissionControlBox.tscn")
 			.Instantiate<GatewayMissionControl>();
@@ -117,4 +103,14 @@ public partial class Gateway : Node2D
 	}
 
 	public override void _ExitTree() => GetViewport().SizeChanged -= FitCamera;
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		foreach (var exercise in System.Enum.GetValues<PracticeSession.Exercise>())
+			PracticeSession.CompleteForDeveloper(ScenePath, exercise);
+		GatewayMission.ArrivalMessages().ToArray();
+		MissionControl.SkipToRover();
+		return true;
+	}
 }

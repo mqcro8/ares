@@ -110,6 +110,20 @@ public partial class GatewayMissionControl : CanvasLayer
         _stations.InteractionLocked = false;
     }
 
+    public bool SkipToRover()
+    {
+        if (_endingComplete) return false;
+        _messages.Clear();
+        _completionPending = false;
+        EndingFrame = 2;
+        _finalImage.Texture = SecondImage;
+        _finalScenes.Show();
+        _imageContinue.Hide();
+        _panel.Hide();
+        Advance();
+        return true;
+    }
+
     private void ShowNext()
     {
         _text.Text = _messages.Dequeue();

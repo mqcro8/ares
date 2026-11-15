@@ -1,10 +1,11 @@
 namespace ares.scripts.prelaunch;
 
 using Godot;
+using System;
 using ares.scripts.gateway;
 
 /// <summary>Small one-shot orbital transfer game. One scene, one controller, no external state.</summary>
-public partial class PreLaunch : Node2D
+public partial class PreLaunch : Node2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	public enum FlightState { Orbiting, Launching, Won, Lost }
 	public const string ScenePath = "res://scenes/pre-launch/pre-launch.tscn";
@@ -42,6 +43,8 @@ public partial class PreLaunch : Node2D
 	private bool _inputReleased = true;
 	private float _wonDelay = -1f;
 	private bool _transitioning;
+	internal Func<string, Error> SceneLoader { get; set; }
+	public bool CanSkipWithDevCode => IsInsideTree() && !_transitioning;
 
 	public override void _Ready()
 	{
@@ -161,8 +164,7 @@ public partial class PreLaunch : Node2D
 			_wonDelay -= delta;
 			if (_wonDelay <= 0f && !_transitioning)
 			{
-				_transitioning = true;
-				SceneTransition.Instance?.GoTo(Gateway.ScenePath);
+				TransferToGateway();
 			}
 		}
 	}
@@ -172,6 +174,31 @@ public partial class PreLaunch : Node2D
 		State = FlightState.Lost;
 		FlightVelocity = Vector2.Zero;
 		_message.Text = "LOST SIGNAL - Espacio para reintentar";
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		return TransferToGateway();
+	}
+
+	private bool TransferToGateway()
+	{
+		if (_transitioning) return false;
+		_transitioning = true;
+		if (SceneLoader != null)
+		{
+			if (SceneLoader(Gateway.ScenePath) == Error.Ok) return true;
+			_transitioning = false;
+			return false;
+		}
+		if (SceneTransition.Instance != null)
+		{
+			SceneTransition.Instance.GoTo(Gateway.ScenePath);
+			return true;
+		}
+		_transitioning = false;
+		return false;
 	}
 
 	private void ResetFlight()

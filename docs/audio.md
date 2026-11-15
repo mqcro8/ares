@@ -1,5 +1,35 @@
 # Audio — Music & SFX
 
+## P0 mechanical feedback (CC0)
+
+The additive P0 bank uses six small WAV derivatives of three Joseph SARDIN / BigSoundBank sources.
+`data/audio/sources.json` records source pages, original BWF URLs, SHA-256 hashes, edit filters,
+license and the exact runtime ID/file mapping. `credits.md` contains human-readable credits.
+Existing audio has not been overwritten or relicensed; its provenance still needs auditing.
+The new files have been technically inspected, not listened to. Human audition remains required.
+
+- UI: `ui_navigate`, `ui_confirm`, `ui_back`, `ui_denied`.
+- Panels/equipment: `panel_open`, `panel_close`, `equipment_take`, `equipment_store`.
+- Repairs: `connector_snap`, `electrical_fault`, `relay_engage`, `objective_complete`.
+- `FeedbackSounds` is owner-local: normally 100 ms between matching cues, 300 ms for rejection.
+  Sound throttling never discards gameplay inputs. Equipment feedback compares actual state before/after.
+- `UiNavigationSounds` binds navigation only, deduplicates hover/focus and disconnects on exit.
+  Action owners select confirmation/rejection after checking their result. Disabled buttons stay silent.
+- `AudioManager.PlayUi(id)` uses the existing non-positional SFX pool and processes during pause.
+  Normal `PlaySfx` resets the reused voice to inherited pause behavior. No new bus or music policy.
+- Wires and fuses use the same paths for mouse, keyboard and phone commands. No new loops.
+  Fuse reset uses the short electrical interruption cue in this first batch; dedicated breaker is deferred.
+  Objective completion uses two recorded switch clicks, not a musical reward or stage-complete fanfare.
+- Panel sounds cover equipment and wire/fuse practices/overlays. Other minigames remain unchanged.
+
+Verification: `dotnet build --no-restore`, then import with Godot .NET and run
+`godot --headless --path . res://tests/AudioFeedbackTest.tscn`.
+Also run `LoadoutTest.tscn`, `TrainingPracticeTest.tscn`, `GatewayMissionTest.tscn`
+and `ProjectConsistencyTest.tscn`. Headless checks do not validate perceptual mix quality.
+For manual audition: test volume/mute, pause navigation, rejected/full loadout, rapid inputs,
+wrong/cancelled wire drops, fuse reset/solve, and repeated scene exits. Listen for harshness,
+clipping and excessive repetition. Keep only used derivatives in Git; do not add full libraries.
+
 `AudioManager` is an autoload. It loads sounds from `data/audio/sound_bank.tres`, plays music and SFX, and routes everything to the existing `Music` / `SFX` buses. You do **not** need to add `AudioStreamPlayer` nodes to your scene for normal one-shot sounds.
 
 The Master / Music / SFX volume sliders already control the output.

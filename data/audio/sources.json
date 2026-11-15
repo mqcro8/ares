@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "scope": "P0 CC0 additions only; legacy audio licenses remain unaudited",
+  "verified_on": "2026-11-15",
+  "audition": "Not listened to. Source descriptions, PCM decoding, silence boundaries and peak levels checked; human audition pending.",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "provider_license_url": "https://bigsoundbank.com/licenses.html",
+  "author": "Joseph SARDIN",
+  "attribution": "Sound sources by Joseph SARDIN / BigSoundBank, CC0 1.0. Edited for Mission: Ares.",
+  "original_policy": "Original BWF/WAV downloads retained in /tmp/opencode/ares-audio-p0 for this work session, not committed. Only used derivatives enter the repository. URLs and hashes identify originals for reproduction; temporary storage is not an archive.",
+  "sources": [
+    {
+      "id": "bsb-0036", "title": "Switch desk lamp",
+      "page": "https://bigsoundbank.com/switch-desk-lamp-s0036.html",
+      "original_url": "https://bigsoundbank.com/UPLOAD/bwf-en/0036.wav",
+      "sha256": "2cf141f1f0b5bea7721612f29261142b34c3b6a303056e682b684981e9937e9e",
+      "description": "Real desk-lamp switch recording, mono 44100 Hz, 16-bit. Original link from page AudioObject encoding, not player preview."
+    },
+    {
+      "id": "bsb-3062", "title": "Industrial switch #2",
+      "page": "https://bigsoundbank.com/industrial-switch-2-s3062.html",
+      "original_url": "https://bigsoundbank.com/UPLOAD/bwf-en/3062.wav",
+      "sha256": "eb6f8b0ce040f6ae7ee1be70cbb4821813d4f6dbc1aff5e8e219961af34d197e",
+      "description": "Sound design using switch, iron bar and reverb; not a documentary machinery recording. Mono 48000 Hz, 24-bit. Original link from page AudioObject encoding."
+    },
+    {
+      "id": "bsb-0134", "title": "Electric shock",
+      "page": "https://bigsoundbank.com/sound-0134-choc-electrique.html",
+      "original_url": "https://bigsoundbank.com/UPLOAD/bwf-en/0134.wav",
+      "sha256": "d271ba87eec4fd3accf67b955ceeb2a07f20122ad1e6bb4b024f4d55c28f706b",
+      "description": "Recorded speaker interference from switching other equipment on the same circuit; not a dangerous electrical arc. Mono 44100 Hz, 16-bit. Original link from page AudioObject encoding."
+    }
+  ],
+  "common_processing": "FFmpeg; output mono 48000 Hz pcm_s16le WAV; metadata removed (-map_metadata -1). No synthesized oscillators or unlicensed layers. Time ranges in seconds on original.",
+  "files": [
+    {
+      "path": "audio/sfx/cc0/switch_a.wav", "source": "bsb-0036", "range": [0, 0.18],
+      "filter": "afade=t=in:d=0.002,afade=t=out:st=0.12:d=0.06,volume=0.7",
+      "sha256": "4f0184d625dc809c0a2bf344d702841af8ec14d93eb932eb6ba8255adf9919b1",
+      "sound_ids": ["ui_navigate", "ui_back"]
+    },
+    {
+      "path": "audio/sfx/cc0/switch_b.wav", "source": "bsb-0036", "range": [0.25, 0.45],
+      "filter": "afade=t=in:d=0.002,afade=t=out:st=0.14:d=0.06,volume=0.7",
+      "sha256": "9a3181609483d94c97502b81607f3fb54e251c4d6fa740e202e445c3e9d2e04d",
+      "sound_ids": ["ui_confirm", "panel_close", "connector_snap"]
+    },
+    {
+      "path": "audio/sfx/cc0/latch.wav", "source": "bsb-3062", "range": [0, 0.35],
+      "filter": "afade=t=in:d=0.002,afade=t=out:st=0.2:d=0.15,volume=0.5",
+      "sha256": "6caa6aeef4f08650785c62351970484a603d3efe94f707f1d2c55c4d99bba167",
+      "sound_ids": ["panel_open", "equipment_take", "equipment_store"]
+    },
+    {
+      "path": "audio/sfx/cc0/relay.wav", "source": "bsb-3062", "range": [0, 1.2],
+      "filter": "afade=t=in:d=0.002,afade=t=out:st=0.8:d=0.4,volume=0.7",
+      "sha256": "6ae6d616ac794d0206e606df0b23fa1046ce88788d9151dffc4e13036e743cfe",
+      "sound_ids": ["relay_engage"]
+    },
+    {
+      "path": "audio/sfx/cc0/electrical_fault.wav", "source": "bsb-0134", "range": [4.02, 4.57],
+      "filter": "highpass=f=120,lowpass=f=7000,afade=t=in:d=0.003,afade=t=out:st=0.4:d=0.15,volume=0.6",
+      "sha256": "313a673aaccd678698e68e1f2ee3afb04516c13375e2a8cb2556dc2effc6450a",
+      "sound_ids": ["ui_denied", "electrical_fault"]
+    },
+    {
+      "path": "audio/sfx/cc0/objective_complete.wav", "source": "bsb-0036",
+      "filter": "[0:a]atrim=start=0:end=0.18,asetpts=PTS-STARTPTS,afade=t=in:d=0.002,afade=t=out:st=0.12:d=0.06,volume=0.7[a];[0:a]atrim=start=0.25:end=0.45,asetpts=PTS-STARTPTS,afade=t=in:d=0.002,afade=t=out:st=0.14:d=0.06,volume=0.7,adelay=280[b];[a][b]amix=inputs=2:normalize=0",
+      "sha256": "8b6d39ccc78bb5469f88231239f097d07fdabfe3f23727fe214e547f797082bc",
+      "sound_ids": ["objective_complete"]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ public static class ToolEffects
 	public const int CargoCapacity = 7;
 	public const int MaximumToolCargoCost = 2;
 	public const int OxygenTankCargoCost = 1;
-	public const double OxygenBaseSecondsPerTank = 180.0;
+	public const double OxygenBaseSecondsPerTank = 120.0;
 	public const int OxygenRegulatorMinimumTanks = 2;
 	public const double OxygenRegulatorTankFactor = 1.3;
 

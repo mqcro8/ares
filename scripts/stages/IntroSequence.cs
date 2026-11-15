@@ -7,13 +7,14 @@ using ares.scripts.dialogue;
 using ares.scripts.mission;
 using Godot;
 
-public partial class IntroSequence : Control
+public partial class IntroSequence : Control, ares.scripts.systems.IDevSceneSkipTarget
 {
 	[Export] public string NextScene { get; set; } = "res://scenes/training/Training.tscn";
 	[Export] public DialogueSequence Transmission { get; set; }
 
 	public Func<string, Error> SceneLoader { get; set; }
 	public bool Finished { get; private set; }
+	public bool CanSkipWithDevCode => IsInsideTree() && !Finished && !_transitionFailed;
 	public bool Skipped { get; private set; }
 	public string LoadedScene { get; private set; }
 	public double Time { get; private set; }
@@ -80,6 +81,13 @@ public partial class IntroSequence : Control
 	public void Skip()
 	{
 		Finish(true);
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		Skip();
+		return Finished;
 	}
 
 	public override void _UnhandledKeyInput(InputEvent @event)

@@ -3,9 +3,11 @@ using Godot;
 
 namespace Ares.Ui.MainMenu;
 
-public partial class VolumeMenu : Control
+public partial class VolumeMenu : Control, ares.scripts.systems.IDevSceneSkipTarget
 {
 	private const double SliderMax = 100.0;
+	private readonly FeedbackSounds _sounds = new();
+	public bool CanSkipWithDevCode => IsInsideTree();
 
 	public override void _Ready()
 	{
@@ -13,6 +15,7 @@ public partial class VolumeMenu : Control
 		SyncSlider("Panel/Panel2/MasterSlider", "Master");
 		SyncSlider("Panel/Panel2/MusicSlider", "Music");
 		SyncSlider("Panel/Panel2/VFXSlider", "SFX");
+		UiNavigationSounds.Attach(this);
 	}
 
 	public void OnMasterVolumeChanged(double value)
@@ -32,7 +35,15 @@ public partial class VolumeMenu : Control
 
 	public void OnBackPressed()
 	{
-		GetTree().ChangeSceneToFile("res://scenes/main_menu/Options.tscn");
+		_sounds.Play(GetTree().ChangeSceneToFile("res://scenes/main_menu/Options.tscn") == Error.Ok
+			? SoundIds.UiBack : SoundIds.UiDenied, 300, true);
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		OnBackPressed();
+		return true;
 	}
 
 	private static void SetBusVolume(string busName, double sliderValue)

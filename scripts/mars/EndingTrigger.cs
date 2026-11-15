@@ -1,6 +1,7 @@
 namespace ares.scripts.mars;
 
 using Godot;
+using System;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
 
@@ -8,7 +9,7 @@ using ares.scripts.mission;
 /// The return-to-start trigger in MarsBase. Finishes the run when every base task is
 /// restored; otherwise it tells the player why they cannot leave yet.
 /// </summary>
-public partial class EndingTrigger : Area2D
+public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipTarget
 {
 	[Export(PropertyHint.File, "*.tscn")]
 	public string EndingScene { get; set; } = "res://scenes/ending/ending.tscn";
@@ -23,6 +24,7 @@ public partial class EndingTrigger : Area2D
 	private bool _showing;
 	private bool _changing;
 	private double _remaining;
+	public bool CanSkipWithDevCode => IsInsideTree() && MissionState.Instance?.IsRunOver == false;
 
 	public override void _Ready()
 	{
@@ -138,6 +140,23 @@ public partial class EndingTrigger : Area2D
 		_player?.SetPhysicsProcess(false);
 		mission.Stage = MissionStage.Ending;
 		Callable.From(ChangeToEnding).CallDeferred();
+	}
+
+	public bool SkipWithDevCode()
+	{
+		if (!CanSkipWithDevCode) return false;
+		var mission = MissionState.Instance;
+		mission.MarkGeneratorRepaired();
+		mission.MarkWireBoxRepaired();
+		mission.MarkSignalTableRepaired();
+		for (int i = 0; i < MissionState.DoorAccessCount; i++) mission.SetDoorAccess(i, true);
+		if (mission.Oxygen.CapacitySeconds <= 0 ||
+			mission.Oxygen.RemainingSeconds < mission.Oxygen.ReturnReserveSeconds)
+			mission.Oxygen.DebugFill(Math.Max(1, mission.Oxygen.TankCount));
+		_player ??= GetTree().GetFirstNodeInGroup("player") as Node2D;
+		_armed = true;
+		BeginEnding();
+		return _changing;
 	}
 
 	private void ShowReturnReserveMessage()

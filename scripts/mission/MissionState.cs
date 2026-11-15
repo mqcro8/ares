@@ -141,6 +141,8 @@ public partial class MissionState : Node
 	// A scene reload must not record the same launch twice.
 	public long LaunchSequence { get; private set; } = 1;
 	public LaunchResult LaunchRecord { get; private set; }
+	public bool LaunchFailed { get; private set; }
+	public bool ShowScoreImmediately { get; private set; }
 	public bool TrainingCourseComplete { get; set; }
 	public bool TrainingWiresComplete { get; set; }
 	public bool TrainingFusesComplete { get; set; }
@@ -247,9 +249,12 @@ public partial class MissionState : Node
 	{
 		LaunchSequence++;
 		LaunchRecord = null; // Deliberately preserve existing resource values.
+		LaunchFailed = false;
+		ShowScoreImmediately = false;
 		PendingLaunchFaults = 0;
 		Outcome.BeginRun(LaunchSequence);
 		RoverStageCompleted = false;
+		RoverStageResolved = false;
 		ResetPuzzleProgress();
 		RoverImpacts = RoverCollisions = 0;
 		RoverDamageLimit = ToolEffects.RoverBaseDamageLimit;
@@ -301,6 +306,16 @@ public partial class MissionState : Node
 		PendingLaunchFaults = result.IgnitionFaults;
 		return true;
 	}
+	public bool FailLaunch(long sequence)
+	{
+		if (sequence != LaunchSequence || LaunchRecord != null || LaunchFailed || IsRunOver)
+			return false;
+		LaunchFailed = true;
+		LoadoutConfirmed = true;
+		ShowScoreImmediately = true;
+		Stage = MissionStage.Ending;
+		return TryFailMission();
+	}
 	/// <summary>Ignition faults owed by the last launch. They become repair work after landing.</summary>
 	public int PendingLaunchFaults { get; private set; }
 	/// <summary>Marks every training exercise as done. Used by the developer shortcut.</summary>
@@ -335,10 +350,22 @@ public partial class MissionState : Node
 	public MissionScoring Scoring { get; } = new();
 	/// <summary>Rover is an intermediate mission stage, not a whole-run ending.</summary>
 	public bool RoverStageCompleted { get; private set; }
+	public bool RoverStageResolved { get; private set; }
 	public bool CompleteRoverStage(long runSequence)
 	{
-		if (runSequence != LaunchSequence || RoverStageCompleted || IsRunOver) return false;
-		RoverStageCompleted = true;
+		return ResolveRoverStage(runSequence, succeeded: true);
+	}
+	public bool FailRoverStage(long runSequence) => ResolveRoverStage(runSequence, succeeded: false);
+	private bool ResolveRoverStage(long runSequence, bool succeeded)
+	{
+		if (runSequence != LaunchSequence || RoverStageResolved || IsRunOver) return false;
+		RoverStageResolved = true;
+		RoverStageCompleted = succeeded;
+		if (!succeeded && (Oxygen.CapacitySeconds <= 0 || Oxygen.IsDepleted))
+		{
+			Oxygen.ProvideEmergencyReserve(ToolEffects.OxygenBaseSecondsPerTank);
+			SetOxygenMessage("ROVER LOST — emergency oxygen reserve deployed.");
+		}
 		return true;
 	}
 
@@ -350,10 +377,23 @@ public partial class MissionState : Node
 	/// <summary>Records completion of the whole campaign, not an intermediate rover stage.</summary>
 	public bool TryCompleteMission()
 	{
+		if (!Outcome.TryComplete(LaunchSequence)) return false;
 		Scoring.RecordRun(this);
-		return Outcome.TryComplete(LaunchSequence);
+		return true;
 	}
-	public bool TryFailMission() => Outcome.TryFail(LaunchSequence);
+	public bool TryFailMission()
+	{
+		if (!Outcome.TryFail(LaunchSequence)) return false;
+		Scoring.RecordRun(this);
+		return true;
+	}
+	public bool FailMissionImmediately()
+	{
+		if (IsRunOver) return false;
+		ShowScoreImmediately = true;
+		Stage = MissionStage.Ending;
+		return TryFailMission();
+	}
 
 	public override void _EnterTree()
 	{

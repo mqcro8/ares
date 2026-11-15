@@ -8,7 +8,7 @@ using ares.scripts.dialogue;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
 
-public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
+public partial class Rover_scence : Node2D, IRoverMissionSkipTarget, ares.scripts.systems.IDevSceneSkipTarget
 {
 	private RoverAnimation _roverAnimation;
 	private Rover _rover;
@@ -41,6 +41,7 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	private bool _gameOver;
 	private bool _victory;
 	private long _roverRunSequence;
+	private bool _roverWasAlreadyResolved;
 	private float _survivalTime;
 	private readonly List<Obstacle> _spawnedObstacles = new();
 
@@ -74,6 +75,7 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	public bool CanSkipRoverMission => IsInsideTree() && !_gameOver && !_victory &&
 		MissionStateForRover?.LaunchSequence == _roverRunSequence &&
 		MissionStateForRover?.RoverStageCompleted == false;
+	public bool CanSkipWithDevCode => CanSkipRoverMission;
 	private ares.scripts.mission.MissionState MissionStateForRover =>
 		ares.scripts.mission.MissionState.Instance;
 	// 0 disables the timer; useful while testing the scene.
@@ -81,7 +83,8 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	public float VictoryTime { get; set; } = 100f;
 	public override void _Ready()
 	{
-		if (MissionState.Instance != null)
+		_roverWasAlreadyResolved = MissionState.Instance?.RoverStageResolved == true;
+		if (MissionState.Instance != null && !_roverWasAlreadyResolved)
 		{
 			MissionState.Instance.RoverImpacts = MissionState.Instance.RoverCollisions = 0;
 			MissionState.Instance.RoverDamageLimit = ToolEffects.RoverBaseDamageLimit +
@@ -146,6 +149,21 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 		_safeRouteButton.Pressed += () => SelectRoute(false);
 		_shortcutButton.Pressed += () => SelectRoute(true);
 		SetRouteButtons(false);
+		if (_roverWasAlreadyResolved)
+		{
+			_gameOver = true;
+			_rover.CanMove = false;
+			_roverAnimation.PlayAnimation("rover_lost");
+			_obstacleTemplate.Hide();
+			_obstacleTemplate.Monitoring = false;
+			_obstacleTemplate.Monitorable = false;
+			_obstacleTemplate.SetPhysicsProcess(false);
+			_obstacleTemplate.SetProcess(false);
+			_panel.Hide();
+			_label.Hide();
+			_ = FadeAndChangeScene("res://scenes/mars/MarsBase.tscn");
+			return;
+		}
 
 		_ = ShowPanel();
 
@@ -244,19 +262,16 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 			return;
 		}
 
-		if (!_gameStarted)
-		{
-			return;
-		}
-		if (!_rover.CanAccelerate && Input.IsActionJustPressed("move_up"))
-			_hud.ShowServoHint();
-		if (_routePaused) return;
 		if (_rover.IsGameOver)
 		{
 			_levelVelocity = DefaultVelocity;
 			GameOver();
 			return;
 		}
+		if (!_gameStarted) return;
+		if (!_rover.CanAccelerate && Input.IsActionJustPressed("move_up"))
+			_hud.ShowServoHint();
+		if (_routePaused) return;
 
 		UpdateLevelVelocity((float)delta);
 		ScrollWorld((float)delta);
@@ -715,19 +730,27 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 		var error = SceneLoader != null ? SceneLoader(scenePath) : GetTree().ChangeSceneToFile(scenePath);
 		if (error == Error.Ok) return;
 		GetNode<CanvasLayer>("TransitionLayer").Visible = false;
-		ShowMessage("Unable to open the next scene. Return to Mission Control.");
+		ShowMessage(scenePath == "res://scenes/mars/MarsBase.tscn"
+			? "ROVER LOST. Continue on foot to Mars."
+			: "Unable to open the next scene.");
 		var back = new Button { Text = "Return to Mission Control" };
 		_hud.AddChild(back);
-		back.Pressed += () => GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn");
+		if (scenePath == "res://scenes/mars/MarsBase.tscn")
+		{
+			back.Text = "Continue to Mars";
+			back.Pressed += () => _ = FadeAndChangeScene(scenePath);
+		}
+		else
+			back.Pressed += () => GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn");
 		back.GrabFocus();
 	}
 	private async void GameOver()
 	{
+		if (MissionStateForRover?.FailRoverStage(_roverRunSequence) != true) return;
 		_gameOver = true;
 		_engineSound?.Stop(0.25f);
 		AudioManager.StopMusic(0.75);
-		AudioManager.PlaySfx2D(SoundIds.RoverExplode, _rover.GlobalPosition);
-		await FadeAndChangeScene("res://scenes/rover/GameOver.tscn");
+		await FadeAndChangeScene("res://scenes/mars/MarsBase.tscn");
 	}
 
 	private async void Victory()
@@ -775,4 +798,6 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 		Victory();
 		return _victory;
 	}
+
+	public bool SkipWithDevCode() => SkipRoverMission();
 }
