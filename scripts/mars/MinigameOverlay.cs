@@ -2,25 +2,52 @@ namespace ares.scripts.mars;
 
 using Godot;
 using System;
+using ares.scripts.dialogue;
 using ares.scripts.training;
 using Ares.Systems.Controllers;
 
 /// <summary>
 /// Reusable full-screen mini-game overlay. Freezes the player, runs the mini-game,
 /// then releases the player in the exact same spot without unloading the building.
+/// A board can also request one automatic retry after a successful run, which keeps
+/// the overlay open while its dialogue is shown.
 /// </summary>
 public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 {
+	/// <summary>A successful run that must be followed by another attempt.</summary>
+	public sealed record RetryPlan(DialogueSequence Dialogue);
+
 	/// <summary>True when the player solved the mini-game, false when they backed out.</summary>
 	public event Action<bool> Finished;
 
+	private PackedScene _packed;
 	private Control _game;
 	private Node2D _player;
 	private Label _title;
+	private Label _hintLabel;
+	private Button _back;
+	private string _titleText;
+	private string _hintText;
 	private string _completedTitle;
+	private ColorRect _retryShade;
+	private DialogueView _retryDialogue;
+	private bool _retrying;
 	private bool _closed;
 	private bool _solved;
+	private bool _exiting;
 	private int _session;
+
+	/// <summary>Called after a successful run. Returning a plan restarts the board instead of completing.</summary>
+	public Func<RetryPlan> RetryAfterSolve { get; set; }
+
+	/// <summary>How long the retry dialogue stays up before the fresh board starts.</summary>
+	public float RetryMessageSeconds { get; set; } = 4f;
+
+	/// <summary>Test/telemetry hook for the currently running board.</summary>
+	public Control CurrentGame => _game;
+
+	/// <summary>True while the retry dialogue is covering an inactive board.</summary>
+	public bool IsRetryDialogueVisible => _retrying && _retryShade?.Visible == true;
 
 	public static MinigameOverlay Open(Node owner, Node2D player, string scenePath, string title, string hint,
 		string completedTitle = "Repaired!")
@@ -32,7 +59,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 			return null;
 		}
 
-		var overlay = new MinigameOverlay { Layer = 50 };
+		var overlay = new MinigameOverlay { Layer = 50, Name = "MinigameOverlay" };
 		owner.AddChild(overlay);
 		overlay.Build(packed, player, title, hint, completedTitle);
 		return overlay;
@@ -40,36 +67,14 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 	private void Build(PackedScene packed, Node2D player, string title, string hint, string completedTitle)
 	{
+		_packed = packed;
 		_player = player;
+		_titleText = title;
+		_hintText = hint;
 		_completedTitle = completedTitle;
 		_player?.SetPhysicsProcess(false);
 
-		_game = packed.Instantiate<Control>();
-		AddChild(_game);
-		_game.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-
-		// Mini-game scenes now always attach the training PracticeReturn wrapper.
-		// An in-world overlay runs the board directly instead: drop that wrapper,
-		// re-enable the board, and republish the controller context it cleared.
-		StripTrainingWrapper();
-		SetGameActive(true);
-		BeginControllerContext();
-
-		switch (_game)
-		{
-			case WireMinigame wire:
-				wire.Completed += OnCompleted;
-				break;
-			case FuseBoxMinigame fuse:
-				fuse.Completed += OnCompleted;
-				break;
-			case FrequencyBoxMinigame frequency:
-				frequency.Completed += OnCompleted;
-				break;
-			case HullRepairMinigame hull:
-				hull.Completed += OnCompleted;
-				break;
-		}
+		SpawnBoard();
 
 		_title = new Label
 		{
@@ -87,30 +92,84 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 		_title.OffsetTop = 18;
 		_title.OffsetBottom = 52;
 
-		var hintLabel = new Label
+		_hintLabel = new Label
 		{
 			Text = hint,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			MouseFilter = Control.MouseFilterEnum.Ignore
 		};
-		hintLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
-		hintLabel.AddThemeConstantOverride("outline_size", 4);
-		AddChild(hintLabel);
-		hintLabel.SetAnchorsPreset(Control.LayoutPreset.CenterTop);
-		hintLabel.OffsetLeft = -360;
-		hintLabel.OffsetRight = 360;
-		hintLabel.OffsetTop = 56;
-		hintLabel.OffsetBottom = 92;
+		_hintLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+		_hintLabel.AddThemeConstantOverride("outline_size", 4);
+		AddChild(_hintLabel);
+		_hintLabel.SetAnchorsPreset(Control.LayoutPreset.CenterTop);
+		_hintLabel.OffsetLeft = -360;
+		_hintLabel.OffsetRight = 360;
+		_hintLabel.OffsetTop = 56;
+		_hintLabel.OffsetBottom = 92;
 
-		var back = new Button { Text = "Back (Esc)" };
-		back.Pressed += () => Close(false);
-		AddChild(back);
-		back.Position = new Vector2(16, 16);
+		_back = new Button { Text = "Back (Esc)" };
+		_back.Pressed += () => Close(false);
+		AddChild(_back);
+		_back.Position = new Vector2(16, 16);
 
 		ControllerCommandRouter.Register(this, this);
 		GetViewport().SizeChanged += FitLayout;
 		FitLayout();
+	}
+
+	/// <summary>Instantiates the board and publishes its controller context.</summary>
+	private void SpawnBoard()
+	{
+		_game = _packed.Instantiate<Control>();
+		AddChild(_game);
+		_game.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+
+		// Mini-game scenes now always attach the training PracticeReturn wrapper.
+		// An in-world overlay runs the board directly instead: drop that wrapper,
+		// re-enable the board, and republish the controller context it cleared.
+		StripTrainingWrapper();
+		SetGameActive(true);
+		BeginControllerContext();
+		HookCompleted(_game);
+	}
+
+	private void HookCompleted(Control game)
+	{
+		switch (game)
+		{
+			case WireMinigame wire:
+				wire.Completed += OnCompleted;
+				break;
+			case FuseBoxMinigame fuse:
+				fuse.Completed += OnCompleted;
+				break;
+			case FrequencyBoxMinigame frequency:
+				frequency.Completed += OnCompleted;
+				break;
+			case HullRepairMinigame hull:
+				hull.Completed += OnCompleted;
+				break;
+		}
+	}
+
+	private void UnhookCompleted(Control game)
+	{
+		switch (game)
+		{
+			case WireMinigame wire:
+				wire.Completed -= OnCompleted;
+				break;
+			case FuseBoxMinigame fuse:
+				fuse.Completed -= OnCompleted;
+				break;
+			case FrequencyBoxMinigame frequency:
+				frequency.Completed -= OnCompleted;
+				break;
+			case HullRepairMinigame hull:
+				hull.Completed -= OnCompleted;
+				break;
+		}
 	}
 
 	/// <summary>Removes the automatically attached training instructions layer.</summary>
@@ -199,18 +258,111 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 	private async void OnCompleted()
 	{
-		if (_closed || _solved)
+		if (_closed || _exiting || _solved)
 			return;
 
 		_solved = true;
 		SetGameActive(false);
+		if (_back != null)
+			_back.Disabled = true;
+
+		RetryPlan retry = RetryAfterSolve?.Invoke();
+		if (retry?.Dialogue != null && retry.Dialogue.Lines.Count > 0)
+		{
+			int retrySession = _session;
+			ShowRetryDialogue(retry.Dialogue);
+			await ToSignal(GetTree().CreateTimer(Mathf.Max(0.05f, RetryMessageSeconds)),
+				SceneTreeTimer.SignalName.Timeout);
+			if (retrySession == _session && !_closed && !_exiting)
+				RestartGame();
+			return;
+		}
+
 		if (_title != null)
 			_title.Text = _completedTitle;
 
 		int session = _session;
 		await ToSignal(GetTree().CreateTimer(0.9f), SceneTreeTimer.SignalName.Timeout);
-		if (session == _session)
+		if (session == _session && !_closed && !_exiting)
 			Close(true);
+	}
+
+	/// <summary>Replaces the finished board with a fresh randomized one.</summary>
+	private void RestartGame()
+	{
+		if (_closed || _exiting)
+			return;
+
+		HideRetryDialogue(true);
+		DetachGame();
+		_session++;
+
+		if (_title != null)
+			_title.Text = _titleText;
+		if (_hintLabel != null)
+			_hintLabel.Text = _hintText;
+		if (_back != null)
+			_back.Disabled = false;
+
+		SpawnBoard();
+		_solved = false;
+		FitLayout();
+	}
+
+	private void ShowRetryDialogue(DialogueSequence sequence)
+	{
+		if (_retryShade == null)
+		{
+			_retryShade = new ColorRect
+			{
+				Name = "RetryShade",
+				Color = new Color(0.01f, 0.015f, 0.025f, 0.55f),
+				MouseFilter = Control.MouseFilterEnum.Stop,
+				Visible = false,
+			};
+			_retryShade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+			AddChild(_retryShade);
+
+			_retryDialogue = new DialogueView { Name = "RetryDialogue", Visible = false };
+			AddChild(_retryDialogue);
+		}
+
+		_retryShade.Visible = true;
+		_retryDialogue.ShowLine(sequence.Lines[0]);
+		_retrying = true;
+		if (IsInstanceValid(_game))
+			ControllerContext.End(_game);
+		if (_title != null) _title.Visible = false;
+		if (_hintLabel != null) _hintLabel.Visible = false;
+	}
+
+	private void HideRetryDialogue(bool restoreChrome)
+	{
+		_retrying = false;
+		if (_retryShade != null) _retryShade.Visible = false;
+		_retryDialogue?.Clear();
+		if (restoreChrome)
+		{
+			if (_title != null) _title.Visible = true;
+			if (_hintLabel != null) _hintLabel.Visible = true;
+		}
+	}
+
+	/// <summary>Detaches the old board so it cannot emit another completion.</summary>
+	private void DetachGame()
+	{
+		if (!IsInstanceValid(_game))
+		{
+			_game = null;
+			return;
+		}
+
+		UnhookCompleted(_game);
+		SetGameActive(false);
+		ControllerContext.End(_game);
+		RemoveChild(_game);
+		_game.QueueFree();
+		_game = null;
 	}
 
 	private void Close(bool solved)
@@ -222,29 +374,8 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 		_session++;
 		GetViewport().SizeChanged -= FitLayout;
 		ControllerCommandRouter.Unregister(this);
-
-		if (IsInstanceValid(_game))
-		{
-			switch (_game)
-			{
-				case WireMinigame wire:
-					wire.Completed -= OnCompleted;
-					break;
-				case FuseBoxMinigame fuse:
-					fuse.Completed -= OnCompleted;
-					break;
-				case FrequencyBoxMinigame frequency:
-					frequency.Completed -= OnCompleted;
-					break;
-				case HullRepairMinigame hull:
-					hull.Completed -= OnCompleted;
-					break;
-			}
-
-			SetGameActive(false);
-			ControllerContext.End(_game);
-			_game = null;
-		}
+		HideRetryDialogue(false);
+		DetachGame();
 
 		if (IsInstanceValid(_player))
 			_player.SetPhysicsProcess(true);
@@ -259,6 +390,8 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 		switch (command.Name)
 		{
 			case ControllerCommands.MinigameCancel:
+				if (_solved && !_retrying)
+					return true;
 				Close(false);
 				return true;
 			case ControllerCommands.MinigameStart:
@@ -271,10 +404,20 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (_closed)
+		if (_closed || (_solved && !_retrying))
 			return;
 
-		if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
+		if (@event is not InputEventKey { Pressed: true, Echo: false } key)
+			return;
+
+		if (_retrying && key.Keycode is Key.E or Key.Space or Key.Enter)
+		{
+			GetViewport().SetInputAsHandled();
+			RestartGame();
+			return;
+		}
+
+		if (key.Keycode == Key.Escape)
 		{
 			GetViewport().SetInputAsHandled();
 			Close(false);
@@ -283,6 +426,7 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink
 
 	public override void _ExitTree()
 	{
+		_exiting = true;
 		ControllerCommandRouter.Unregister(this);
 
 		// Scene left while the overlay was open: do not leave the player frozen.
