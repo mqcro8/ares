@@ -83,6 +83,7 @@ public partial class Rover_scence : Node2D
 			GD.PushError("RoverScene: missing elements");
 			return;
 		}
+		_hud.ConfigureMaxImpactPoints(_rover.MaxImpactPoints);
 
 		AudioManager.PlayMusic(SoundIds.RoverAmbientWind, 1.5);
 
