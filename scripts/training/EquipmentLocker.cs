@@ -85,6 +85,8 @@ public partial class EquipmentLocker : Node2D
             return "SUPPLY LOCKER UNAVAILABLE";
 
         var mission = MissionState.Instance;
+        if (mission?.LoadoutConfirmed == true || mission?.Oxygen.HasStartedSurface == true)
+            return "LOADOUT LOCKED — the launch is confirmed.";
         if (player.Inventory.Contains(StarterKit))
         {
             if (!InventoryTransferService.TryTransfer(player.Inventory, Contents, StarterKit, 1,
