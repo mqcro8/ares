@@ -26,8 +26,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="21_monitor"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="22_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="23_slot"]
-[ext_resource type="Texture2D" uid="uid://dhxqfbuyf3i7v" path="res://art/training/equipment/tanque_oxigeno.png" id="24_tank"]
-[ext_resource type="Texture2D" uid="uid://iyjqmso4oy1f" path="res://art/training/equipment/kit_mantenimiento.png" id="25_kit_icon"]
 [ext_resource type="Texture2D" uid="uid://bimfvp1udfbfj" path="res://art/training/tilesets/Room_Builder_free_16x16.png" id="26_atlas"]
 [ext_resource type="Script" uid="uid://co7wi7wmvydsv" path="res://scripts/gateway/GatewayWalls.cs" id="27_walls"]
 [ext_resource type="Texture2D" uid="uid://7bgjfdbqy5jw" path="res://art/gateway/tiles/wall_tops_steel.png" id="28_wall_texture"]
@@ -56,9 +54,6 @@ size = Vector2(1510, 20)
 
 [sub_resource type="RectangleShape2D" id="WallVertical"]
 size = Vector2(20, 850)
-
-[sub_resource type="RectangleShape2D" id="LockerShape"]
-size = Vector2(58, 61)
 
 [sub_resource type="SpriteFrames" id="PlayerFrames"]
 animations = [{
@@ -123,7 +118,7 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="PlayerShape"]
 size = Vector2(24, 16)
 
-[node name="Gateway" type="Node2D" unique_id=1806365618 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "FrequencyZone", "HullRepairZone", "Locker", "Monitor")]
+[node name="Gateway" type="Node2D" unique_id=1806365618 node_paths=PackedStringArray("Player", "Camera", "WiresZone", "FusesZone", "FrequencyZone", "HullRepairZone", "Monitor")]
 texture_filter = 1
 script = ExtResource("1_gateway")
 Player = NodePath("Player")
@@ -132,7 +127,6 @@ WiresZone = NodePath("Annex/WiringRoom/FrontZone")
 FusesZone = NodePath("Annex/FuseRoom/FrontZone")
 FrequencyZone = NodePath("Annex/FrequencyRoom/FrontZone")
 HullRepairZone = NodePath("Annex/HullRoom/FrontZone")
-Locker = NodePath("SupplyLocker")
 Monitor = NodePath("MissionMonitor")
 
 [node name="MissionMonitor" parent="." unique_id=1335768410 instance=ExtResource("21_monitor")]
@@ -331,36 +325,6 @@ shape = SubResource("WallVertical")
 [node name="East" type="CollisionShape2D" parent="Perimeter" unique_id=1537682979]
 position = Vector2(1500, 425)
 shape = SubResource("WallVertical")
-
-[node name="SupplyLocker" type="Node2D" parent="." unique_id=1968196514 node_paths=PackedStringArray("Sprite", "FrontZone")]
-position = Vector2(120, 347)
-script = ExtResource("19_locker_script")
-Sprite = NodePath("Sprite2D")
-ClosedTexture = ExtResource("17_locker")
-OpenTexture = ExtResource("18_locker_open")
-StarterKit = ExtResource("20_kit")
-FrontZone = NodePath("FrontZone")
-TankIcon = ExtResource("24_tank")
-KitIcon = ExtResource("25_kit_icon")
-
-[node name="Sprite2D" type="Sprite2D" parent="SupplyLocker" unique_id=1794716643]
-position = Vector2(341, 3)
-scale = Vector2(1.75, 1.5)
-texture = ExtResource("17_locker")
-
-[node name="Base" type="StaticBody2D" parent="SupplyLocker" unique_id=1155442889]
-position = Vector2(342, 6)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SupplyLocker/Base" unique_id=69823957]
-position = Vector2(3, -5.5)
-shape = SubResource("LockerShape")
-
-[node name="FrontZone" type="ReferenceRect" parent="SupplyLocker" unique_id=1836614999]
-offset_left = 293.0
-offset_top = -30.0
-offset_right = 381.0
-offset_bottom = 50.0
-mouse_filter = 2
 
 [node name="GatewayDoor" type="Node2D" parent="." unique_id=2135548927]
 editor_description = "Open main gate; jambs mark the only passage from the hub into the annex."
