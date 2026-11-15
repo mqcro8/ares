@@ -23,10 +23,14 @@ public partial class GatewayWalls : TileMapLayer
 
     private void PaintWalls()
     {
+        CollisionEnabled = true;
+        CollisionVisibilityMode = DebugVisibilityMode.Default;
         Clear();
         foreach (var run in _wallRuns)
             for (int y = run.Position.Y; y < run.End.Y; y++)
                 for (int x = run.Position.X; x < run.End.X; x++)
                     SetCell(new Vector2I(x, y), 0, Vector2I.Zero);
+        // Make the rebuilt collision geometry available before the player's first physics tick.
+        UpdateInternals();
     }
 }
