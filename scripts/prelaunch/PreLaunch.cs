@@ -173,7 +173,7 @@ public partial class PreLaunch : Node2D, ares.scripts.systems.IDevSceneSkipTarge
 	{
 		State = FlightState.Lost;
 		FlightVelocity = Vector2.Zero;
-		_message.Text = "LOST SIGNAL - Espacio para reintentar";
+		_message.Text = "LOST SIGNAL — Press Space to retry.";
 	}
 
 	public bool SkipWithDevCode()
