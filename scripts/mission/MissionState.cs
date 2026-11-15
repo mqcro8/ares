@@ -259,6 +259,14 @@ public partial class MissionState : Node
 		StaminaRestSeconds = Mathf.Max(0, restSeconds);
 	}
 	public void ResetStamina() => RestoreStamina(MaxStamina);
+
+	/// <summary>Debug-only: starts Mars testing with a full oxygen reserve and stamina.</summary>
+	public void DebugFillStats()
+	{
+		Oxygen.DebugFill(OxygenSupply.MaxTanks);
+		ResetStamina();
+	}
+
 	public void AdvanceStamina(double delta, bool resting)
 	{
 		if (!resting)

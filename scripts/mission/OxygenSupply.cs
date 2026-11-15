@@ -160,6 +160,18 @@ public sealed class OxygenSupply
 		Changed?.Invoke();
 	}
 
+	/// <summary>Debug-only: forces a full reserve and ignores the normal loadout locks.</summary>
+	public void DebugFill(int tankCount = MaxTanks)
+	{
+		TankCount = Math.Clamp(tankCount, 0, MaxTanks);
+		RemainingSeconds = CapacitySeconds;
+		IsActive = false;
+		HasStartedSurface = false;
+		IsDepleted = false;
+		EmergencyReturnRequired = false;
+		Changed?.Invoke();
+	}
+
 	private void Deplete()
 	{
 		if (IsDepleted) return;
