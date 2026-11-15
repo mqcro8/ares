@@ -31,6 +31,7 @@ public partial class OxygenSystemTest : Node
 			await TestGreenhouseCollisions();
 			await TestPickupInteraction();
 			await TestMarsBaseWiring();
+			await TestMarsBuildingDrain();
 			await TestHudAndMissionFailure();
 			GD.Print($"OXYGEN PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -299,7 +300,47 @@ public partial class OxygenSystemTest : Node
 		mars.QueueFree();
 		await Frames();
 		Check(!mission.Oxygen.IsActive,
-			"Leaving the outdoor Mars scene pauses oxygen drain indoors");
+			"Leaving the outdoor Mars scene stops that scene's HUD drain");
+		mission.ResetEquipment();
+	}
+
+	private async Task TestMarsBuildingDrain()
+	{
+		var mission = MissionState.Instance;
+		mission.ResetEquipment();
+		mission.CargoCapacity = 6;
+		Check(mission.TrySetOxygenTankCount(2, out string error), "Building loadout accepts oxygen tanks: " + error);
+
+		var building = GD.Load<PackedScene>("res://scenes/mars/FirstBuilding.tscn").Instantiate<Node2D>();
+		Check(building.GetNodeOrNull<CanvasLayer>("OxygenHud") != null,
+			"Mars building scenes include the oxygen HUD");
+		building.Free();
+
+		foreach (string path in new[]
+		{
+			"res://scenes/mars/SecondBuilding.tscn",
+			"res://scenes/mars/ThirdBuilding.tscn",
+		})
+		{
+			var other = GD.Load<PackedScene>(path).Instantiate<Node2D>();
+			Check(other.GetNodeOrNull<CanvasLayer>("OxygenHud") != null,
+				$"Mars building scene keeps oxygen active: {path}");
+			other.Free();
+		}
+
+		var hud = GD.Load<PackedScene>("res://scenes/ui/OxygenHud.tscn").Instantiate<OxygenHud>();
+		AddChild(hud);
+		await Frames(6);
+		Check(mission.Stage == MissionStage.Mars && mission.Oxygen.IsActive,
+			"Entering a Mars building keeps the oxygen HUD draining the suit");
+		double before = mission.Oxygen.RemainingSeconds;
+		await Frames(6);
+		Check(mission.Oxygen.RemainingSeconds < before,
+			"Oxygen drains while the astronaut is inside a Mars building");
+		hud.QueueFree();
+		await Frames();
+		Check(!mission.Oxygen.IsActive,
+			"Leaving a Mars building scene stops that scene's HUD drain");
 		mission.ResetEquipment();
 	}
 }

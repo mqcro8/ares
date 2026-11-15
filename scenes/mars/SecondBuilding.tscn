@@ -31,6 +31,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ObjectiveDialogue.tscn" id="29_objective"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="30_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="31_hotbar_slot"]
+[ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="32_oxygen_hud"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -119,6 +120,7 @@ size = Vector2(44, 12)
 z_index = 1
 position = Vector2(8, 110)
 script = ExtResource("1_54i23")
+FootstepSoundId = "footsteps_metal"
 TrainingMovement = NodePath("TrainingMovement")
 Hotbar = NodePath("HotbarLayer/Hotbar")
 
@@ -458,3 +460,5 @@ shape = SubResource("GreenhouseBedCollision")
 
 [node name="ObjectiveDialogue" parent="." unique_id=1838437084 instance=ExtResource("29_objective")]
 ShowSecondBuildingBriefing = true
+
+[node name="OxygenHud" parent="." instance=ExtResource("32_oxygen_hud")]

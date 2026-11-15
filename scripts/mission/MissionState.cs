@@ -1,6 +1,7 @@
 namespace ares.scripts.mission;
 
 using System;
+using System.Collections.Generic;
 using Godot;
 using ares.scripts.player;
 using ares.scripts.systems.inventory;
@@ -39,6 +40,31 @@ public partial class MissionState : Node
 	public bool GatewayDiscoveryAcknowledged { get; private set; }
 	public bool MarsArrivalBriefingShown { get; private set; }
 	public bool AllPuzzlesComplete => GeneratorRepaired && WireBoxRepaired && SignalTableRepaired && AllDoorAccessOn;
+
+	// A repair attempted without its matching tool leaves the task unfinished and
+	// requires one more successful run. This survives building/scene changes.
+	private readonly Dictionary<MarsRepairTask, int> _marsRepairAttempts = new();
+
+	public bool IsMarsRepairComplete(MarsRepairTask task) => task switch
+	{
+		MarsRepairTask.Generator => GeneratorRepaired,
+		MarsRepairTask.Wires => WireBoxRepaired,
+		MarsRepairTask.Frequency => SignalTableRepaired,
+		_ => false,
+	};
+
+	public int MarsRepairAttempts(MarsRepairTask task) =>
+		_marsRepairAttempts.TryGetValue(task, out int attempts) ? attempts : 0;
+
+	public bool MarsRepairNeedsRetry(MarsRepairTask task) =>
+		!IsMarsRepairComplete(task) && MarsRepairAttempts(task) > 0;
+
+	public void RecordMarsRepairAttempt(MarsRepairTask task)
+	{
+		if (IsMarsRepairComplete(task))
+			return;
+		_marsRepairAttempts[task] = MarsRepairAttempts(task) + 1;
+	}
 	public bool SecondBuildingBriefingShown { get; private set; }
 	public MissionObjective? LastAnnouncedObjective { get; private set; }
 
@@ -148,6 +174,7 @@ public partial class MissionState : Node
 		SecondBuildingBriefingShown = false;
 		MarsArrivalBriefingShown = false;
 		LastAnnouncedObjective = null;
+		_marsRepairAttempts.Clear();
 		for (int i = 0; i < _doorAccess.Length; i++)
 			_doorAccess[i] = false;
 	}

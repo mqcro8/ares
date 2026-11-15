@@ -28,6 +28,7 @@
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="29_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="30_hotbar_slot"]
 [ext_resource type="Script" path="res://scripts/mars/GatewayDiscovery.cs" id="31_discovery"]
+[ext_resource type="PackedScene" path="res://scenes/ui/OxygenHud.tscn" id="32_oxygen_hud"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sli3d"]
 animations = [{
@@ -101,6 +102,7 @@ size = Vector2(94, 17)
 z_index = 1
 position = Vector2(-17, 133)
 script = ExtResource("1_54i23")
+FootstepSoundId = "footsteps_metal"
 TrainingMovement = NodePath("TrainingMovement")
 Hotbar = NodePath("HotbarLayer/Hotbar")
 
@@ -233,3 +235,5 @@ texture = ExtResource("26_6xexp")
 
 [node name="GatewayDiscovery" type="CanvasLayer" parent="."]
 script = ExtResource("31_discovery")
+
+[node name="OxygenHud" parent="." instance=ExtResource("32_oxygen_hud")]
