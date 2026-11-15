@@ -132,6 +132,7 @@ public partial class TrainingIntro : Node2D
 		ShowLine();
 		_panel.Show();
 		_continue.GrabFocus();
+		AudioManager.PlayMusic(SoundIds.TrainingMusic, 1.5);
 	}
 
 	private void QueueCompletion() => Callable.From(ShowCompletion).CallDeferred();

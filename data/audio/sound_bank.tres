@@ -6,7 +6,10 @@
 [ext_resource type="AudioStream" uid="uid://c2x5iaha6fu7u" path="res://audio/music/adventure.mp3" id="4_7ahkm"]
 [ext_resource type="AudioStream" uid="uid://ddeder15rh70f" path="res://audio/music/rover_scene_ambient_wind.mp3" id="4_wind"]
 [ext_resource type="AudioStream" uid="uid://ndgjtxh8e8ur" path="res://audio/sfx/rover_moving.mp3" id="5_moving"]
+[ext_resource type="AudioStream" uid="uid://b200pu6cghhmo" path="res://audio/music/training_msc.mp3" id="5_t2b07"]
+[ext_resource type="AudioStream" uid="uid://p1nw7xhdcb6l" path="res://audio/music/ending_song.mp3" id="6_2hs1k"]
 [ext_resource type="AudioStream" uid="uid://i5r77ma0x6nw" path="res://audio/sfx/rover_collision.wav" id="6_collision"]
+[ext_resource type="AudioStream" uid="uid://bifilysq7nujx" path="res://audio/music/tension_msc.mp3" id="7_2obti"]
 [ext_resource type="AudioStream" uid="uid://gr3nhid3ynsa" path="res://audio/sfx/rover_explode.wav" id="7_explode"]
 [ext_resource type="AudioStream" uid="uid://5rs4vv65mgmd" path="res://audio/sfx/rover_victory.wav" id="8_victory"]
 [ext_resource type="AudioStream" uid="uid://qgg50n2elqjb" path="res://audio/sfx/whoosh.mp3" id="9_7xwmv"]
@@ -32,6 +35,26 @@ Id = "rover_adventure"
 Stream = ExtResource("4_7ahkm")
 VolumeDb = -12.0
 Loop = true
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
+
+[sub_resource type="Resource" id="Resource_t2b07"]
+script = ExtResource("2_def")
+Id = "training"
+Stream = ExtResource("5_t2b07")
+VolumeDb = -4.0
+Loop = true
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
+
+[sub_resource type="Resource" id="Resource_2hs1k"]
+script = ExtResource("2_def")
+Id = "ending"
+Stream = ExtResource("6_2hs1k")
+metadata/_custom_type_script = "uid://ckubyvcmxog1f"
+
+[sub_resource type="Resource" id="Resource_2obti"]
+script = ExtResource("2_def")
+Id = "tension"
+Stream = ExtResource("7_2obti")
 metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
 [sub_resource type="Resource" id="SoundDef_moving"]
@@ -80,5 +103,5 @@ metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
 [resource]
 script = ExtResource("1_bank")
-Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind"), SubResource("Resource_o1k5s")])
+Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind"), SubResource("Resource_o1k5s"), SubResource("Resource_t2b07"), SubResource("Resource_2hs1k"), SubResource("Resource_2obti")])
 Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5")])
