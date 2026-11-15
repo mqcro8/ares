@@ -1,7 +1,9 @@
 using Godot;
 using System;
+using System.Linq;
 using ares.scripts.mission;
 using ares.scripts.player;
+using ares.scripts.rover;
 using ares.scripts.systems.inventory;
 using ares.scripts.systems.items;
 using ares.scripts.training;
@@ -37,24 +39,80 @@ public partial class LoadoutTest : Node
         AddChild(fuse);
         Check(fuse.GetNode<HBoxContainer>("Box/Lights").GetChildCount() == (equipped ? 5 : 4),
             "Fuse box shows one extra press/light only when spare fuses are carried");
+        var fuseStatus = fuse.GetChildren().OfType<Label>().First(label => label.Text.StartsWith("Presses:"));
+        int pressBudget = ToolEffects.FusePressesFor(equipped);
+        Check(fuseStatus.Text.Contains($"{pressBudget}/{pressBudget}"),
+            "Fuse status text uses effective press budget");
         RemoveChild(fuse);
         fuse.Free();
 
         var frequency = GD.Load<PackedScene>("res://scenes/minigames/FrequencyBoxMinigame.tscn").Instantiate<FrequencyBoxMinigame>();
         AddChild(frequency);
-        Check(Mathf.IsEqualApprox(frequency.MatchThreshold, equipped ? 0.85f : 0.9f) &&
-            Mathf.IsEqualApprox(frequency.HoldSeconds, 0.35f),
+        Check(Mathf.IsEqualApprox(frequency.MatchThreshold, equipped
+                ? ToolEffects.FrequencyAnalyzerThreshold : ToolEffects.FrequencyBaseThreshold) &&
+            Mathf.IsEqualApprox(frequency.HoldSeconds, ToolEffects.FrequencyBaseHoldSeconds),
             "Frequency analyzer changes only the match threshold");
         RemoveChild(frequency);
         frequency.Free();
 
         var hull = GD.Load<PackedScene>("res://scenes/minigames/HullRepairMinigame.tscn").Instantiate<HullRepairMinigame>();
         AddChild(hull);
-        Check(Mathf.IsEqualApprox(hull.WeldTolerance, equipped ? 18f : 14f) &&
-            Mathf.IsEqualApprox(hull.PlaceTolerance, 14f),
-            "Precision welder changes only weld tolerance");
+        Check(Mathf.IsEqualApprox(hull.WeldTolerance, equipped
+                ? ToolEffects.HullPrecisionWeldTolerance : ToolEffects.HullBaseWeldTolerance) &&
+            Mathf.IsEqualApprox(hull.HeatOffSeam, equipped
+                ? ToolEffects.HullPrecisionHeatOffSeam : ToolEffects.HullBaseHeatOffSeam) &&
+            Mathf.IsEqualApprox(hull.PlaceTolerance, ToolEffects.HullBasePlaceTolerance),
+            "Precision welder changes weld tolerance and off-seam heat only");
         RemoveChild(hull);
         hull.Free();
+
+        var wires = GD.Load<PackedScene>("res://scenes/minigames/wireminigame.tscn").Instantiate<WireMinigame>();
+        AddChild(wires);
+        Check(wires.ConnectedCount == (equipped ? ToolEffects.WirePreconnectedCount : 0),
+            "Wire pliers preconnect exactly one cable");
+        RemoveChild(wires);
+        wires.Free();
+    }
+
+    private void CheckRoverLoadout(bool bumper, bool servos)
+    {
+        var mission = MissionState.Instance;
+        mission.ResetEquipment();
+        var inventory = mission.GetOrCreatePlayerInventory(7, out _);
+        if (bumper) inventory.AddItem(GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.RoverBumper}.tres"));
+        if (servos) inventory.AddItem(GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.RoverServos}.tres"));
+
+        var root = new Node2D();
+        var rover = new Rover();
+        rover.AddChild(new RoverAnimation { Name = "AnimatedSprite2D" });
+        root.AddChild(rover);
+        var hud = new Hud();
+        var hearts = new HBoxContainer { Name = "HBoxContainer" };
+        for (int i = 0; i < ToolEffects.RoverBaseDamageLimit; i++)
+            hearts.AddChild(new TextureRect { Texture = GD.Load<Texture2D>("res://art/rover/heart_full.png") });
+        hud.AddChild(hearts);
+        hud.AddChild(new TextureRect { Name = "lagometer" });
+        root.AddChild(hud);
+        AddChild(root);
+        hud.ConfigureMaxImpactPoints(rover.MaxImpactPoints);
+
+        int expectedLimit = ToolEffects.RoverBaseDamageLimit +
+            (bumper ? ToolEffects.RoverBumperExtraDamageLimit : 0);
+        int expectedDamage = servos ? ToolEffects.RoverServoDamagePerCollision :
+            ToolEffects.RoverBaseDamagePerCollision;
+        float expectedSpeed = ToolEffects.RoverBaseLaneChangeSpeed *
+            (bumper ? ToolEffects.RoverBumperSpeedFactor : 1f) /
+            (servos ? ToolEffects.RoverServoControlTimeFactor : 1f);
+        Check(rover.MaxImpactPoints == expectedLimit && rover.DamagePerCollision == expectedDamage &&
+            Mathf.IsEqualApprox(rover.EffectiveLaneChangeSpeed, expectedSpeed),
+            $"Rover loadout bumper={bumper}, servos={servos} applies approved trade-offs");
+        Check(hud.HeartCount == expectedLimit, "Rover HUD heart count matches impact capacity");
+        hud.UpdateCollisions(expectedLimit);
+        Check(hearts.GetChildren().OfType<TextureRect>().All(heart => heart.Texture ==
+            GD.Load<Texture2D>("res://art/rover/heart_lost.png")), "Rover HUD clears hearts to impact damage count");
+        RemoveChild(root);
+        root.Free();
+        mission.ResetEquipment();
     }
 
     private void Run()
@@ -94,7 +152,7 @@ public partial class LoadoutTest : Node
             && cargoError.Contains("Cargo limit"), "Cargo limit blocks the transfer with a clear reason");
         Check(locker.Contains(kit) && !player.Contains(kit), "Failed cargo transfer leaves both containers unchanged");
 
-        mission.CargoCapacity = 6;
+        mission.CargoCapacity = ToolEffects.CargoCapacity;
         var full = new Inventory { Size = 1 };
         full.AddItem(filler, filler.MaxStackSize);
         Check(!InventoryTransferService.TryTransfer(locker, full, kit, 1, mission.CargoCapacity, out string spaceError)
@@ -129,6 +187,7 @@ public partial class LoadoutTest : Node
             "Unchanged size does not emit another notification");
         hotbar.QueueFree();
 
+        mission.CargoCapacity = 6;
         Check(mission.TrySetOxygenTankCount(4, out string tankError),
             "Four oxygen tanks fit the available cargo: " + tankError);
         Check(mission.CargoUsed == 4 && mission.OxygenTankCount == 4,
@@ -146,6 +205,8 @@ public partial class LoadoutTest : Node
             "Tank selection cannot exceed cargo after acquiring the maintenance kit");
 
         mission.ResetEquipment();
+        Check(mission.CargoCapacity == ToolEffects.CargoCapacity,
+            "New mission uses the approved seven-cargo loadout capacity");
         Check(mission.PlayerInventory == null && mission.LockerInventory == null && mission.CargoUsed == 0 &&
             mission.OxygenTankCount == 0,
             "New mission reset clears equipment references");
@@ -154,29 +215,55 @@ public partial class LoadoutTest : Node
         AddChild(astronaut);
         var supply = new EquipmentLocker { StarterKit = kit };
         AddChild(supply);
-        Check(supply.Contents.SlotCount == 4 && supply.Tools.Length == 3 &&
-            supply.Tools[0].Id == "spare_fuses" && supply.Tools[1].Id == "frequency_analyzer" &&
-            supply.Tools[2].Id == "precision_welder", "Locker stocks the three distinct tools once");
+        Check(supply.Contents.SlotCount == 7 && supply.Tools.Length == 6 &&
+            supply.Tools[0].Id == ToolEffects.SpareFuses && supply.Tools[1].Id == ToolEffects.FrequencyAnalyzer &&
+            supply.Tools[2].Id == ToolEffects.PrecisionWelder && supply.Tools[3].Id == ToolEffects.WirePliers &&
+            supply.Tools[4].Id == ToolEffects.RoverBumper && supply.Tools[5].Id == ToolEffects.RoverServos &&
+            supply.DormantOxygenRegulator.Id == ToolEffects.OxygenRegulator,
+            "Locker stocks six tools and keeps regulator dormant until oxygen gameplay is connected");
+        Check(supply.DormantOxygenRegulator.CargoCost == 1 && supply.DormantOxygenRegulator.Icon != null,
+            "Dormant regulator resource has configured cargo and icon");
         foreach (var tool in supply.Tools)
-            Check(tool.Icon == null && tool.CargoCost == 1 && tool.MaxStackSize == 1,
-                "New tools are one-cargo, single items with blank placeholder icons");
+            Check(tool.Icon != null && tool.HotbarLabel.Length == 2 && tool.MaxStackSize == 1,
+                "Stocked tools have an icon, hotbar abbreviation and single-item stack");
+        Check(supply.Tools[0].CargoCost == 1 && supply.Tools[1].CargoCost == 1 &&
+            supply.Tools[2].CargoCost == 2 && supply.Tools[3].CargoCost == 1 &&
+            supply.Tools[4].CargoCost == 2 && supply.Tools[5].CargoCost == 1,
+            "Cargo costs match the approved trade-off catalog");
+        int allToolCargo = supply.Tools.Sum(tool => tool.CargoCost) + supply.DormantOxygenRegulator.CargoCost;
+        int minimumLoadoutFreeCargo = mission.CargoCapacity - kit.CargoCost - MissionState.OxygenTankCargoCost;
+        Check(allToolCargo == 9 && allToolCargo > minimumLoadoutFreeCargo && minimumLoadoutFreeCargo == 3,
+            "Nine cargo of tools exceed three free cargo after kit plus one tank");
+        Check(!supply.Contents.Contains(supply.DormantOxygenRegulator),
+            "Regulator resource exists but is not offered before oxygen gameplay is connected");
 
         Check(supply.Toggle(astronaut).Contains("ACQUIRED") && mission.CargoUsed == 3,
             "Taking the existing kit still costs three cargo");
-        Check(mission.TrySetOxygenTankCount(2, out tankError) && mission.CargoUsed == 5 &&
-            mission.Oxygen.CapacitySeconds == 360, "Two tanks leave one cargo for a tool");
+        Check(mission.TrySetOxygenTankCount(1, out tankError) && mission.CargoUsed == 4 &&
+            mission.Oxygen.CapacitySeconds == 180 && mission.CargoCapacity - mission.CargoUsed == 3,
+            "One-tank survival kit leaves three cargo for tools");
         Check(supply.ToggleTool(astronaut, supply.Tools[0]).Contains("ACQUIRED") &&
-            mission.HasEquipped("spare_fuses") && mission.CargoUsed == 6,
+            mission.HasEquipped(ToolEffects.SpareFuses) && mission.CargoUsed == 5,
             "Tool possession is stored in MissionState's inventory");
-        Check(supply.ToggleTool(astronaut, supply.Tools[1]).Contains("Cargo limit") &&
-            !mission.HasEquipped("frequency_analyzer") && supply.Contents.Contains(supply.Tools[1]),
+        Check(supply.ToggleTool(astronaut, supply.Tools[1]).Contains("ACQUIRED") &&
+            mission.HasEquipped(ToolEffects.FrequencyAnalyzer) && mission.CargoUsed == 6,
+            "Analyser trades one cargo unit for a measurable frequency benefit");
+        Check(supply.ToggleTool(astronaut, supply.Tools[2]).Contains("Cargo limit") &&
+            !mission.HasEquipped(ToolEffects.PrecisionWelder) && supply.Contents.Contains(supply.Tools[2]),
             "Over-capacity selection leaves both inventories unchanged");
         Check(mission.GetOrCreateLocker(4, kit, supply.Tools).CountOf(supply.Tools[0]) == 0,
             "Revisiting the locker does not duplicate a tool already taken");
-        Check(mission.TrySetOxygenTankCount(1, out tankError) &&
-            supply.ToggleTool(astronaut, supply.Tools[1]).Contains("ACQUIRED") &&
-            mission.CargoUsed == 6 && mission.Oxygen.CapacitySeconds == 180,
-            "Choosing two tools trades six oxygen minutes for repair advantages");
+        Check(mission.CargoUsed == 6 && mission.Oxygen.CapacitySeconds == 180,
+            "Two specialized tools trade two cargo units while preserving one tank");
+
+        var testSlot = GD.Load<PackedScene>("res://scripts/hotbar_scene.tscn").Instantiate<HotbarSlot>();
+        AddChild(testSlot);
+        testSlot.SetStack(astronaut.Inventory.GetStack(1));
+        Check(testSlot.GetNode<Label>("Abbreviation").Text == "FU" &&
+            testSlot.GetNode<Label>("Abbreviation").Visible,
+            "Hotbar displays abbreviation over tool icon");
+        RemoveChild(testSlot);
+        testSlot.Free();
 
         var equipmentPanel = new EquipmentPanel { Player = astronaut, Locker = supply };
         AddChild(equipmentPanel);
@@ -185,7 +272,7 @@ public partial class LoadoutTest : Node
             $"Equipment rows fit the panel: {panelSize.GetCombinedMinimumSize().Y}/{panelSize.Size.Y}");
         Check(!equipmentPanel.GetNode<Label>("Panel/Margin/VBox/OxygenWarning").Visible,
             "Zero-tank warning stays hidden while carrying oxygen");
-        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/spare_fusesRow/spare_fusesButton").Text == "STORE",
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Text == "GUARDAR",
             "Equipment screen shows carried tool and provides a store action");
         Check(mission.TrySetOxygenTankCount(0, out tankError), "Zero tanks remain an allowed choice");
         equipmentPanel.Refresh();
@@ -193,7 +280,7 @@ public partial class LoadoutTest : Node
             "Zero tanks produce an explicit warning without blocking the choice");
         mission.LoadoutConfirmed = true;
         equipmentPanel.Refresh();
-        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/spare_fusesRow/spare_fusesButton").Disabled,
+        Check(equipmentPanel.GetNode<Button>("Panel/Margin/VBox/ToolScroll/ToolRows/spare_fusesRow/spare_fusesButton").Disabled,
             "Confirmed loadout locks the new tool actions");
         equipmentPanel.Close();
         mission.ResetEquipment();
@@ -203,5 +290,26 @@ public partial class LoadoutTest : Node
         CheckRepairEffects(true);
         mission.ResetEquipment();
         CheckRepairEffects(false);
+
+        var regulator = GD.Load<ItemData>($"res://data/equipment/items/{ToolEffects.OxygenRegulator}.tres");
+        var oxygenInventory = mission.GetOrCreatePlayerInventory(7, out _);
+        oxygenInventory.AddItem(regulator);
+        mission.Oxygen.RefreshLoadout();
+        Check(mission.TrySetOxygenTankCount(ToolEffects.OxygenRegulatorMinimumTanks, out tankError) &&
+            mission.Oxygen.CapacitySeconds == ToolEffects.OxygenBaseSecondsPerTank *
+            ToolEffects.OxygenRegulatorMinimumTanks * ToolEffects.OxygenRegulatorTankFactor,
+            "Regulator adds thirty percent capacity with two tanks");
+        Check(mission.TrySetOxygenTankCount(1, out tankError) &&
+            mission.Oxygen.CapacitySeconds == ToolEffects.OxygenBaseSecondsPerTank,
+            "Regulator provides no bonus with fewer than two tanks");
+        mission.ResetEquipment();
+        Check(mission.TrySetOxygenTankCount(ToolEffects.OxygenRegulatorMinimumTanks, out tankError) &&
+            mission.Oxygen.CapacitySeconds == ToolEffects.OxygenBaseSecondsPerTank *
+            ToolEffects.OxygenRegulatorMinimumTanks,
+            "Two tanks without regulator keep original duration");
+        CheckRoverLoadout(false, false);
+        CheckRoverLoadout(true, false);
+        CheckRoverLoadout(false, true);
+        CheckRoverLoadout(true, true);
     }
 }
