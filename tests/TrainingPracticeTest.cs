@@ -7,6 +7,7 @@ using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.training;
 using Ares.Systems.Audio;
+using Ares.Systems.Controllers;
 
 /// <summary>Real scene swaps, input, collision routes and puzzle solutions. --visual saves rendered frames.</summary>
 public partial class TrainingPracticeTest : Node
@@ -694,12 +695,13 @@ public partial class TrainingPracticeTest : Node
     private async Task SolveFuses()
     {
         var fuse = (FuseBoxMinigame)Scene;
-        var status = Find<Label>(fuse, l => l.Text.Contains("DOUBLE:"));
-        int partner = int.Parse(status.Text.Split(' ').Last()) - 1;
+        fuse.PublishControllerContext();
+        var context = Json.ParseString(ControllerContext.BuildMessage()).AsGodotDictionary();
+        int partner = context["state"].AsGodotDictionary()["partner"].AsInt32();
         var switches = fuse.GetNode("Box/TopRow").GetChildren().Concat(fuse.GetNode("Box/BottomRow").GetChildren()).Cast<Panel>().ToArray();
         int initiallyOn = Array.FindIndex(switches, sw => sw.GetNode<Label>("PracticeNumber").Text.EndsWith("ON"));
         for (int i = 0; i < switches.Length; i++) if (i != partner && i != initiallyOn) { KeyPress((Key)((int)Key.Key1 + i)); await Frames(2); }
-        Check(Find<Label>(fuse, l => l.Text == "All switches ON!") != null, $"Fuse solution actually reaches success timer: {status.Text}; on={initiallyOn}, partner={partner}; {string.Join(",", switches.Select(s => s.GetNode<Label>("PracticeNumber").Text))}");
+        Check(Find<Label>(fuse, l => l.Text == "All switches ON!") != null, $"Fuse solution actually reaches success timer: on={initiallyOn}, partner={partner}; {string.Join(",", switches.Select(s => s.GetNode<Label>("PracticeNumber").Text))}");
     }
     private void Mouse(Vector2 point, bool pressed) => GetViewport().PushInput(new InputEventMouseButton
         { Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = pressed }, true);

@@ -2,6 +2,7 @@ namespace ares.scripts.gateway;
 
 using Godot;
 using System.Collections.Generic;
+using System;
 using ares.scripts.player;
 using ares.scripts.training;
 
@@ -19,6 +20,7 @@ public partial class GatewayMissionControl : CanvasLayer
     private TextureRect _finalImage;
     private Button _imageContinue;
     private bool _completionPending, _endingComplete;
+    internal Func<string, Error> SceneLoader { get; set; }
     [Export] public Texture2D FirstImage { get; set; }
     [Export] public Texture2D SecondImage { get; set; }
     public int EndingFrame { get; private set; }
@@ -73,10 +75,20 @@ public partial class GatewayMissionControl : CanvasLayer
         }
         if (EndingFrame == 2)
         {
+            var error = SceneLoader != null
+                ? SceneLoader("res://scenes/rover/rover.tscn")
+                : GetTree().ChangeSceneToFile("res://scenes/rover/rover.tscn");
+            if (error != Error.Ok)
+            {
+                _text.Text = "Unable to transfer control to the rover. Continue to retry.";
+                _continue.Text = "Retry transfer";
+                _panel.Show();
+                _continue.GrabFocus();
+                return;
+            }
             _endingComplete = true;
             _panel.Hide();
             _continue.ReleaseFocus();
-            // Keep the final image and gameplay lock until an explicit scene transition.
             return;
         }
         if (_completionPending)

@@ -45,6 +45,7 @@ public partial class RocketLaunchTest : Node
             PracticeSession.RequestLaunch(mode, new Vector2(12, 34));
         launch = GD.Load<PackedScene>("res://scenes/RocketLaunch/Launching.tscn").Instantiate<RocketLaunch>();
         now = 0; holding = false; launch.Clock = () => now;
+        launch.SceneLoader = _ => Error.Ok;
         AddChild(launch); launch.SetProcess(false); await Frames();
     }
 
@@ -167,6 +168,7 @@ public partial class RocketLaunchTest : Node
         Check(!mission.RecordLaunch(mission.LaunchSequence, new LaunchResult(.5, 10)),
             "Real launch rejects a partial center hold");
         await Load(); await Capture("ready");
+        string launchDestination = "";
         Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launching_background.jpeg"),
             "Launch-site background is used");
         var launchBackground = launch.GetNode<Background>("Background");
@@ -262,6 +264,7 @@ public partial class RocketLaunchTest : Node
             "Space cannot restart a failed ignition");
         launch.QueueFree(); launch = null; await Frames();
         await Load();
+        launch.SceneLoader = path => { launchDestination = path; return Error.Ok; };
         Check(launch.State == RocketLaunch.Phase.Ready,
             "A new simulator entry remains available after leaving a failed attempt");
         ignitionProgress = launch.GetNode<ProgressBar>("HUD/ProgressBar");
@@ -359,16 +362,31 @@ public partial class RocketLaunchTest : Node
         float backgroundStartY = launch.GetNode<Background>("Background").Position.Y;
         await WaitFor(RocketLaunch.Phase.Ascending);
         float ascentStartY = launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y;
-        launch.SetProcess(true);
-        await ToSignal(GetTree().CreateTimer(.6), SceneTreeTimer.SignalName.Timeout);
+        launch.SetProcess(false);
+        launch._Process(.6);
+        Check(launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y < ascentStartY &&
+            launch.GetNode<Background>("Background").Position.Y > backgroundStartY,
+            "Rocket and background move during ascent");
         await Capture("ascent");
-        await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
+        launch._Process(2.2);
+        await Frames(2);
         var backgroundEndY = launch.GetNode<Background>("Background").Position.Y;
         Check(launch.IsInsideTree() && launch.State == RocketLaunch.Phase.Complete &&
             launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y < ascentStartY,
             $"Rocket visibly ascends and remains in scene without auto-return ({launch.State}, {ascentStartY:F2}->{launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y:F2})");
         Check(backgroundEndY > backgroundStartY,
             "Launch background scrolls down as rocket climbs");
+        Check(launchDestination == ares.scripts.stages.RocketMalfunction.ScenePath,
+            "Successful real launch enters the malfunction cutscene after the ascent");
+        var malfunction = GD.Load<PackedScene>(ares.scripts.stages.RocketMalfunction.ScenePath)
+            .Instantiate<ares.scripts.stages.RocketMalfunction>();
+        string nextScene = "";
+        malfunction.SceneLoader = path => { nextScene = path; return Error.Ok; };
+        AddChild(malfunction);
+        malfunction.TransitionToGateway();
+        Check(nextScene == ares.scripts.stages.RocketMalfunction.GatewayScene,
+            "The malfunction cutscene hands off to Gateway");
+        malfunction.QueueFree();
         launch.QueueFree(); launch = null; await Frames();
 
         mission.BeginLaunchSequence(); mission.Energy = 50;

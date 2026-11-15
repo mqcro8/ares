@@ -6,7 +6,8 @@ namespace ares.scripts.stages;
 
 public partial class RocketMalfunction : Control
 {
-	private const string GatewayScene = "res://scenes/gateway/Gateway.tscn";
+	public const string ScenePath = "res://scenes/cinematics/RocketMalfunction.tscn";
+	internal const string GatewayScene = "res://scenes/gateway/Gateway.tscn";
 	private const string AudioPath = "res://audio/sfx/system-malfunction-sound-effects.wav";
 	private static readonly string[] Frames = Enumerable.Range(0, 12)
 		.Select(index => $"res://art/rocket/malfunction_frames/frame_{index:00}.png").ToArray();
@@ -14,6 +15,7 @@ public partial class RocketMalfunction : Control
 	private AnimatedSprite2D _animation;
 	private AudioStreamPlayer _sound;
 	private bool _transitioning;
+	internal Func<string, Error> SceneLoader { get; set; }
 
 	public override void _Ready()
 	{
@@ -61,12 +63,15 @@ public partial class RocketMalfunction : Control
 			_sound.Finished -= TransitionToGateway;
 	}
 
-	private void TransitionToGateway()
+	internal void TransitionToGateway()
 	{
 		if (_transitioning) return;
 		_transitioning = true;
-		var error = GetTree().ChangeSceneToFile(GatewayScene);
+		var error = SceneLoader != null ? SceneLoader(GatewayScene) : GetTree().ChangeSceneToFile(GatewayScene);
 		if (error != Error.Ok)
+		{
+			_transitioning = false;
 			GD.PushError($"Unable to load Gateway after malfunction cutscene: {error}");
+		}
 	}
 }

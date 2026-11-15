@@ -30,6 +30,7 @@ public partial class Gateway : Node2D
 
     public override void _Ready()
     {
+        MissionState.Instance.Stage = MissionStage.Gateway;
         var arrival = PracticeSession.Arrive(ScenePath);
         if (arrival != null)
         {
