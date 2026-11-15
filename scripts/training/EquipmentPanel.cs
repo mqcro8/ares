@@ -23,7 +23,7 @@ public partial class EquipmentPanel : CanvasLayer
 
 	private readonly TrainingPlayerLock _physicsLock = new();
 	private readonly List<(ItemData Item, Button Button, Action Handler)> _tools = new();
-	private Label _kitStatus, _tankCount, _tankCapacity, _cargoStatus, _oxygenWarning, _feedback;
+	private Label _kitStatus, _tankCount, _tankCapacity, _cargoStatus, _oxygenWarning, _coverageStatus, _feedback;
 	private Button _kitButton, _minus, _plus, _close;
 
 	public override void _Ready()
@@ -48,7 +48,7 @@ public partial class EquipmentPanel : CanvasLayer
 
 		var panel = new PanelContainer { Name = "Panel" };
 		panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-		float halfWidth = Mathf.Min(210, (GetViewport().GetVisibleRect().Size.X - 32) / 2);
+		float halfWidth = Mathf.Min(240, (GetViewport().GetVisibleRect().Size.X - 32) / 2);
 		float halfHeight = Mathf.Min(250, (GetViewport().GetVisibleRect().Size.Y - 32) / 2);
 		panel.OffsetLeft = -halfWidth;
 		panel.OffsetRight = halfWidth;
@@ -76,7 +76,7 @@ public partial class EquipmentPanel : CanvasLayer
 		title.HorizontalAlignment = HorizontalAlignment.Center;
 		column.AddChild(title);
 
-		column.AddChild(MakeLabel("EQUIPMENT", new Color(0.75f, 0.82f, 0.86f), 8));
+		column.AddChild(MakeLabel("EQUIPO", new Color(0.75f, 0.82f, 0.86f), 8));
 		var kitRow = new HBoxContainer { Name = "KitRow" };
 		kitRow.AddThemeConstantOverride("separation", 8);
 		column.AddChild(kitRow);
@@ -84,16 +84,18 @@ public partial class EquipmentPanel : CanvasLayer
 		_kitStatus = MakeLabel("", Colors.White, 8);
 		_kitStatus.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		_kitStatus.VerticalAlignment = VerticalAlignment.Center;
-		kitRow.AddChild(_kitStatus);		_kitButton = new Button { Name = "KitButton", Text = "TAKE", CustomMinimumSize = new Vector2(84, 26) };
+		kitRow.AddChild(_kitStatus);
+		_kitButton = new Button { Name = "KitButton", Text = "TOMAR", CustomMinimumSize = new Vector2(84, 26) };
 		_kitButton.Pressed += ToggleKit;
 		kitRow.AddChild(_kitButton);
-		column.AddChild(MakeLabel("KIT: 3 CARGO", new Color(0.65f, 0.77f, 0.82f), 7));
+		column.AddChild(MakeLabel($"KIT: {Locker?.StarterKit?.CargoCost ?? 0} CARGA", new Color(0.65f, 0.77f, 0.82f), 7));
 
-		column.AddChild(MakeLabel("OXYGEN TANKS (1 CARGO EACH)", new Color(0.75f, 0.82f, 0.86f), 8));
+		column.AddChild(MakeLabel($"TANQUES DE OXÍGENO ({MissionState.OxygenTankCargoCost} CARGA C/U)", new Color(0.75f, 0.82f, 0.86f), 8));
 		var tankRow = new HBoxContainer { Name = "TankRow" };
 		tankRow.AddThemeConstantOverride("separation", 8);
 		column.AddChild(tankRow);
-		tankRow.AddChild(MakeIcon(TankIcon, "TankIcon"));		_minus = new Button { Name = "RemoveTank", Text = "-", CustomMinimumSize = new Vector2(28, 24) };
+		tankRow.AddChild(MakeIcon(TankIcon, "TankIcon"));
+		_minus = new Button { Name = "RemoveTank", Text = "-", CustomMinimumSize = new Vector2(28, 24) };
 		_minus.Pressed += RemoveTank;
 		tankRow.AddChild(_minus);
 		_tankCount = MakeLabel("0 / 4 TANKS", Colors.White, 8);
@@ -110,36 +112,57 @@ public partial class EquipmentPanel : CanvasLayer
 		_cargoStatus = MakeLabel("", new Color(0.65f, 0.77f, 0.82f), 7);
 		column.AddChild(_cargoStatus);
 
-		column.AddChild(MakeLabel("REPAIR TOOLS (1 CARGO EACH)", new Color(0.75f, 0.82f, 0.86f), 8));
+		column.AddChild(MakeLabel("HERRAMIENTAS (COSTO INDIVIDUAL)", new Color(0.75f, 0.82f, 0.86f), 8));
+		var toolScroll = new ScrollContainer
+		{
+			Name = "ToolScroll",
+			CustomMinimumSize = new Vector2(0, 150),
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			FollowFocus = true,
+		};
+		column.AddChild(toolScroll);
+		var toolColumn = new VBoxContainer { Name = "ToolRows" };
+		toolColumn.AddThemeConstantOverride("separation", 3);
+		toolScroll.AddChild(toolColumn);
 		foreach (ItemData tool in Locker?.Tools ?? Array.Empty<ItemData>())
 		{
 			if (tool == null) continue;
 			var row = new HBoxContainer { Name = tool.Id + "Row" };
 			row.AddThemeConstantOverride("separation", 8);
-			column.AddChild(row);
-			row.AddChild(MakeIcon(null, tool.Id + "Icon"));
-			var name = MakeLabel(tool.DisplayName.ToUpperInvariant(), Colors.White, 8);
+			toolColumn.AddChild(row);
+			row.AddChild(MakeIcon(tool.Icon, tool.Id + "Icon"));
+			var name = MakeLabel($"{tool.DisplayName.ToUpperInvariant()} — {tool.CargoCost} CARGA", Colors.White, 8);
 			name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 			name.VerticalAlignment = VerticalAlignment.Center;
 			row.AddChild(name);
-			var button = new Button { Name = tool.Id + "Button", Text = "TAKE", CustomMinimumSize = new Vector2(84, 26) };
+			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(84, 26) };
 			Action handler = () => ToggleTool(tool);
 			button.Pressed += handler;
 			row.AddChild(button);
 			_tools.Add((tool, button, handler));
-			column.AddChild(MakeLabel(ToolEffect(tool.Id), new Color(0.65f, 0.77f, 0.82f), 7));
+			var effect = MakeLabel(ToolEffects.Describe(tool.Id), new Color(0.65f, 0.77f, 0.82f), 7);
+			effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			effect.ClipText = false;
+			effect.CustomMinimumSize = new Vector2(0, 18);
+			toolColumn.AddChild(effect);
 		}
 
-		_oxygenWarning = MakeLabel("0 TANKS: MARS STARTS WITHOUT OXYGEN.", new Color(1f, 0.72f, 0.24f), 7);
+		_oxygenWarning = MakeLabel("0 TANQUES: MARTE EMPIEZA SIN OXÍGENO.", new Color(1f, 0.72f, 0.24f), 7);
 		_oxygenWarning.Name = "OxygenWarning";
 		column.AddChild(_oxygenWarning);
+		_coverageStatus = MakeLabel("", new Color(0.75f, 0.82f, 0.86f), 6);
+		_coverageStatus.Name = "CoverageSummary";
+		_coverageStatus.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		_coverageStatus.ClipText = false;
+		_coverageStatus.CustomMinimumSize = new Vector2(0, 42);
+		column.AddChild(_coverageStatus);
 		_feedback = MakeLabel("", new Color(1f, 0.45f, 0.38f), 7);
 		_feedback.HorizontalAlignment = HorizontalAlignment.Center;
 		_feedback.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		_feedback.ClipText = false;
 		column.AddChild(_feedback);
 
-		_close = new Button { Name = "Close", Text = "CLOSE", CustomMinimumSize = new Vector2(0, 30) };
+		_close = new Button { Name = "Close", Text = "CERRAR", CustomMinimumSize = new Vector2(0, 30) };
 		_close.Pressed += Close;
 		column.AddChild(_close);
 	}
@@ -194,14 +217,6 @@ public partial class EquipmentPanel : CanvasLayer
 		Refresh();
 	}
 
-	private static string ToolEffect(string id) => id switch
-	{
-		"spare_fuses" => "FUSES: 4 -> 5 PRESSES PER ATTEMPT",
-		"frequency_analyzer" => "FREQUENCY: 0.90 -> 0.85 MATCH",
-		"precision_welder" => "HULL WELD: 14 -> 18 PX TOLERANCE",
-		_ => "",
-	};
-
 	private void ToggleTool(ItemData tool)
 	{
 		if (Locker == null || Player == null) return;
@@ -233,26 +248,41 @@ public partial class EquipmentPanel : CanvasLayer
 		{
 			bool carried = Player.Inventory != null && Player.Inventory.Contains(Locker.StarterKit);
 			bool stored = Locker.Contents != null && Locker.Contents.Contains(Locker.StarterKit);
-			_kitStatus.Text = carried ? "MAINTENANCE KIT" : stored ? "MAINTENANCE KIT" : "NO KIT";
-			_kitButton.Text = carried ? "STORE" : stored ? "TAKE" : "EMPTY";
+			_kitStatus.Text = carried ? "KIT EN INVENTARIO" : stored ? "KIT EN CASILLERO" : "SIN KIT";
+			_kitButton.Text = carried ? "GUARDAR" : stored ? "TOMAR" : "VACÍO";
 			_kitButton.Disabled = locked || (!carried && !stored);
 		}
 
-		_tankCount.Text = $"{mission.OxygenTankCount} / {OxygenSupply.MaxTanks} TANKS";
+		_tankCount.Text = $"{mission.OxygenTankCount} / {OxygenSupply.MaxTanks} TANQUES";
 		var capacity = TimeSpan.FromSeconds(mission.Oxygen.CapacitySeconds);
-		_tankCapacity.Text = $"CAPACITY {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({mission.OxygenCargoUsed} CARGO)";
-		_cargoStatus.Text = $"CARGO {mission.CargoUsed}/{mission.CargoCapacity}";
+		_tankCapacity.Text = $"RESERVA {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({mission.OxygenCargoUsed} CARGA)";
+		_cargoStatus.Text = $"CARGA {mission.CargoUsed}/{mission.CargoCapacity}";
 		_oxygenWarning.Visible = mission.OxygenTankCount == 0;
 		foreach (var (tool, button, _) in _tools)
 		{
 			bool carried = Player?.Inventory?.Contains(tool) == true;
-			button.Text = carried ? "STORE" : "TAKE";
+			button.Text = carried ? "GUARDAR" : "TOMAR";
 			button.Disabled = locked || (!carried && Locker?.Contents?.Contains(tool) != true);
 		}
+		var covered = new List<string>();
+		foreach (var tool in _tools)
+			if (mission.HasEquipped(tool.Item.Id))
+			{
+				string failure = ToolEffects.CoveredFailure(tool.Item.Id);
+				if (!string.IsNullOrEmpty(failure) && !covered.Contains(failure)) covered.Add(failure);
+			}
+		if (mission.HasEquipped(ToolEffects.OxygenRegulator) && mission.OxygenTankCount >= ToolEffects.OxygenRegulatorMinimumTanks)
+			covered.Add(ToolEffects.CoveredFailure(ToolEffects.OxygenRegulator));
+		covered.RemoveAll(string.IsNullOrEmpty);
+		var uncovered = new List<string>(ToolEffects.FailureCategories);
+		foreach (string failure in covered) uncovered.Remove(failure);
+		string kitAccess = mission.HasEquipped(ToolEffects.MaintenanceKit)
+			? "Kit permite las cuatro prácticas." : "Kit necesario para iniciar prácticas.";
+		_coverageStatus.Text = $"{kitAccess}\nFALLAS CON BONO: {(covered.Count > 0 ? string.Join(", ", covered) : "ninguna")}\nSIN BONO: {(uncovered.Count > 0 ? string.Join(", ", uncovered) : "ninguna")}";
 		_minus.Disabled = locked || mission.OxygenTankCount <= 0;
 		_plus.Disabled = locked || mission.OxygenTankCount >= OxygenSupply.MaxTanks ||
 			mission.CargoUsed + MissionState.OxygenTankCargoCost > mission.CargoCapacity;
-		if (locked) _feedback.Text = "LOADOUT LOCKED — the launch is confirmed.";
+		if (locked) _feedback.Text = "EQUIPO BLOQUEADO — lanzamiento confirmado.";
 	}
 
 	private bool _closed;
