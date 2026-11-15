@@ -403,6 +403,42 @@ test("three-player crews keep every Gateway repair assigned", async (t) => {
   assert.equal((await completed).slot, 2);
 });
 
+test("shared Mars task lock is exclusive and clears when owner disconnects", async (t) => {
+  const { relay, port } = await startRelay();
+  t.after(() => relay.close());
+  const host = await connect(port, "LOCK1", "team_host");
+  const player = await connect(port, "LOCK1", "player");
+  t.after(() => closeAll(host, player));
+  const joined = await nextMessage(player, (message) => message.type === "team_joined");
+  const rosterReady = nextMessage(host, (message) => message.type === "team_lobby" &&
+    message.players.length === 2 && message.players.every((entry) => entry.connected && entry.ready));
+  host.send(JSON.stringify({ type: "team_ready", slot: 0, ready: true }));
+  player.send(JSON.stringify({ type: "team_ready", ready: true }));
+  await rosterReady;
+  const started = nextMessage(player, (message) => message.type === "team_start");
+  host.send(JSON.stringify({ type: "team_start" }));
+  await started;
+
+  const firstResult = nextMessage(player, (message) => message.type === "team_lock_result");
+  const firstLock = nextMessage(host, (message) => message.type === "team_task_lock");
+  player.send(JSON.stringify({ type: "team_lock_acquire", id: "mars.generator" }));
+  assert.equal((await firstResult).granted, true);
+  assert.equal((await firstLock).slot, joined.slot);
+
+  const denied = nextMessage(host, (message) => message.type === "team_lock_result");
+  host.send(JSON.stringify({ type: "team_lock_acquire", slot: 0, id: "mars.generator" }));
+  const deniedResult = await denied;
+  assert.equal(deniedResult.granted, false);
+  assert.equal(deniedResult.slot, joined.slot);
+
+  const unlocked = nextMessage(host, (message) =>
+    message.type === "team_task_lock" && message.id === "mars.generator" && message.slot === -1);
+  const closed = new Promise((resolve) => player.once("close", resolve));
+  player.close();
+  await closed;
+  await unlocked;
+});
+
 test("serves the controller page and only the art it needs", async (t) => {
   const { relay, port } = await startRelay();
   t.after(() => relay.close());

@@ -29,6 +29,8 @@ public partial class TeamSession : Node
     private readonly bool[] _participants = new bool[4];
     private readonly HashSet<string> _claimedOxygen = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Action<bool>> _pendingOxygenClaims = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _taskLocks = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Action<bool, int>> _pendingTaskLocks = new(StringComparer.Ordinal);
     private bool _applyingRemoteState;
     private double _positionTimer;
     private double _pingTimer;
@@ -71,6 +73,7 @@ public partial class TeamSession : Node
     public int[] ActiveSlots => Enumerable.Range(0, _participants.Length).Where(slot => _participants[slot]).ToArray();
     public bool ApplyingRemoteState => _applyingRemoteState;
     public bool IsOxygenPickupClaimed(string id) => _claimedOxygen.Contains(id);
+    public int TaskLockOwner(string id) => _taskLocks.TryGetValue(id, out int slot) ? slot : -1;
 
     public override void _EnterTree() => Instance = this;
 
@@ -95,7 +98,8 @@ public partial class TeamSession : Node
         {
             var state = pair.Value;
             _presence.SetRemote(pair.Key, Get(state, "scene", "").AsString(),
-                new Vector2((float)Get(state, "x", 0).AsDouble(), (float)Get(state, "y", 0).AsDouble()));
+                new Vector2((float)Get(state, "x", 0).AsDouble(), (float)Get(state, "y", 0).AsDouble()),
+                Get(state, "facing", "down").AsString(), Get(state, "flip", false).AsBool());
         }
     }
 
@@ -127,6 +131,9 @@ public partial class TeamSession : Node
         if (_socket.GetReadyState() == WebSocketPeer.State.Closed)
         {
             _socket = null;
+            foreach (var pending in _pendingTaskLocks)
+                pending.Value?.Invoke(false, TaskLockOwner(pending.Key));
+            _pendingTaskLocks.Clear();
             for (int i = 0; i < Players.Count; i++)
                 if (Players[i].TryGetValue("slot", out Variant slot) && slot.AsInt32() == LocalSlot)
                     Players[i]["connected"] = false;
@@ -195,6 +202,10 @@ public partial class TeamSession : Node
         Array.Clear(_teamPasses);
         Array.Clear(_participants);
         _claimedOxygen.Clear();
+        _taskLocks.Clear();
+        foreach (Action<bool, int> pending in _pendingTaskLocks.Values)
+            pending?.Invoke(false, -1);
+        _pendingTaskLocks.Clear();
         foreach (Action<bool> pending in _pendingOxygenClaims.Values)
             pending?.Invoke(false);
         _pendingOxygenClaims.Clear();
@@ -321,6 +332,34 @@ public partial class TeamSession : Node
         }
         _pendingOxygenClaims[id] = completed;
         SendOxygenClaim(id);
+    }
+
+    public void RequestTaskLock(string id, Action<bool, int> completed)
+    {
+        if (!Active || !_missionStarted || !IsParticipant(LocalSlot) || string.IsNullOrEmpty(id))
+        {
+            completed?.Invoke(false, -1);
+            return;
+        }
+        if (_socket?.GetReadyState() != WebSocketPeer.State.Open)
+        {
+            completed?.Invoke(false, TaskLockOwner(id));
+            return;
+        }
+        _pendingTaskLocks[id] = completed;
+        Send(new Godot.Collections.Dictionary
+        {
+            ["type"] = "team_lock_acquire", ["slot"] = LocalSlot, ["id"] = id,
+        });
+    }
+
+    public void ReleaseTaskLock(string id)
+    {
+        if (!Active || string.IsNullOrEmpty(id)) return;
+        Send(new Godot.Collections.Dictionary
+        {
+            ["type"] = "team_lock_release", ["slot"] = LocalSlot, ["id"] = id,
+        });
     }
 
     public bool SubmitTeamScore(double score, bool passed)
@@ -522,6 +561,23 @@ public partial class TeamSession : Node
                 completed?.Invoke(accepted);
             if (accepted) _claimedOxygen.Add(id);
         }
+        else if (type == "team_task_lock")
+        {
+            string id = Get(message, "id", "").AsString();
+            int slot = (int)Get(message, "slot", -1).AsInt64();
+            if (slot < 0) _taskLocks.Remove(id);
+            else _taskLocks[id] = slot;
+            EmitSignal(SignalName.TeamChanged);
+        }
+        else if (type == "team_lock_result")
+        {
+            string id = Get(message, "id", "").AsString();
+            bool granted = Get(message, "granted", false).AsBool();
+            int slot = (int)Get(message, "slot", -1).AsInt64();
+            if (granted) _taskLocks[id] = slot;
+            if (_pendingTaskLocks.Remove(id, out Action<bool, int> completed))
+                completed?.Invoke(granted, slot);
+        }
         else if (type == "team_position")
         {
             int slot = (int)Get(message, "slot", -1).AsInt64();
@@ -536,7 +592,7 @@ public partial class TeamSession : Node
                 ["scene"] = scene, ["x"] = position.X, ["y"] = position.Y,
                 ["facing"] = facing, ["flip"] = flip,
             };
-            _presence?.SetRemote(slot, scene, position);
+            _presence?.SetRemote(slot, scene, position, facing, flip);
             EmitSignal(SignalName.TeamPositionReceived, slot, scene, position, facing, flip);
         }
         else if (type == "team_pong")

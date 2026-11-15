@@ -241,7 +241,7 @@ export function createRelayServer({
     if (!room) {
       room = {
         controller: null, game: null, context: null, players: new Map(), nextSlot: 1,
-        oxygenClaims: new Map(), positions: new Map(),
+        oxygenClaims: new Map(), positions: new Map(), taskLocks: new Map(),
         participants: null,
       };
       rooms.set(roomId, room);
@@ -274,6 +274,10 @@ export function createRelayServer({
         player = { slot: room.nextSlot++, token: randomUUID(), socket: null, ready: false };
         room.players.set(player.slot, player);
       }
+      if (player.socket && player.socket !== socket) {
+        releaseTaskLocks(room, player.slot);
+        player.socket.close(1000, "Reconnected");
+      }
       player.socket = socket;
       player.ready = false;
       socket.playerSlot = player.slot;
@@ -287,6 +291,8 @@ export function createRelayServer({
       if (room.teamState) sendJson(socket, { type: "team_state", state: room.teamState });
       for (const position of room.positions.values())
         sendJson(socket, { type: "team_position", ...position });
+      for (const [id, slot] of room.taskLocks)
+        sendJson(socket, { type: "team_task_lock", id, slot });
       broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
     }
     socket.isAlive = true;
@@ -299,6 +305,8 @@ export function createRelayServer({
       if (room.teamState) sendJson(socket, { type: "team_state", state: room.teamState });
       for (const position of room.positions.values())
         sendJson(socket, { type: "team_position", ...position });
+      for (const [id, slot] of room.taskLocks)
+        sendJson(socket, { type: "team_task_lock", id, slot });
     } else if (role === "game") {
       sendJson(socket, room.controller ? { type: "controller_connected" } : { type: "room_ready" });
       notify(room, "controller", { type: "game_connected" });
@@ -322,6 +330,15 @@ export function createRelayServer({
       }
 
       if (role === "team_host") {
+        if (message?.type === "team_lock_acquire" && room.teamStarted &&
+            message.slot === 0 && validTaskId(message.id) && room.participants?.includes(0)) {
+          acquireTaskLock(room, 0, message.id, socket);
+          return;
+        }
+        if (message?.type === "team_lock_release" && message.slot === 0 && validTaskId(message.id)) {
+          releaseTaskLock(room, 0, message.id, true);
+          return;
+        }
         if (message?.type === "team_ping" && Number.isSafeInteger(message.sent_at)) {
           sendJson(socket, { type: "team_pong", sent_at: message.sent_at });
           return;
@@ -396,6 +413,12 @@ export function createRelayServer({
         } else if (message?.type === "team_ready") {
           player.ready = message.ready === true;
           broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
+        } else if (room.teamStarted && message?.type === "team_lock_acquire" &&
+                   validTaskId(message.id) && room.participants?.includes(player.slot)) {
+          acquireTaskLock(room, player.slot, message.id, socket);
+        } else if (room.teamStarted && message?.type === "team_lock_release" &&
+                   validTaskId(message.id)) {
+          releaseTaskLock(room, player.slot, message.id);
         } else if (room.teamStarted && message?.type === "team_position" && validTeamPosition(message)) {
           const position = { slot: player.slot, scene: message.scene, x: message.x, y: message.y,
             facing: message.facing, flip: message.flip };
@@ -487,6 +510,7 @@ export function createRelayServer({
         if (player?.socket === socket) {
           player.socket = null;
           player.ready = false;
+          releaseTaskLocks(room, player.slot);
         }
         if (room.teamHost) sendJson(room.teamHost, { type: "team_player_disconnected", slot: socket.playerSlot });
         broadcastTeam(room, { type: "team_lobby", players: teamRoster(room) });
@@ -499,6 +523,7 @@ export function createRelayServer({
         if (room.teamHost !== socket) return;
         room.teamHost = null;
         room.hostReady = false;
+        releaseTaskLocks(room, 0);
         for (const player of room.players.values()) {
           player.socket?.close(1001, "Host disconnected");
           player.socket = null;
@@ -588,6 +613,34 @@ function validTeamPosition(message) {
     Math.abs(message.y) <= 100000 &&
     ["up", "down", "side", "left", "right"].includes(message.facing) &&
     typeof message.flip === "boolean";
+}
+
+const TeamTaskIds = new Set(["mars.generator", "mars.wire_box", "mars.signal_table"]);
+
+function validTaskId(id) {
+  return typeof id === "string" && TeamTaskIds.has(id);
+}
+
+function acquireTaskLock(room, slot, id, socket) {
+  const owner = room.taskLocks.get(id);
+  const granted = owner === undefined || owner === slot;
+  const currentOwner = granted ? slot : owner;
+  if (granted) {
+    room.taskLocks.set(id, slot);
+    broadcastTeam(room, { type: "team_task_lock", id, slot });
+  }
+  sendJson(socket, { type: "team_lock_result", id, granted, slot: currentOwner });
+}
+
+function releaseTaskLock(room, slot, id, force = false) {
+  if (!room.taskLocks.has(id) || (!force && room.taskLocks.get(id) !== slot)) return;
+  room.taskLocks.delete(id);
+  broadcastTeam(room, { type: "team_task_lock", id, slot: -1 });
+}
+
+function releaseTaskLocks(room, slot) {
+  for (const [id, owner] of room.taskLocks)
+    if (owner === slot) releaseTaskLock(room, slot, id);
 }
 
 function claimOxygenPickup(room, slot, id) {

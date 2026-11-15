@@ -12,6 +12,11 @@ public partial class TeamPresence : Node2D
         public Vector2 Current;
         public Vector2 Target;
         public bool HasPosition;
+        public string Facing = "down";
+        public bool Flip;
+        public bool Moving;
+        public Vector2 PreviousTarget;
+        public AnimatedSprite2D Sprite;
     }
 
     private readonly Dictionary<int, RemotePlayer> _players = new();
@@ -35,16 +40,24 @@ public partial class TeamPresence : Node2D
         layer.AddChild(_networkLabel);
     }
 
-    public void SetRemote(int slot, string scene, Vector2 position)
+    public void SetRemote(int slot, string scene, Vector2 position, string facing = "down", bool flip = false)
     {
         if (!_players.TryGetValue(slot, out RemotePlayer remote))
         {
-            remote = new RemotePlayer { Scene = scene, Current = position, Target = position, HasPosition = true };
+            remote = new RemotePlayer
+            {
+                Scene = scene, Current = position, Target = position, PreviousTarget = position,
+                HasPosition = true, Facing = facing, Flip = flip,
+            };
             _players[slot] = remote;
         }
         else
         {
             remote.Scene = scene;
+            remote.Moving = remote.Target.DistanceTo(position) > 1.5f;
+            remote.PreviousTarget = remote.Target;
+            remote.Facing = facing;
+            remote.Flip = flip;
             if (!remote.HasPosition)
             {
                 remote.Current = position;
@@ -61,7 +74,10 @@ public partial class TeamPresence : Node2D
         const float FollowRate = 14f;
         float blend = 1f - Mathf.Exp(-FollowRate * (float)delta);
         foreach (RemotePlayer player in _players.Values)
+        {
             player.Current = player.Current.Lerp(player.Target, blend);
+            UpdateSprite(player);
+        }
 
         _statsTimer += delta;
         if (_statsTimer >= 1)
@@ -82,14 +98,37 @@ public partial class TeamPresence : Node2D
         QueueRedraw();
     }
 
+    private void UpdateSprite(RemotePlayer player)
+    {
+        if (player.Sprite == null || !GodotObject.IsInstanceValid(player.Sprite))
+        {
+            var local = GetTree()?.GetFirstNodeInGroup("player") as ares.scripts.player.Player;
+            var source = local?.GetNodeOrNull<ares.scripts.player.PlayerAnimation>("AnimatedSprite2D");
+            if (source?.SpriteFrames == null) return;
+            player.Sprite = new AnimatedSprite2D
+            {
+                Name = "RemoteAstronaut",
+                SpriteFrames = source.SpriteFrames,
+                ZIndex = 5,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            };
+            AddChild(player.Sprite);
+            player.Sprite.Play("idle_down");
+        }
+
+        player.Sprite.Position = player.Current;
+        player.Sprite.FlipH = player.Flip;
+        string animation = $"{(player.Moving ? "walk" : "idle")}_{player.Facing}";
+        if (player.Sprite.SpriteFrames.HasAnimation(animation) && player.Sprite.Animation != animation)
+            player.Sprite.Play(animation);
+    }
+
     public override void _Draw()
     {
         string currentScene = GetTree()?.CurrentScene?.SceneFilePath ?? "";
         foreach (var (slot, player) in _players)
         {
             if (player.Scene != currentScene || !player.HasPosition) continue;
-            DrawCircle(player.Current, 10, new Color(0.2f, 0.85f, 1f, 0.9f));
-            DrawArc(player.Current, 13, 0, Mathf.Tau, 24, Colors.White, 2);
             DrawString(ThemeDB.FallbackFont, player.Current + new Vector2(-28, -17),
                 $"CREW {slot + 1}", HorizontalAlignment.Center, 56, 10, Colors.White);
         }

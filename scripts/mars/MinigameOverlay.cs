@@ -258,6 +258,14 @@ public partial class MinigameOverlay : CanvasLayer, IControllerCommandSink, ares
 		QueueFree();
 	}
 
+	/// <summary>Closes a duplicate board after a teammate completes its shared task.</summary>
+	public void CloseFromSharedCompletion()
+	{
+		if (_closed) return;
+		_solved = true;
+		Close(true);
+	}
+
 	public bool SkipWithDevCode()
 	{
 		if (!CanSkipWithDevCode) return false;

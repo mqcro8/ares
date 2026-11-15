@@ -65,10 +65,11 @@ godot --path . -- --team-join --relay=https://YOUR-NGROK-DOMAIN --room=ABCDE
 
 The team room remains experimental. It provides a four-slot lobby,
 ready/start barrier, reconnect reservations, and a wait/pause gate on
-disconnect. Gateway repairs are distributed across the active crew and shared; Mars
-generator, wiring, signal and door progress is shared; failed team rover runs
+disconnect. Gateway repairs are distributed across the active crew and shared;
+Mars generator, wiring, and signal-table puzzles use exclusive crew locks, while
+door progress is shared; failed team rover runs
 retry, and Mars entry waits until every participant has a rover result. It shows
-remote crew markers in shared world scenes (not animated astronaut sprites).
+animated remote astronaut sprites in shared world scenes.
 Oxygen canisters are claimed once by the crew and refill only the collector's
 personal suit; suits and loadouts are not transferred between players. The
 debrief waits for all participants and shows their mean mission score; the crew
