@@ -3,6 +3,19 @@
 Every third-party asset (art, music, SFX, fonts, code) gets a row here **when it enters the repo**.
 Reference images from the design doc (other games, stock sites) are mood boards only — never import them.
 
+## Project team
+
+| Name | Contribution |
+|------|--------------|
+| Sergio Alfredo Gutierrez | Music |
+| Jose Miguel Ramirez | Creative director, developer |
+| Miguel Ceballos | Developer, architecture |
+| Nikita Serna | Digital art, developer, history helper |
+| Diego Alberto Pasaye | Developer, digital art |
+| Luis Fernando Nieto | Developer, writer |
+
+Art: free art assets from itch.io.
+
 | Asset | File(s) | Author | Source URL | License | Notes |
 |-------|---------|--------|------------|---------|-------|
 | Switch desk lamp #0036 | `audio/sfx/cc0/switch_a.wav`, `switch_b.wav`, `objective_complete.wav` | Joseph SARDIN / BigSoundBank | https://bigsoundbank.com/switch-desk-lamp-s0036.html | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Original BWF downloaded; trimmed, faded, gain reduced, resampled; completion combines two clicks. |

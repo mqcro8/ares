@@ -69,23 +69,28 @@ public partial class Credits : Control
 
 		AddCreditLabel("MISSION: ARES", 38, new Color(0.46f, 0.88f, 0.94f), 36);
 		AddCreditLabel("C R E D I T S", 20, new Color(0.96f, 0.72f, 0.42f), 76);
-		AddCreditLabel("DEVELOPMENT TEAM", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("[TEAM NAMES AND ROLES]", 14, Colors.White, 8);
+		AddCreditLabel("PROJECT TEAM", 18, new Color(0.46f, 0.88f, 0.94f), 44);
+		AddCreditLabel("Jose Miguel Ramirez", 14, Colors.White, 8);
+		AddCreditLabel("Creative Director · Developer", 10, new Color(0.82f, 0.84f, 0.91f), 0);
+		AddCreditLabel("Miguel Ceballos", 14, Colors.White, 12);
+		AddCreditLabel("Developer · Architecture", 10, new Color(0.82f, 0.84f, 0.91f), 0);
+		AddCreditLabel("Nikita Serna", 14, Colors.White, 12);
+		AddCreditLabel("Digital Art · Developer · History Helper", 10, new Color(0.82f, 0.84f, 0.91f), 0);
+		AddCreditLabel("Diego Alberto Pasaye", 14, Colors.White, 12);
+		AddCreditLabel("Developer · Digital Art", 10, new Color(0.82f, 0.84f, 0.91f), 0);
+		AddCreditLabel("Luis Fernando Nieto", 14, Colors.White, 12);
+		AddCreditLabel("Developer · Writer", 10, new Color(0.82f, 0.84f, 0.91f), 0);
 		AddCreditLabel("MUSIC & AUDIO", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("[MUSIC AND AUDIO CREDITS]", 14, Colors.White, 8);
+		AddCreditLabel("Sergio Alfredo Gutierrez · Music", 12, Colors.White, 8);
 		AddCreditLabel("BigSoundBank — Joseph SARDIN", 12, Colors.White, 0);
 		AddCreditLabel("Switches and electrical effects · CC0 1.0", 10, new Color(0.82f, 0.84f, 0.91f), 0);
 		AddCreditLabel("bigsoundbank.com · CC0 1.0", 10, new Color(0.82f, 0.84f, 0.91f), 0);
 		AddCreditLabel("ART & THIRD-PARTY RESOURCES", 18, new Color(0.46f, 0.88f, 0.94f), 44);
-		AddCreditLabel("[ARTISTS, ASSETS AND SOURCES]", 14, Colors.White, 8);
-		AddCreditLabel("User-provided Mars base props · base_assets.zip", 10, Colors.White, 0);
-		AddCreditLabel("[AUTHOR AND LICENSE NOT PROVIDED]", 10, new Color(0.96f, 0.72f, 0.42f), 0);
+		AddCreditLabel("Digital Art · Nikita Serna · Diego Alberto Pasaye", 10, Colors.White, 8);
+		AddCreditLabel("Free art assets from itch.io", 12, Colors.White, 8);
 		AddCreditLabel("Generated placeholder icons · OpenAI · 2026", 10, Colors.White, 0);
-		AddCreditLabel("Existing equipment icons · original author unknown", 10, Colors.White, 0);
-		AddCreditLabel("[ATTRIBUTION / LICENSE TO BE CONFIRMED]", 10, new Color(0.96f, 0.72f, 0.42f), 0);
 		AddCreditLabel("Net.Codecrete.QrCodeGenerator", 12, Colors.White, 0);
 		AddCreditLabel("Manuel Bleichenbacher · MIT License", 10, new Color(0.82f, 0.84f, 0.91f), 0);
-		AddCreditLabel("[ACKNOWLEDGEMENTS]", 14, Colors.White, 52);
 		AddCreditLabel("THANK YOU FOR PLAYING", 20, new Color(0.96f, 0.72f, 0.42f), 36);
 		AddCreditLabel("MISSION CONTROL OUT", 12, new Color(0.82f, 0.84f, 0.91f), 0);
 	}
