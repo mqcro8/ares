@@ -184,6 +184,9 @@ public partial class RocketLaunchTest : Node
 			launchRocketSprite.GlobalPosition.Y < GetViewport().GetVisibleRect().Size.Y &&
 			launchBackground.LaunchGround.Y > 0 && launchBackground.LaunchGround.Y < GetViewport().GetVisibleRect().Size.Y,
 			"Rocket and launch pad begin inside the visible viewport");
+		Check(launchBackground.LaunchSocket.X == 254 &&
+			Mathf.IsEqualApprox(launchRocketSprite.GlobalPosition.X, launchBackground.LaunchGround.X),
+			"Rocket ignition axis aligns with the launch socket");
 		Check(launch.GetNode<Control>("IntroUI/Briefing").Visible && !launch.GetNode<Control>("IntroUI/Panel").Visible,
 			"Launch Pad shows a compact ready dialog");
 		var launchBriefing = launch.GetNode<PanelContainer>("IntroUI/Briefing");
@@ -387,6 +390,9 @@ public partial class RocketLaunchTest : Node
 			$"Rocket visibly ascends and remains in scene without auto-return ({launch.State}, {ascentStartY:F2}->{launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y:F2})");
 		Check(backgroundEndY > backgroundStartY,
 			"Launch background scrolls down as rocket climbs");
+		Check(launch.GetNode<Background>("Background").ScrollOffset >=
+			launch.GetNode<Background>("Background").MaximumScrollOffset * 0.49f,
+			"Launch ascent reveals the upper half of the tall background");
 		Check(launchDestination == ares.scripts.prelaunch.PreLaunch.ScenePath,
 			"Successful real launch enters pre-launch transfer after the ascent");
 		var prelaunch = GD.Load<PackedScene>(ares.scripts.prelaunch.PreLaunch.ScenePath)

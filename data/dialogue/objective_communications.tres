@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "The access doors are open. The communications building is up ahead. I need to restore the communication satellite's frequency."
+Text = "Access is open. Next: recalibrate Gateway's Earth uplink in the communications building."
 
 [resource]
 script = ExtResource("1_sequence")

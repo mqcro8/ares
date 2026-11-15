@@ -289,7 +289,7 @@ void fragment() {
 		_telemetryTitle = new Label
 		{
 			Name = "TelemetryTitle",
-			Text = "GATEWAY RELAY // 2067",
+			Text = "GATEWAY SURFACE BASE // 2067",
 			MouseFilter = MouseFilterEnum.Ignore,
 		};
 		_telemetryTitle.AddThemeColorOverride("font_color", new Color(0.55f, 0.9f, 1f));
@@ -307,7 +307,7 @@ void fragment() {
 
 		foreach (string text in new[]
 		{
-			"GATEWAY BASE // MARS",
+			"GATEWAY SURFACE BASE // MARS",
 			"LAST CONTACT: 14 DAYS AGO",
 			"LAUNCH WINDOW: 06H",
 			"PROBE 01: LOST",
@@ -414,7 +414,7 @@ void fragment() {
 		};
 		column.AddChild(rule);
 
-		foreach (string text in new[] { "REACH MARS", "DIAGNOSE THE FAILURE", "RESTORE THE LINK", "RETURN HOME" })
+		foreach (string text in new[] { "REACH MARS ORBIT", "RESTORE GATEWAY", "RECOVER OPPORTUNITY", "RETURN HOME" })
 		{
 			var label = new Label
 			{

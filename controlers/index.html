@@ -248,16 +248,16 @@ const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
 const params = new URLSearchParams(location.search);
 function fail(msg) { $("#err").textContent = msg; $("#err").classList.add("show"); throw new Error(msg); }
 
-// The relay also serves this page, so its WebSocket lives on the page's own
-// origin. ?relay=wss://host keeps the old split-hosting setup working.
+// Vercel hosts the page and relay on one origin; local/split relay overrides
+// remain supported for development.
 function relayUrl() {
   const override = params.get("relay");
   if (override) return override
     .replace(/^https:/i, "wss:")
     .replace(/^http:/i, "ws:")
     .replace(/\/+$/, "");
-  if (!location.host) fail("NO RELAY. Open this page from the relay or add ?relay=wss://host.");
-  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}`;
+  if (!location.host) fail("NO RELAY. Open this page from the relay or add ?relay=wss://host/api/relay.");
+  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/relay`;
 }
 const RELAY = relayUrl();
 
@@ -269,7 +269,7 @@ function setLink(text, ok) { $("#link").textContent = text; $("#link").className
 
 let ws;
 (function connect() {
-  ws = new WebSocket(`${RELAY}/?room=${encodeURIComponent(room)}&role=controller`);
+  ws = new WebSocket(`${RELAY}?room=${encodeURIComponent(room)}&role=controller`);
   ws.onopen = () => setLink("WAITING FOR GAME", false);
   ws.onmessage = e => {
     let msg;

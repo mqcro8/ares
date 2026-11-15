@@ -33,6 +33,7 @@
 [ext_resource type="PackedScene" path="res://scenes/mars/OxygenStation.tscn" id="32_oxygen_station"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="33_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="34_hotbar_slot"]
+[ext_resource type="Script" uid="uid://cvn1jmo2pqjrd" path="res://scripts/systems/audio/SfxEmitter2D.cs" id="36_ambient_wind"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_7lra3"]
 animations = [{
@@ -138,6 +139,7 @@ size = Vector2(67, 31.5)
 z_index = 2
 position = Vector2(-2, 435)
 script = ExtResource("1_hv47d")
+Speed = 120.0
 FootstepSoundId = "footsteps_planet"
 Hotbar = NodePath("HotbarLayer/Hotbar")
 
@@ -167,6 +169,12 @@ shape = SubResource("RectangleShape2D_15e4b")
 
 [node name="HandEquip" type="Node" parent="Player" unique_id=1502189849]
 script = ExtResource("14_pwwc4")
+
+[node name="AmbientWind" type="AudioStreamPlayer2D" parent="Player"]
+script = ExtResource("36_ambient_wind")
+SoundId = "rover_wind_sfx"
+PlayOnReady = true
+VolumeDbOffset = -2.0
 
 [node name="HotbarLayer" type="CanvasLayer" parent="Player"]
 layer = 10

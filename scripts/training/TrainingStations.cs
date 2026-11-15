@@ -12,7 +12,8 @@ public partial class TrainingStations : Node
 {
     public sealed record Target(string Name, Control Zone, string Scene, string Marker,
         PracticeSession.Exercise? Exercise = null, PracticeSession.LaunchMode? Launch = null, Func<string> Locked = null,
-        ItemCapability? RequiredCapability = null, Func<string> Interact = null, Func<string> Prompt = null)
+        ItemCapability? RequiredCapability = null, Func<string> Interact = null, Func<string> Prompt = null,
+        string MissingCapabilityPrompt = null)
     {
         public Vector2 Center => Zone.GetGlobalTransform() * (Zone.Size / 2);
         public bool Contains(Vector2 globalPosition)
@@ -124,7 +125,7 @@ public partial class TrainingStations : Node
         if (Player.SelectedStack?.Item.HasCapability(capability) == true) return "";
         return Player.Inventory?.HasCapability(capability) == true
             ? "SELECT MAINTENANCE KIT (1-5)"
-            : "MAINTENANCE KIT REQUIRED — USE THE SUPPLY LOCKER";
+            : target.MissingCapabilityPrompt ?? "MAINTENANCE KIT REQUIRED — USE THE SUPPLY LOCKER";
     }
     public override void _ExitTree()
     {

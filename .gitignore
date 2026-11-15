@@ -3,9 +3,12 @@
 /android/
 .idea/
 controlers/node_modules/
+/node_modules/
+/public/
 .DS_Store
 
 # Local editor tooling
 .addons/
 addons/
 .mcp.json
+Mission_Ares_Multiagent_Plan.md

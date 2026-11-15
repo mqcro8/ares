@@ -5,8 +5,8 @@
 
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
-Speaker = "MISSION CONTROL"
-Text = "You can't go back yet. Communications haven't been restored."
+Speaker = "YOU"
+Text = "The Earth uplink is still offline. I need to restore it before departure."
 
 [resource]
 script = ExtResource("1_sequence")

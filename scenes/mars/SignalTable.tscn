@@ -23,7 +23,7 @@ size = Vector2(120, 80)
 
 [node name="SignalTable" type="Area2D"]
 script = ExtResource("1_script")
-PromptText = "Press E to interact"
+PromptText = "CALIBRATE EARTH UPLINK"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(1.5, 1.5)

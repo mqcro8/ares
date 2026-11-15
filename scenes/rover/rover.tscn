@@ -549,7 +549,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.94, 0.95, 0.97, 1)
 theme_override_font_sizes/font_size = 18
-text = "Rover deployed"
+text = "OPPORTUNITY TELEMETRY RECEIVED"
 autowrap_mode = 3
 
 [node name="Continue" type="Button" parent="Panel/Margin/VBox" unique_id=2059502556]

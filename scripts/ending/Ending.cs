@@ -16,7 +16,7 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 
 	[Export] public CinematicSequence GoodSequence { get; set; }
 	[Export] public CinematicSequence BadSequence { get; set; }
-	[Export] public Texture2D ResultsBackground { get; set; }
+	[Export] public string ResultsScene { get; set; } = "res://scenes/ending/EndingResults.tscn";
 	[Export] public string MainMenuScene { get; set; } = "res://scenes/main_menu/main_menu_take3.tscn";
 	internal Func<string, Error> SceneLoader { get; set; }
 
@@ -63,6 +63,8 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		_mission.Stage = MissionStage.Ending;
 		_sequence = Outcome switch
 		{
+			MissionEnding.Good when _mission.RoverStageResolved && !_mission.RoverStageCompleted =>
+				GD.Load<CinematicSequence>("res://data/cinematics/ending_rover_lost.tres"),
 			MissionEnding.Good => GoodSequence ?? GD.Load<CinematicSequence>("res://data/cinematics/ending_good.tres"),
 			MissionEnding.Bad => BadSequence ?? GD.Load<CinematicSequence>("res://data/cinematics/ending_bad.tres"),
 			_ => null,
@@ -171,7 +173,7 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		_resultsBackground = new TextureRect
 		{
 			Name = "ResultsBackground",
-			Texture = ResultsBackground ?? GD.Load<Texture2D>("res://art/cinematics/ending_score_bg.png"),
+			Texture = GD.Load<Texture2D>("res://art/cinematics/ending_score_bg.png"),
 			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 			StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -351,6 +353,8 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 			(score.HasReturnReserve ? "SECURED" : "FAILED");
 		_scoreText.Text = ResultsMessage;
 		_returnButton.GrabFocus();
+		Error error = SceneLoader != null ? SceneLoader(ResultsScene) : GetTree().ChangeSceneToFile(ResultsScene);
+		if (error != Error.Ok) ShowUnavailable("COULD NOT OPEN MISSION RESULTS");
 		PublishControllerContext();
 	}
 

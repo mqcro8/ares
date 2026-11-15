@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "Four access panels. This is usually done by four people simultaneously, but since I'm alone, I'll have to do all four myself to open the way to communications."
+Text = "Four access panels. A team would bring them online in parallel. I'll activate them one at a time."
 
 [resource]
 script = ExtResource("1_sequence")

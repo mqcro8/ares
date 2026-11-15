@@ -73,7 +73,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
-placeholder_text = "wss://your-name.ngrok.app"
+placeholder_text = "https://your-project.vercel.app"
 
 [node name="Apply" type="Button" parent="Panel/Panel2/Controller/Body/Info/RelayRow"]
 custom_minimum_size = Vector2(0, 34)

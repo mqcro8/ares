@@ -27,8 +27,11 @@ public partial class OxygenSystemTest : Node
 		{
 			TestSupplyModel();
 			TestCanisterCollection();
+			await TestWorldInteractionPrompt();
+			await TestGreenhouseCollisions();
 			await TestPickupInteraction();
 			await TestMarsBaseWiring();
+			await TestMarsBuildingDrain();
 			await TestHudAndMissionFailure();
 			GD.Print($"OXYGEN PASS ({_assertions} assertions)");
 			GetTree().Quit();
@@ -191,6 +194,54 @@ public partial class OxygenSystemTest : Node
 		mission.ResetEquipment();
 	}
 
+	private async Task TestWorldInteractionPrompt()
+	{
+		var mission = MissionState.Instance;
+		mission.ResetPuzzleProgress();
+		var player = new ares.scripts.player.Player { Name = "Player" };
+		player.AddChild(new CollisionShape2D
+		{
+			Shape = new CircleShape2D { Radius = 8 },
+		});
+		var generator = GD.Load<PackedScene>("res://scenes/mars/Generator.tscn").Instantiate<Generator>();
+		AddChild(generator);
+		AddChild(player);
+		player.GlobalPosition = generator.GlobalPosition + new Vector2(0, -32);
+		await Frames(6);
+		var prompt = generator.GetNode<PanelContainer>("InteractionPromptLayer/InteractionPrompt");
+		Check(prompt.Visible &&
+			prompt.GetNode<Label>("Margin/Row/Keycap/Key").Text == "E" &&
+			prompt.GetNode<Label>("Margin/Row/Message").Text == "RESTORE GENERATOR",
+			"Mars repair device shows a contextual E prompt near the machine");
+		var rect = prompt.GetGlobalRect();
+		Check(GetViewport().GetVisibleRect().Encloses(rect), "World interaction prompt stays inside the viewport");
+		generator.QueueFree();
+		player.QueueFree();
+		await Frames();
+	}
+
+	private async Task TestGreenhouseCollisions()
+	{
+		var building = GD.Load<PackedScene>("res://scenes/mars/SecondBuilding.tscn").Instantiate<Node2D>();
+		var player = building.GetNode<ares.scripts.player.Player>("Player");
+		var movement = player.GetNode<Node>("TrainingMovement");
+		player.RemoveChild(movement);
+		movement.Free();
+		player.TrainingMovement = null;
+		AddChild(building);
+		await Frames(3);
+		var beds = building.GetNode<StaticBody2D>("GreenhouseBedCollisions");
+		var colliders = beds.GetChildren().OfType<CollisionShape2D>().ToArray();
+		Check(colliders.Length == 12 && colliders.All(collider => collider.Shape is RectangleShape2D && !collider.Disabled),
+			"Each greenhouse planter has an enabled collision box");
+		player.SetPhysicsProcess(false);
+		player.GlobalPosition = new Vector2(86, -5);
+		Check(player.MoveAndCollide(Vector2.Up * 30) != null,
+			"Greenhouse planter blocks the player instead of allowing passage through the bed");
+		building.QueueFree();
+		await Frames();
+	}
+
 	private async Task TestHudAndMissionFailure()
 	{
 		var mission = MissionState.Instance;
@@ -249,7 +300,47 @@ public partial class OxygenSystemTest : Node
 		mars.QueueFree();
 		await Frames();
 		Check(!mission.Oxygen.IsActive,
-			"Leaving the outdoor Mars scene pauses oxygen drain indoors");
+			"Leaving the outdoor Mars scene stops that scene's HUD drain");
+		mission.ResetEquipment();
+	}
+
+	private async Task TestMarsBuildingDrain()
+	{
+		var mission = MissionState.Instance;
+		mission.ResetEquipment();
+		mission.CargoCapacity = 6;
+		Check(mission.TrySetOxygenTankCount(2, out string error), "Building loadout accepts oxygen tanks: " + error);
+
+		var building = GD.Load<PackedScene>("res://scenes/mars/FirstBuilding.tscn").Instantiate<Node2D>();
+		Check(building.GetNodeOrNull<CanvasLayer>("OxygenHud") != null,
+			"Mars building scenes include the oxygen HUD");
+		building.Free();
+
+		foreach (string path in new[]
+		{
+			"res://scenes/mars/SecondBuilding.tscn",
+			"res://scenes/mars/ThirdBuilding.tscn",
+		})
+		{
+			var other = GD.Load<PackedScene>(path).Instantiate<Node2D>();
+			Check(other.GetNodeOrNull<CanvasLayer>("OxygenHud") != null,
+				$"Mars building scene keeps oxygen active: {path}");
+			other.Free();
+		}
+
+		var hud = GD.Load<PackedScene>("res://scenes/ui/OxygenHud.tscn").Instantiate<OxygenHud>();
+		AddChild(hud);
+		await Frames(6);
+		Check(mission.Stage == MissionStage.Mars && mission.Oxygen.IsActive,
+			"Entering a Mars building keeps the oxygen HUD draining the suit");
+		double before = mission.Oxygen.RemainingSeconds;
+		await Frames(6);
+		Check(mission.Oxygen.RemainingSeconds < before,
+			"Oxygen drains while the astronaut is inside a Mars building");
+		hud.QueueFree();
+		await Frames();
+		Check(!mission.Oxygen.IsActive,
+			"Leaving a Mars building scene stops that scene's HUD drain");
 		mission.ResetEquipment();
 	}
 }

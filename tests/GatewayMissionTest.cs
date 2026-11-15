@@ -24,6 +24,7 @@ public partial class GatewayMissionTest : Node
         {
             SessionMessages();
             await PanelAndMovement();
+            await ContextControlsPrompt();
             await DeveloperSkip();
             GD.Print($"GATEWAY MISSION PASS ({_assertions} assertions)");
             GetTree().Quit();
@@ -108,6 +109,7 @@ public partial class GatewayMissionTest : Node
         var gateway = GD.Load<PackedScene>(Gateway.ScenePath).Instantiate<Gateway>();
         string nextScene = "";
         AddChild(gateway);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(!gateway.HasNode("SupplyLocker") && !gateway.GetChildren().OfType<EquipmentLocker>().Any(),
             "Gateway has no supply locker or locker collision");
         Check(gateway.Player.Inventory == inventory && inventory.HasCapability(ItemCapability.Repair) &&
@@ -123,10 +125,19 @@ public partial class GatewayMissionTest : Node
         RemoveChild(fuseGame);
         fuseGame.Free();
         var panel = gateway.MissionControl;
+        float transmissionHeight = panel.PanelHeight;
+        Check(transmissionHeight > 0 && transmissionHeight <= panel.MaximumPanelHeight + 1,
+            "Gateway transmission panel fits the viewport height limit");
         panel.SceneLoader = path => { nextScene = path; return Error.Ok; };
         var stations = gateway.GetNode<TrainingStations>("GatewayStations");
         Check(panel.IsOpen && panel.Message == GatewayMission.Start, "Gateway opens mission start panel");
         Check(!gateway.Player.IsPhysicsProcessing() && stations.InteractionLocked, "Transmission locks movement and station interaction");
+		panel.Enqueue("SHORT NOTICE");
+		panel.Advance();
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		Check(panel.PanelHeight < transmissionHeight,
+			"Gateway dialogue panel shrinks to fit short messages");
+		panel.Advance();
 
         var training = GD.Load<PackedScene>(PracticeSession.TrainingScene).Instantiate();
         var expectedStyle = (StyleBoxFlat)training.GetNode<PanelContainer>("IntroUI/Panel")
@@ -234,5 +245,29 @@ public partial class GatewayMissionTest : Node
         gateway.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         PracticeSession.Clear();
+    }
+
+    private async Task ContextControlsPrompt()
+    {
+        var world = new Node2D();
+        var player = new ares.scripts.player.Player { Name = "Player" };
+        var zone = new ReferenceRect { Name = "Zone", Position = new Vector2(100, 100), Size = new Vector2(120, 80) };
+        var stations = new TrainingStations { Name = "Stations", Player = player };
+        stations.Targets.Add(new("Electrical bay", zone, null, null));
+        var guide = new TrainingControlsGuide { Name = "ContextControlsGuide", Player = player, Stations = stations };
+        world.AddChild(zone);
+        world.AddChild(player);
+        world.AddChild(stations);
+        world.AddChild(guide);
+        AddChild(world);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        player.GlobalPosition = zone.GlobalPosition + zone.Size / 2;
+        stations._Process(0);
+        guide._Process(0);
+        Check(guide.CurrentHint == "INTERACT" && guide.CurrentKeys == "E" &&
+            guide.CurrentMessage == "Electrical bay" && guide.GetNode<PanelContainer>("ContextControlHint").Visible,
+            "Gateway-style stations show one world-positioned E interaction prompt");
+        world.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
 }

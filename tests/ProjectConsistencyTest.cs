@@ -69,14 +69,14 @@ public partial class ProjectConsistencyTest : Node
 		{
 			"res://scripts/Hotbar.tscn", "res://scripts/hotbar_scene.tscn",
 			"res://scripts/ui/button_1.tscn", "res://scenes/rover/GameOver.tscn",
-			"res://scenes/rover/MissionCompleted.tscn", "res://scenes/main_menu/Control_menu.tscn"
+			"res://scenes/main_menu/Control_menu.tscn"
 		})
 		{
 			var node = GD.Load<PackedScene>(path).Instantiate();
 			AddChild(node);
 			await Frames();
 			Check(node.IsInsideTree(), "Retained scene loads: " + path);
-			if (node is GameOver || node is MissionCompleted)
+			if (node is GameOver)
 			{
 				var dialoguePanel = Find<PanelContainer>(node,
 					panel => panel.Name == "Panel" && panel.GetParent() is CanvasLayer);
@@ -210,7 +210,8 @@ public partial class ProjectConsistencyTest : Node
 		await Wait(.1);
 
 		rover = GD.Load<PackedScene>("res://scenes/rover/rover.tscn").Instantiate<Rover_scence>();
-		rover.SceneLoader = _ => Error.CantOpen;
+		string victoryDestination = "";
+		rover.SceneLoader = path => { victoryDestination = path; return Error.CantOpen; };
 		AddChild(rover);
 		await Frames();
 		rover.VictoryTime = .01f;
@@ -222,8 +223,9 @@ public partial class ProjectConsistencyTest : Node
 			"Rover fade is visible and uses a normalized alpha");
 		await Wait(4);
 		Check(!rover.GetNode<CanvasLayer>("TransitionLayer").Visible &&
-			Find<Button>(rover, b => b.Text == "Return to Mission Control") != null,
-			"Failed rover transition restores a visible way out");
+			victoryDestination == "res://scenes/mars/MarsBase.tscn" &&
+			Find<Button>(rover, b => b.Text == "Continue to Mars") != null,
+			"Rover victory transitions directly to Mars and exposes transfer recovery only if loading fails");
 		rover.QueueFree();
 		await Frames();
 	}

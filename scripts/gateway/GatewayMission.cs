@@ -18,18 +18,18 @@ public static class GatewayMission
 
     public static string Alert(PracticeSession.Exercise exercise) => exercise switch
     {
-        PracticeSession.Exercise.Wires => "SYSTEM ALERT: ELECTRICAL FAILURE\nElectrical circuit malfunction detected.\nPower connections have been disrupted. Access the Electrical Bay and reconnect the damaged wiring.",
-        PracticeSession.Exercise.HullRepair => "CRITICAL ALERT: HULL BREACH\nStructural damage detected. Cabin pressure is at risk.\nProceed to Hull Access and seal the damaged sections before depressurization occurs.",
-        PracticeSession.Exercise.Fuses => "SYSTEM ALERT: POWER FAILURE\nPower distribution malfunction detected.\nMultiple protective fuses have failed. Inspect the fuse box and restore the correct electrical configuration.",
-        _ => "SYSTEM ALERT: SIGNAL LOST\nCommunication link with Mission Control interrupted.\nSignal frequency mismatch detected. Recalibrate the communications system to reestablish contact."
+        PracticeSession.Exercise.Wires => "GATEWAY DIAGNOSTICS: ELECTRICAL CIRCUIT FAULT\nSeveral local connections are unresponsive. Reconnect the service circuit remotely from Ares.",
+        PracticeSession.Exercise.HullRepair => "GATEWAY DIAGNOSTICS: PRESSURE-CONTROL FAULT\nThe service-compartment pressure controls are unresponsive. Restore remote control; inspect structural seals after landing.",
+        PracticeSession.Exercise.Fuses => "GATEWAY DIAGNOSTICS: DISTRIBUTION FAULT\nProtective fuses have tripped. Restore the correct local power configuration from Ares.",
+        _ => "GATEWAY DIAGNOSTICS: LOCAL LINK MISALIGNED\nThe Earth uplink remains offline. Recalibrate Gateway's local communications relay."
     };
 
     public static string Restored(PracticeSession.Exercise exercise) => exercise switch
     {
-        PracticeSession.Exercise.Wires => "SYSTEM RESTORED\nElectrical connections restored. Circuit integrity confirmed.",
-        PracticeSession.Exercise.HullRepair => "SYSTEM RESTORED\nHull breach sealed. Pressure stabilized. Structural integrity restored.",
-        PracticeSession.Exercise.Fuses => "SYSTEM RESTORED\nPower distribution restored. All circuits operating within safe parameters.",
-        _ => "SIGNAL RESTORED\nFrequency synchronized. Communication link with Mission Control reestablished."
+        PracticeSession.Exercise.Wires => "LOCAL SERVICE RESTORED\nRemote wiring connections respond. Full surface inspection is still required.",
+        PracticeSession.Exercise.HullRepair => "PRESSURE CONTROLS RESTORED\nService-compartment pressure is stable. Gateway's structural seals still require on-site inspection.",
+        PracticeSession.Exercise.Fuses => "LOCAL DISTRIBUTION RESTORED\nGateway's service circuits are stable. Main surface power remains offline.",
+        _ => "LOCAL RELAY SYNCHRONIZED\nGateway telemetry is available. The Earth uplink remains offline."
     };
 
     private static void EnsureSession()

@@ -52,7 +52,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private PauseManager pauseManager;
 	internal Func<string, Error> SceneLoader { get; set; }
 	private Vector2 returnPosition;
-	private float ascentOffset, ascentTravel;
+	private float ascentOffset, ascentTravel, backgroundAscentTravel;
 	private double ascentProgress;
 	private long sequence;
 	private string backError;
@@ -454,7 +454,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 				ascentProgress = Math.Min(1, ascentProgress + Math.Max(0, delta) / 2.8);
 			float eased = 1 - Mathf.Pow(1 - (float)ascentProgress, 3);
 			ascentOffset = -ascentTravel * eased;
-			background.SetScrollOffset(-ascentOffset);
+			background.SetScrollOffset(backgroundAscentTravel * eased);
 			if (ascentProgress >= 1 && State == Phase.Ascending)
 			{
 				State = Phase.Complete;
@@ -623,6 +623,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		ascentProgress = 0; ascentOffset = 0;
 		ascentTravel = GetViewportRect().Size.Y * .72f;
 		background.ResetScroll();
+		backgroundAscentTravel = background.MaximumScrollOffset * .5f;
 		rocket.StartAscending(); Refresh();
 	}
 

@@ -16,7 +16,7 @@ Text = "And the probes?"
 [sub_resource type="Resource" id="Line2"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "Still silent. Move."
+Text = "Still silent. Complete your checks—we need you ready."
 
 [resource]
 script = ExtResource("1_sequence")

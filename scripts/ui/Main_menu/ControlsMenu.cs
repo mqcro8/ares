@@ -85,7 +85,7 @@ public partial class ControlsMenu : Control, ares.scripts.systems.IDevSceneSkipT
 		if (string.IsNullOrEmpty(normalized))
 		{
 			_sounds.Play(SoundIds.UiDenied, 300, true);
-			_hint!.Text = "Use a ws:// or wss:// address, for example wss://your-name.ngrok.app";
+			_hint!.Text = "Enter your Vercel site address, for example https://your-project.vercel.app";
 			_relayInput.GrabFocus();
 			return;
 		}
@@ -137,11 +137,11 @@ public partial class ControlsMenu : Control, ares.scripts.systems.IDevSceneSkipT
 			if (!_relay.Enabled)
 				_hint!.Text = "Turn on the phone controller, then scan the QR code with your phone.";
 			else if (!hasRelay)
-				_hint!.Text = "Set the relay address, for example wss://your-name.ngrok.app, then press Apply.";
+				_hint!.Text = "Set your Vercel site address, then press Apply.";
 			else if (_relay.State == ControllerLinkState.ControllerConnected)
 				_hint!.Text = $"Phone linked in room {_relay.RoomCode}. Use the field pad or rover wheel.";
 			else
-				_hint!.Text = "Start the relay and ngrok, then scan the QR or open the link on your phone.";
+				_hint!.Text = "Connect to the hosted relay, then scan the QR or open the link on your phone.";
 
 			UpdateQr(_relay.Enabled && hasRelay ? _relay.JoinUrl : "");
 		}

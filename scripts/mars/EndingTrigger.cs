@@ -16,6 +16,7 @@ public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipT
 
 	[Export] public DialogueSequence CommunicationsLocked { get; set; }
 	[Export] public DialogueSequence RepairsPending { get; set; }
+	[Export] public DialogueSequence DiscoveryPending { get; set; }
 	[Export] public float MessageSeconds { get; set; } = 4f;
 
 	private DialogueView _dialogue;
@@ -33,6 +34,7 @@ public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipT
 
 		CommunicationsLocked ??= GD.Load<DialogueSequence>("res://data/dialogue/ending_locked_comms.tres");
 		RepairsPending ??= GD.Load<DialogueSequence>("res://data/dialogue/ending_locked_repairs.tres");
+		DiscoveryPending ??= GD.Load<DialogueSequence>("res://data/dialogue/gateway_discovery_pending.tres");
 		_dialogue = GetNodeOrNull<DialogueView>("DialogueLayer/Dialogue");
 		Callable.From(ArmFromInitialOverlap).CallDeferred();
 	}
@@ -91,14 +93,19 @@ public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipT
 			return;
 
 		GetParent()?.GetNodeOrNull<ObjectiveDialogue>("ObjectiveDialogue")?.Dismiss();
-		bool communicationsDown = MissionState.Instance?.SignalTableRepaired != true;
-		DialogueSequence sequence = communicationsDown ? CommunicationsLocked : RepairsPending;
+		var mission = MissionState.Instance;
+		bool communicationsDown = mission?.SignalTableRepaired != true;
+		bool discoveryPending = mission?.GatewayDiscoveryPending == true;
+		DialogueSequence sequence = discoveryPending ? DiscoveryPending :
+			communicationsDown ? CommunicationsLocked : RepairsPending;
 		DialogueLine line = sequence != null && sequence.Lines.Count > 0
 			? sequence.Lines[0]
 			: new DialogueLine
 			{
 				Speaker = "MISSION CONTROL",
-				Text = communicationsDown
+				Text = discoveryPending
+					? "Review the Gateway communications archive before departure."
+					: communicationsDown
 					? "You can't go back yet. Communications haven't been restored."
 					: "You can't go back yet. Finish the remaining repairs first."
 			};
@@ -123,6 +130,11 @@ public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipT
 	private void BeginEnding()
 	{
 		var mission = MissionState.Instance;
+		if (mission?.GatewayDiscoveryPending == true)
+		{
+			ShowLockedMessage();
+			return;
+		}
 		if (mission?.Oxygen.CapacitySeconds <= 0 ||
 			mission.Oxygen.RemainingSeconds < mission.Oxygen.ReturnReserveSeconds)
 		{
@@ -149,6 +161,7 @@ public partial class EndingTrigger : Area2D, ares.scripts.systems.IDevSceneSkipT
 		mission.MarkGeneratorRepaired();
 		mission.MarkWireBoxRepaired();
 		mission.MarkSignalTableRepaired();
+		mission.AcknowledgeGatewayDiscovery();
 		for (int i = 0; i < MissionState.DoorAccessCount; i++) mission.SetDoorAccess(i, true);
 		if (mission.Oxygen.CapacitySeconds <= 0 ||
 			mission.Oxygen.RemainingSeconds < mission.Oxygen.ReturnReserveSeconds)

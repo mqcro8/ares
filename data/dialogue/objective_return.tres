@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "YOU"
-Text = "Communications are restored. I can go back to the start now."
+Text = "Gateway's Earth uplink is restored. My preliminary report is queued. Time to return to the lander."
 
 [resource]
 script = ExtResource("1_sequence")

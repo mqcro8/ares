@@ -119,6 +119,7 @@ position = Vector2(575.00006, -537)
 scale = Vector2(2.0482144, 1.9608052)
 texture = ExtResource("2_vhiws")
 script = ExtResource("3_ndnbf")
+LaunchSocket = Vector2(254, 1814)
 
 [node name="Rocket" type="Node2D" parent="." unique_id=303650542]
 script = ExtResource("4_umb18")

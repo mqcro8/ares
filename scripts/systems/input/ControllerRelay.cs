@@ -24,6 +24,7 @@ public partial class ControllerRelay : Node
     public const string EnabledSetting = "ares_controller/enabled";
     public const string RoomSetting = "ares_controller/room_code";
     public const string JoinPath = "/";
+    public const string RelayEndpointPath = "/api/relay";
 
     private const string ConfigSection = "controller";
     private const double ReconnectDelay = 2.0;
@@ -273,6 +274,7 @@ public partial class ControllerRelay : Node
         if (path.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase))
             path = path[..^"/index.html".Length];
         if (path == "/") path = "";
+        if (path == "" && scheme == "wss") path = RelayEndpointPath;
 
         return $"{scheme}://{uri.Authority}{path}";
     }
@@ -308,7 +310,7 @@ public partial class ControllerRelay : Node
         }
 
         _socket = new WebSocketPeer();
-        string url = $"{RelayUrl}/?room={RoomCode}&role=game";
+        string url = $"{RelayUrl}?room={RoomCode}&role=game";
         Error error = _socket.ConnectToUrl(url);
         if (error != Error.Ok)
         {

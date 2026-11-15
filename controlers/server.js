@@ -9,7 +9,7 @@ try {
   const address = await relay.listen();
   const shown = typeof address === "object" && address ? address.port : port;
   console.log(`Mission: Ares relay listening on http://localhost:${shown}`);
-  console.log("Point ngrok at this port; the controller page and relay share one URL.");
+  console.log("The controller page and local relay share this URL.");
 } catch (error) {
   console.error(`Could not start the relay: ${error.message}`);
   process.exit(1);

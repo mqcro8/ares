@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Line0"]
 script = ExtResource("2_line")
 Speaker = "MISSION CONTROL"
-Text = "All training is complete. The pad is live. Don't keep Gateway waiting."
+Text = "Mandatory training is complete. Launch pad authorized. Review your loadout before departure."
 
 [resource]
 script = ExtResource("1_sequence")
