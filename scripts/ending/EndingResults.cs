@@ -32,13 +32,13 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 			BuildScoreBreakdown(null);
 		}
 
-		_return = new Button { Text = "RETURN TO MISSION CONTROL", CustomMinimumSize = new Vector2(360, 48) };
+		_return = new Button { Text = "VIEW CREDITS", CustomMinimumSize = new Vector2(360, 48) };
 		_return.SetAnchorsPreset(LayoutPreset.BottomRight);
 		_return.OffsetLeft = -390;
 		_return.OffsetTop = -74;
 		_return.OffsetRight = -24;
 		_return.OffsetBottom = -24;
-		_return.Pressed += ReturnToMenu;
+		_return.Pressed += ContinueToCredits;
 		AddChild(_return);
 		_return.GrabFocus();
 		ControllerCommandRouter.Register(this, this);
@@ -165,13 +165,13 @@ public partial class EndingResults : Control, IControllerCommandSink, IControlle
 		return label;
 	}
 
-	private void ReturnToMenu() =>
-		GetTree().ChangeSceneToFile("res://scenes/main_menu/main_menu_take3.tscn");
+	private void ContinueToCredits() =>
+		GetTree().ChangeSceneToFile("res://scenes/credits/credits.tscn");
 
 	public bool HandleControllerCommand(ControllerCommand command)
 	{
 		if (command.Name != ControllerCommands.EndingContinue) return false;
-		ReturnToMenu();
+		ContinueToCredits();
 		return true;
 	}
 
