@@ -62,7 +62,7 @@ public partial class Gateway : Node2D
         {
             var mission = MissionState.Instance;
             Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission, inLab: true,
-                stamina: null, circuitProgress: 0, circuitComplete: false,
+				stamina: mission.Stamina, circuitProgress: 0, circuitComplete: false,
                 hasRepairKit: Player.Inventory?.HasCapability(ItemCapability.Repair) == true,
                 prompt: _stations?.MonitorPrompt, feedback: _stations?.MonitorFeedback,
                 visible: true));

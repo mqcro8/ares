@@ -42,9 +42,9 @@ public partial class MissionMonitorTest : Node
         Check(gym.Objectives.All(item => item.Id is not "energy" and not "integrity" and not "health"),
             "Unsupported ship and health statistics are not invented");
 
-        var directLab = MissionMonitorPresenter.BuildTraining(true, null, 0, false,
+        var directLab = MissionMonitorPresenter.BuildTraining(true, 100, 0, false,
             false, false, false, false, false, false);
-        Check(directLab.Stamina == null, "Direct lab entry does not fabricate stamina");
+        Check(directLab.Stamina == 100, "Direct lab entry shows the mission stamina stat");
         Check(Objective(directLab, "kit").State == MonitorObjectiveState.Active &&
             Objective(directLab, "wires").State == MonitorObjectiveState.Pending,
             "Lab directs the player to the missing kit before repair");
@@ -58,20 +58,20 @@ public partial class MissionMonitorTest : Node
         Check(kitReady.Prompt == "E — Wiring workbench" && kitReady.Feedback == "Practice cancelled.",
             "Station prompts and practice feedback reach the monitor model");
 
-        var simulator = MissionMonitorPresenter.BuildTraining(true, null, 3, true,
+        var simulator = MissionMonitorPresenter.BuildTraining(true, 74.5f, 3, true,
             false, true, true, false, false, false,
             frequencyComplete: true, hullRepairComplete: true);
-        Check(simulator.Stamina == null && Objective(simulator, "circuit").State == MonitorObjectiveState.Complete,
-            "Lab keeps valid course progress without showing a live stamina value");
+        Check(simulator.Stamina == 74.5f && Objective(simulator, "circuit").State == MonitorObjectiveState.Complete,
+            "Lab keeps course progress and stamina visible together");
         Check(!simulator.Objectives.Any(item => item.Id == "kit") &&
             Objective(simulator, "simulator").State == MonitorObjectiveState.Active &&
             Objective(simulator, "launch").State == MonitorObjectiveState.Pending,
             "Kit objective disappears after repairs and simulator becomes the recommendation");
 
-        var launched = MissionMonitorPresenter.BuildTraining(true, null, 3, true,
+        var launched = MissionMonitorPresenter.BuildTraining(true, 40, 3, true,
             false, true, true, true, true, true, visible: false,
             frequencyComplete: true, hullRepairComplete: true);
-        Check(Objective(launched, "launch").State == MonitorObjectiveState.Complete && !launched.Visible,
-            "Completed launch and modal visibility are reflected in the snapshot");
+        Check(launched.Stamina == 40 && Objective(launched, "launch").State == MonitorObjectiveState.Complete && !launched.Visible,
+            "Completed launch, stamina and modal visibility are reflected in the snapshot");
     }
 }

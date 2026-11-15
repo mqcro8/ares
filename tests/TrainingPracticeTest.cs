@@ -251,6 +251,10 @@ public partial class TrainingPracticeTest : Node
         await Frames(8); Check(Scene is TrainingLab, "Held E cannot immediately return through entrance");
         Input.ParseInputEvent(new InputEventKey { Keycode = Key.E, PhysicalKeycode = Key.E, Pressed = false }); Input.FlushBufferedEvents();
         var saved = PracticeSession.Saved;
+        float labEntryStamina = ares.scripts.mission.MissionState.Instance.Stamina;
+        await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
+        Check(ares.scripts.mission.MissionState.Instance.Stamina > labEntryStamina,
+            "Stamina regenerates while resting in the lab");
         Check(saved.Course.Direction != 0 && saved.Course.Cleared == 1 && saved.Movement.Stamina < 100, "Partial course and stamina saved");
         Check(Player.Position.DistanceTo(TrainingLab.DefaultSpawn) < 1, "Room-specific entrance, never gym position");
         Check(TrainingLab.RoomWidth == 768f && TrainingLab.RoomHeight == 432f,
@@ -434,7 +438,7 @@ public partial class TrainingPracticeTest : Node
         await Frames(); KeyPress(Key.E); await Frames(8);
         Check(Scene is TrainingLab && !mission.LaunchPadUnlocked, "Launch pad stays locked until the course is complete");
         await Capture("lab-completed-repairs");
-        Check(PracticeSession.Saved == saved, "Gym stamina/rest and course frozen outside gym");
+        Check(PracticeSession.Saved == saved, "Course snapshot stays intact while stamina updates globally");
         var labStations = ((TrainingLab)Scene).GetNode<TrainingStations>("PracticeStations");
         var gymTarget = labStations.Targets.First(target => target.Name == "Return to gym");
         await WalkTo(gymTarget.Center); await Frames();
@@ -442,7 +446,8 @@ public partial class TrainingPracticeTest : Node
         Check(Scene is TrainingIntro && !Gym.BriefingActive, "Return to gym skips welcome");
         Check(Player.Position.DistanceTo(Gym.LabReturnMarker.GlobalPosition) < 1, "Gym return marker");
         Check(Gym.Course.Capture() == saved.Course, "Count and direction restored");
-        Check(Mathf.Abs(Player.TrainingMovement.Stamina - saved.Movement.Stamina) < 1, "Stamina restored");
+        Check(Player.TrainingMovement.Stamina >= saved.Movement.Stamina,
+            "Recovered stamina carries back from the lab");
         Check(Player.GetNode<PlayerAnimation>("AnimatedSprite2D").Facing == "side" && Player.GetNode<PlayerAnimation>("AnimatedSprite2D").FlipH, "Orientation restored");
         await WalkTo(new(400, 510)); await Frames(); await Capture("gym-circuit-hint");
         Check(Gym.ControlsGuide.CurrentHint == "JUMP" && Gym.ControlsGuide.CurrentKeys == "SPACE",
@@ -566,8 +571,9 @@ public partial class TrainingPracticeTest : Node
         GetTree().ChangeSceneToFile(PracticeSession.LabScene); await Frames(8);
         Check(Scene is TrainingLab && Player.Position.DistanceTo(TrainingLab.DefaultSpawn) < 1,
             "Lab safely uses its default spawn when travel marker is missing");
-        Check(!((TrainingLab)Scene).Monitor.StaminaVisible,
-            "Direct lab entry hides stamina when there is no valid training snapshot");
+        Check(((TrainingLab)Scene).Monitor.StaminaVisible &&
+            mission.Stamina > 0,
+            "Direct lab entry shows live mission stamina without a training snapshot");
         await WalkTo(((TrainingLab)Scene).WiresZone.GetGlobalTransform() * (((TrainingLab)Scene).WiresZone.Size / 2));
         KeyPress(Key.E); await Frames(8);
         Check(Scene.SceneFilePath == PracticeSession.SceneFor(PracticeSession.Exercise.Wires),

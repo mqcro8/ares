@@ -94,7 +94,7 @@ public partial class TrainingLab : Node2D
 			var saved = PracticeSession.Saved;
 			Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission,
 				inLab: true,
-				stamina: saved?.Movement?.Stamina,
+				stamina: mission.Stamina,
 				circuitProgress: mission.TrainingCourseComplete ? 3 : saved?.Course?.Cleared ?? 0,
 				circuitComplete: mission.TrainingCourseComplete || saved?.Course?.Finished == true,
 				hasRepairKit: Player.Inventory?.HasCapability(ItemCapability.Repair) == true,

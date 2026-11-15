@@ -2,6 +2,7 @@ namespace ares.scripts.mission;
 
 using System;
 using Godot;
+using ares.scripts.player;
 using ares.scripts.systems.inventory;
 using ares.scripts.systems.items;
 
@@ -19,6 +20,11 @@ public partial class MissionState : Node
 	public Inventory PlayerInventory { get; private set; }
 	public Inventory LockerInventory { get; private set; }
 	public int CargoCapacity { get; set; } = 6;
+	public const float MaxStamina = 100f;
+	public const float StaminaRestDelay = 1f;
+	public const float StaminaRecoveryPerSecond = 25f;
+	public float Stamina { get; private set; } = MaxStamina;
+	public float StaminaRestSeconds { get; private set; }
 	public bool LoadoutConfirmed { get; set; }
 	public OxygenSupply Oxygen { get; } = new();
 	public int OxygenTankCount => Oxygen.TankCount;
@@ -235,6 +241,32 @@ public partial class MissionState : Node
 		TrainingCourseComplete = TrainingWiresComplete = TrainingFusesComplete = false;
 		TrainingFrequencyComplete = TrainingHullRepairComplete = TrainingLaunchPracticeComplete = false;
 		TrainingCompletionPending = TrainingCompletionShown = false;
+		ResetStamina();
+	}
+	public bool TrySpendStamina(float amount)
+	{
+		if (amount < 0 || Stamina < amount) return false;
+		Stamina -= amount;
+		StaminaRestSeconds = 0;
+		return true;
+	}
+	public void RestoreStamina(float stamina, float restSeconds = 0)
+	{
+		Stamina = Mathf.Clamp(stamina, 0, MaxStamina);
+		StaminaRestSeconds = Mathf.Max(0, restSeconds);
+	}
+	public void ResetStamina() => RestoreStamina(MaxStamina);
+	public void AdvanceStamina(double delta, bool resting)
+	{
+		if (!resting)
+		{
+			StaminaRestSeconds = 0;
+			return;
+		}
+		float previousRest = StaminaRestSeconds;
+		StaminaRestSeconds += (float)delta;
+		Stamina = Mathf.Min(MaxStamina, Stamina + StaminaRecoveryPerSecond *
+			(Mathf.Max(0, StaminaRestSeconds - StaminaRestDelay) - Mathf.Max(0, previousRest - StaminaRestDelay)));
 	}
 	public bool RecordLaunch(long sequence, LaunchResult result)
 	{
@@ -276,4 +308,19 @@ public partial class MissionState : Node
 	public int RoverImpacts { get; set; }
 	public int RoverCollisions { get; set; }
 	public override void _EnterTree() => Instance = this;
+	public override void _Process(double delta)
+	{
+		var player = GetTree()?.GetFirstNodeInGroup("player") as Player;
+		if (player == null)
+		{
+			AdvanceStamina(delta, true);
+			return;
+		}
+		bool grounded = player.TrainingMovement == null ||
+			!player.TrainingMovement.IsConfigured || player.TrainingMovement.Grounded;
+		bool resting = grounded &&
+			Input.GetVector("move_left", "move_right", "move_up", "move_down") == Vector2.Zero &&
+			player.Velocity.LengthSquared() < 0.01f;
+		AdvanceStamina(delta, resting);
+	}
 }

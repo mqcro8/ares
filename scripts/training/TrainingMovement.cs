@@ -2,6 +2,7 @@ namespace ares.scripts.training;
 
 using Godot;
 using ares.scripts.player;
+using ares.scripts.mission;
 
 /// <summary>Independent height, driven exclusively by Player's physics tick.</summary>
 public partial class TrainingMovement : Node
@@ -14,10 +15,10 @@ public partial class TrainingMovement : Node
     [Export] public float Gravity { get; set; } = 900;
     public float Height { get; private set; }
     public float VerticalSpeed { get; private set; }
-    public float Stamina { get; private set; } = 100;
+    private float _fallbackStamina = MissionState.MaxStamina;
+    public float Stamina => MissionState.Instance?.Stamina ?? _fallbackStamina;
     public bool Grounded { get; private set; } = true;
     public bool IsConfigured { get; private set; }
-    private float _rest;
     private Vector2 _visualOrigin;
     private uint _originalMask;
     private bool _bound;
@@ -26,11 +27,13 @@ public partial class TrainingMovement : Node
     public void SuppressDialogueJump() => _waitForJumpRelease = true;
 
     public sealed record Progress(float Stamina, float Rest);
-    public Progress Capture() => new(Stamina, _rest);
+    public Progress Capture() => new(Stamina, MissionState.Instance?.StaminaRestSeconds ?? 0);
     public void Restore(Progress progress)
     {
-        Stamina = progress.Stamina;
-        _rest = progress.Rest;
+        if (MissionState.Instance != null)
+            MissionState.Instance.RestoreStamina(progress.Stamina, progress.Rest);
+        else
+            _fallbackStamina = Mathf.Clamp(progress.Stamina, 0, MissionState.MaxStamina);
         SuppressDialogueJump();
     }
 
@@ -61,13 +64,11 @@ public partial class TrainingMovement : Node
         float oldHeight = Height;
         float support = Course.SupportAt(before, Height);
         if (Height > support + 0.001f) Grounded = false;
-        if (Grounded && !_waitForJumpRelease && Input.IsActionJustPressed("training_jump") && Stamina >= 20)
+        if (Grounded && !_waitForJumpRelease && Input.IsActionJustPressed("training_jump") && TrySpendStamina(20))
         {
             Course.JumpStarted(before, Height);
             VerticalSpeed = JumpImpulse;
             Grounded = false;
-            Stamina -= 20;
-            _rest = 0;
         }
         if (!Grounded)
         {
@@ -94,16 +95,19 @@ public partial class TrainingMovement : Node
             if (landed) Course.Landed(after, support);
         }
         else if (Height > support) Grounded = false;
-        if (Grounded && direction == Vector2.Zero && body.Velocity.LengthSquared() < 0.01f)
-        {
-            float previousRest = _rest;
-            _rest += dt;
-            Stamina = Mathf.Min(100, Stamina + 25 * (Mathf.Max(0, _rest - 1) - Mathf.Max(0, previousRest - 1)));
-        }
-        else _rest = 0;
         Visual.Position = _visualOrigin + Vector2.Up * Mathf.Round(Height);
         // Shadow is a sibling of Visual: stays at the ground footprint even in flight.
         Shadow.Visible = true;
+        return true;
+    }
+
+    private bool TrySpendStamina(float amount)
+    {
+        if (MissionState.Instance != null)
+            return MissionState.Instance.TrySpendStamina(amount);
+        if (_fallbackStamina < amount)
+            return false;
+        _fallbackStamina -= amount;
         return true;
     }
 }

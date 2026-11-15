@@ -44,11 +44,10 @@ public partial class TrainingIntro : Node2D
 	{
 		if (Monitor == null || Course == null || _player is not ares.scripts.player.Player player) return;
 		var mission = MissionState.Instance;
-		var movement = player.TrainingMovement;
 		int progress = mission.TrainingCourseComplete ? 3 : Course.ClearedCount;
 		Monitor.Render(MissionMonitorPresenter.CaptureTraining(mission,
 			inLab: false,
-			stamina: movement?.Stamina,
+			stamina: mission.Stamina,
 			circuitProgress: progress,
 			circuitComplete: mission.TrainingCourseComplete || Course.Congratulated,
 			hasRepairKit: player.Inventory?.HasCapability(ItemCapability.Repair) == true,
@@ -99,7 +98,11 @@ public partial class TrainingIntro : Node2D
 			if (saved != null)
 			{
 				Course.Restore(saved.Course);
-				((ares.scripts.player.Player)_player).TrainingMovement.Restore(saved.Movement);
+				((ares.scripts.player.Player)_player).TrainingMovement.Restore(saved.Movement with
+				{
+					Stamina = MissionState.Instance.Stamina,
+					Rest = MissionState.Instance.StaminaRestSeconds,
+				});
 				_completionShown = saved.CompletionShown || Course.ClearedCount >= 3;
 				if (_completionShown)
 				{
