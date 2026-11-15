@@ -2,6 +2,7 @@ namespace ares.scripts.mission;
 
 using Godot;
 using ares.scripts.player;
+using Ares.Systems.Audio;
 
 /// <summary>World pickup that refills the suit reserve when the astronaut presses E nearby.</summary>
 public partial class OxygenPickup : Area2D
@@ -61,7 +62,10 @@ public partial class OxygenPickup : Area2D
 		if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
 		if (key.PhysicalKeycode != Key.E && key.Keycode != Key.E) return;
 		GetViewport().SetInputAsHandled();
-		MissionState.Instance?.SetOxygenMessage(Collect());
+		string message = Collect();
+		if (LastFeedback.StartsWith("OXYGEN", System.StringComparison.Ordinal))
+			AudioManager.PlaySfx(SoundIds.Enter);
+		MissionState.Instance?.SetOxygenMessage(message);
 	}
 
 	/// <summary>Tries to take the oxygen. Returns the feedback message for the HUD.</summary>

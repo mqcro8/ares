@@ -15,6 +15,7 @@ public partial class Player : CharacterBody2D
 	[Export] public float Acceleration { get; set; } = 1600f;
 
 	[Export] public float Friction { get; set; } = 1400f;
+	[Export] public string FootstepSoundId { get; set; } = "footsteps_metal";
 
 	[Export] public Hotbar Hotbar { get; set; }
 

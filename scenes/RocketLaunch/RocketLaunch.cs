@@ -5,6 +5,7 @@ using ares.scripts.mission;
 using ares.scripts.training;
 using ares.scripts.systems;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 /// <summary>Runs launch practice and the real center-hold launch sequence.</summary>
 public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerContextSource
@@ -244,6 +245,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 	private void RegisterIgnitionClick()
 	{
 		if (Paused || State != Phase.Ignition) return;
+		AudioManager.PlaySfx(SoundIds.Enter, -12f, 1.3f);
 		Ignition.RegisterClick();
 		ignitionProgress.Value = Ignition.Clicks;
 		if (Ignition.Complete)
@@ -539,6 +541,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		if (!IsInsideTree() || Paused || State != Phase.Result || fire.Animation != "success" ||
 			(requireStopped && fire.IsPlaying()) || !Model.Complete || sequence != MissionState.Instance.LaunchSequence) return;
 		State = Phase.Ascending;
+		AudioManager.PlaySfx(SoundIds.RocketTakeoff);
 		ascentProgress = 0; ascentOffset = 0;
 		ascentTravel = GetViewportRect().Size.Y * .72f;
 		background.ResetScroll();

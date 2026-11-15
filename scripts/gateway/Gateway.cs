@@ -6,6 +6,7 @@ using ares.scripts.player;
 using ares.scripts.systems.items;
 using ares.scripts.training;
 using ares.scripts.ui.mission_monitor;
+using Ares.Systems.Audio;
 
 /// <summary>
 /// Gateway hub and four-room repair annex. Each annex room owns one of the
@@ -29,6 +30,7 @@ public partial class Gateway : Node2D
 
     public override void _Ready()
     {
+        AudioManager.PlayMusic(SoundIds.TensionMusic, 1.5);
         MissionState.Instance.Stage = MissionStage.Gateway;
         var arrival = PracticeSession.Arrive(ScenePath);
         if (arrival != null)

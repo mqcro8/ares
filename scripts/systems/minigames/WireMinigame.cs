@@ -5,6 +5,7 @@ using ares.scripts.training;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 public partial class WireMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
@@ -268,6 +269,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 
 		if (success)
 		{
+			AudioManager.PlaySfx(SoundIds.Enter, -8f, 1.25f);
 			// Bloque 8a: fijar cable
 			var end = Center(target);
 			wire.SetPointPosition(1, end);
@@ -291,6 +293,7 @@ public partial class WireMinigame : Control, IControllerCommandSink, IController
 		}
 		else
 		{
+			if (target != null) AudioManager.PlaySfx(SoundIds.OpenDoor, -8f, 0.8f);
 			// Bloque 8b: borrar cable
 			wire?.QueueFree();
 			glow?.QueueFree();

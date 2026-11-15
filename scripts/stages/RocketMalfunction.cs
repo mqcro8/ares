@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Linq;
+using Ares.Systems.Audio;
 
 namespace ares.scripts.stages;
 
@@ -45,7 +46,12 @@ public partial class RocketMalfunction : Control
 		AddChild(_animation);
 		_animation.Play("malfunction");
 
-		_sound = new AudioStreamPlayer { Stream = GD.Load<AudioStream>(AudioPath) };
+		_sound = new AudioStreamPlayer
+		{
+			Stream = GD.Load<AudioStream>(AudioPath),
+			Bus = AudioManager.SfxBusName,
+			ProcessMode = ProcessModeEnum.Pausable
+		};
 		AddChild(_sound);
 		if (_sound.Stream == null)
 		{

@@ -15,6 +15,13 @@
 [ext_resource type="AudioStream" uid="uid://qgg50n2elqjb" path="res://audio/sfx/whoosh.mp3" id="9_7xwmv"]
 [ext_resource type="AudioStream" uid="uid://c2yhmev8navt4" path="res://audio/sfx/rover_power_up.wav" id="10_ar03j"]
 [ext_resource type="AudioStream" uid="uid://q62yvd7wp44k" path="res://audio/sfx/open_door.mp3" id="11_7hx3i"]
+[ext_resource type="AudioStream" path="res://audio/sfx/enter_sfx.wav" id="12_enter"]
+[ext_resource type="AudioStream" path="res://audio/sfx/Pasos planeta.wav" id="13_planet_steps"]
+[ext_resource type="AudioStream" path="res://audio/sfx/Pasos metal.wav" id="14_metal_steps"]
+[ext_resource type="AudioStream" path="res://audio/sfx/Soplete.wav" id="15_welding"]
+[ext_resource type="AudioStream" path="res://audio/sfx/Cohete despegue_vuelo .wav" id="16_takeoff"]
+[ext_resource type="AudioStream" path="res://audio/sfx/Cohete aterriza .wav" id="17_landing"]
+[ext_resource type="AudioStream" path="res://audio/sfx/system-malfunction-sound-effects.wav" id="18_malfunction"]
 
 [sub_resource type="Resource" id="SoundDef_menu"]
 script = ExtResource("2_def")
@@ -55,6 +62,7 @@ metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 script = ExtResource("2_def")
 Id = "tension"
 Stream = ExtResource("7_2obti")
+Loop = true
 metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
 [sub_resource type="Resource" id="SoundDef_moving"]
@@ -101,7 +109,59 @@ Id = "open_door"
 Stream = ExtResource("11_7hx3i")
 metadata/_custom_type_script = "uid://ckubyvcmxog1f"
 
+[sub_resource type="Resource" id="SoundDef_enter"]
+script = ExtResource("2_def")
+Id = "enter"
+Stream = ExtResource("12_enter")
+VolumeDb = -5.0
+
+[sub_resource type="Resource" id="SoundDef_planet_steps"]
+script = ExtResource("2_def")
+Id = "footsteps_planet"
+Stream = ExtResource("13_planet_steps")
+VolumeDb = -8.0
+PitchVariation = 0.08
+
+[sub_resource type="Resource" id="SoundDef_metal_steps"]
+script = ExtResource("2_def")
+Id = "footsteps_metal"
+Stream = ExtResource("14_metal_steps")
+VolumeDb = -8.0
+PitchVariation = 0.08
+
+[sub_resource type="Resource" id="SoundDef_welding"]
+script = ExtResource("2_def")
+Id = "welding"
+Stream = ExtResource("15_welding")
+VolumeDb = -6.0
+Loop = true
+
+[sub_resource type="Resource" id="SoundDef_takeoff"]
+script = ExtResource("2_def")
+Id = "rocket_takeoff"
+Stream = ExtResource("16_takeoff")
+VolumeDb = -3.0
+
+[sub_resource type="Resource" id="SoundDef_landing"]
+script = ExtResource("2_def")
+Id = "rocket_landing"
+Stream = ExtResource("17_landing")
+VolumeDb = -3.0
+
+[sub_resource type="Resource" id="SoundDef_rover_wind_sfx"]
+script = ExtResource("2_def")
+Id = "rover_wind_sfx"
+Stream = ExtResource("4_wind")
+VolumeDb = -12.0
+Loop = true
+
+[sub_resource type="Resource" id="SoundDef_malfunction"]
+script = ExtResource("2_def")
+Id = "system_malfunction"
+Stream = ExtResource("18_malfunction")
+VolumeDb = -5.0
+
 [resource]
 script = ExtResource("1_bank")
 Music = Array[ExtResource("2_def")]([SubResource("SoundDef_menu"), SubResource("SoundDef_wind"), SubResource("Resource_o1k5s"), SubResource("Resource_t2b07"), SubResource("Resource_2hs1k"), SubResource("Resource_2obti")])
-Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5")])
+Sfx = Array[ExtResource("2_def")]([SubResource("SoundDef_moving"), SubResource("SoundDef_collision"), SubResource("SoundDef_explode"), SubResource("SoundDef_victory"), SubResource("Resource_j1i2t"), SubResource("Resource_aywkm"), SubResource("Resource_besv5"), SubResource("SoundDef_enter"), SubResource("SoundDef_planet_steps"), SubResource("SoundDef_metal_steps"), SubResource("SoundDef_welding"), SubResource("SoundDef_takeoff"), SubResource("SoundDef_landing"), SubResource("SoundDef_rover_wind_sfx"), SubResource("SoundDef_malfunction")])

@@ -252,6 +252,8 @@ public partial class MissionState : Node
 		RoverStageCompleted = false;
 		ResetPuzzleProgress();
 		RoverImpacts = RoverCollisions = 0;
+		RoverDamageLimit = ToolEffects.RoverBaseDamageLimit;
+		Scoring.Reset();
 		TrainingCourseComplete = TrainingWiresComplete = TrainingFusesComplete = false;
 		TrainingFrequencyComplete = TrainingHullRepairComplete = TrainingLaunchPracticeComplete = false;
 		TrainingCompletionPending = TrainingCompletionShown = false;
@@ -329,6 +331,8 @@ public partial class MissionState : Node
 	public int SpareParts { get; set; }
 	public int RoverImpacts { get; set; }
 	public int RoverCollisions { get; set; }
+	public int RoverDamageLimit { get; set; } = ToolEffects.RoverBaseDamageLimit;
+	public MissionScoring Scoring { get; } = new();
 	/// <summary>Rover is an intermediate mission stage, not a whole-run ending.</summary>
 	public bool RoverStageCompleted { get; private set; }
 	public bool CompleteRoverStage(long runSequence)
@@ -344,7 +348,11 @@ public partial class MissionState : Node
 	public bool IsRunOver => Outcome.IsOver;
 
 	/// <summary>Records completion of the whole campaign, not an intermediate rover stage.</summary>
-	public bool TryCompleteMission() => Outcome.TryComplete(LaunchSequence);
+	public bool TryCompleteMission()
+	{
+		Scoring.RecordRun(this);
+		return Outcome.TryComplete(LaunchSequence);
+	}
 	public bool TryFailMission() => Outcome.TryFail(LaunchSequence);
 
 	public override void _EnterTree()
