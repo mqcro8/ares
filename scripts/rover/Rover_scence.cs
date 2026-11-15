@@ -12,6 +12,7 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 	private RoverAnimation _roverAnimation;
 	private Rover _rover;
 	private SfxEmitter2D _engineSound;
+	private SfxEmitter2D _windSound;
 	private Label _label;
 	public bool _gameStarted = false;
 	private Hud _hud;
@@ -144,6 +145,14 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 		_ = ShowPanel();
 
 		_rover.CollisionRegistered += OnCollisionRegistered;
+		_windSound = new SfxEmitter2D
+		{
+			Name = "RoverWind",
+			SoundId = SoundIds.RoverWindSfx,
+			PlayOnReady = false,
+			ProcessMode = ProcessModeEnum.Pausable,
+		};
+		AddChild(_windSound);
 
 		obstacles[0] = GD.Load<Texture2D>("res://art/rover/obstacle_wreck.png");
 		obstacles[1] = GD.Load<Texture2D>("res://art/rover/obstacle_rocks.png");
@@ -198,8 +207,8 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 		await WaitSeconds(0.5);
 		AudioManager.PlaySfx2D(SoundIds.RoverPowerUp, GlobalPosition);
 		if (!await WaitUntil(() => !_roverAnimation.IsPlaying())) return;
-		AudioManager.PlayMusic(SoundIds.RoverAmbientWind, 1.5);
 		AudioManager.PlayMusic(SoundIds.RoverAdventure, 1.5);
+		_windSound?.Play();
 		_roverAnimation.Play("idle");
 		_panel.Visible = true;
 	}
@@ -475,6 +484,8 @@ public partial class Rover_scence : Node2D, IRoverMissionSkipTarget
 
 		if (GodotObject.IsInstanceValid(_engineSound))
 			_engineSound.Stop(0f);
+		if (GodotObject.IsInstanceValid(_windSound))
+			_windSound.Stop(0.2f);
 
 		AudioManager.StopMusic(0.25);
 	}

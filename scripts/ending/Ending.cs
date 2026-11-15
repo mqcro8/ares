@@ -7,6 +7,7 @@ using Ares.Systems.Controllers;
 using ares.scripts.dialogue;
 using ares.scripts.mission;
 using ares.scripts.systems;
+using Ares.Systems.Audio;
 
 /// <summary>Plays the latched good/bad ending and shows an honest results placeholder.</summary>
 public partial class Ending : Control, IControllerCommandSink, IControllerContextSource
@@ -58,6 +59,7 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		}
 
 		Outcome = _mission.Ending;
+		AudioManager.PlayMusic(Outcome == MissionEnding.Good ? SoundIds.endingMusic : SoundIds.TensionMusic, 1.5);
 		_mission.Stage = MissionStage.Ending;
 		_sequence = Outcome switch
 		{

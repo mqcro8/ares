@@ -5,6 +5,7 @@ using ares.scripts.training;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
@@ -160,6 +161,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		if (_busy || i < 0 || i >= _switches.Count) return;
 
 		Toggle(i);
+		AudioManager.PlaySfx(SoundIds.Enter, -7f, 0.9f + i * 0.035f);
 
 		// Spend one press.
 		_pressesLeft--;
@@ -172,6 +174,7 @@ public partial class FuseBoxMinigame : Control, IControllerCommandSink, IControl
 		// Check whether all switches are on.
 		if (_state.All(s => s))
 		{
+			AudioManager.PlaySfx(SoundIds.RoverPowerUp, -8f);
 			// Emit completed after the success animation.
 			_busy = true;
 			foreach (var sw in _switches) Sparks(sw, OnColor);

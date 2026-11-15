@@ -2,6 +2,7 @@ namespace ares.scripts.mars;
 
 using Godot;
 using ares.scripts.mission;
+using Ares.Systems.Audio;
 
 /// <summary>One of the four door-access switches in the second building.</summary>
 public partial class DoorSwitch : Interactable
@@ -27,6 +28,8 @@ public partial class DoorSwitch : Interactable
 			return;
 
 		MissionState.Instance.SetDoorAccess(SwitchIndex, true);
+		if (MissionState.Instance.AllDoorAccessOn)
+			AudioManager.PlaySfx(SoundIds.OpenDoor);
 		Apply(true);
 	}
 

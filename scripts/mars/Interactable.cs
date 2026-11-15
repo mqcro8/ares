@@ -1,6 +1,7 @@
 namespace ares.scripts.mars;
 
 using Godot;
+using Ares.Systems.Audio;
 
 /// <summary>
 /// Area2D that shows a "Press E to interact" prompt while the player is inside it.
@@ -80,6 +81,7 @@ public abstract partial class Interactable : Area2D
 		if (@event is InputEventKey { Pressed: true, Echo: false } && @event.IsActionPressed("interact"))
 		{
 			GetViewport().SetInputAsHandled();
+			AudioManager.PlaySfx(SoundIds.Enter);
 			Interact();
 		}
 	}

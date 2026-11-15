@@ -5,6 +5,7 @@ using ares.scripts.training;
 using ares.scripts.mission;
 using ares.scripts.systems.items;
 using Ares.Systems.Controllers;
+using Ares.Systems.Audio;
 
 public partial class HullRepairMinigame : Control, IControllerCommandSink, IControllerContextSource
 {
@@ -110,6 +111,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	private float _stability = 1f;
 
 	private Tween _rejectTween;
+	private SfxEmitter2D _weldingSound;
 
 	private bool _mouseHeld;
 	private bool _pressStartedInHold;
@@ -145,6 +147,14 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 		_world.AddChild(_damage);
 
 		BuildTorch();
+		_weldingSound = new SfxEmitter2D
+		{
+			Name = "WeldingSound",
+			SoundId = SoundIds.Welding,
+			PlayOnReady = false,
+			Position = Vector2.Zero,
+		};
+		AddChild(_weldingSound);
 		CreateStabilityBar();
 		BuildScene();
 		SetPhase(Phase.Pick);
@@ -579,6 +589,14 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 
 		if (_phase == Phase.Hold) ProcessHold(dt);
 		else if (_phase == Phase.Weld) ProcessWeld(dt);
+		if (_weldingSound != null)
+		{
+			bool welding = _phase == Phase.Weld && !_requireRelease &&
+				(Input.IsKeyPressed(Key.Space) || Input.IsMouseButtonPressed(MouseButton.Left) ||
+				 Input.IsActionPressed(ControllerActions.MinigameAction));
+			if (welding && !_weldingSound.Playing) _weldingSound.Play();
+			else if (!welding && _weldingSound.Playing) _weldingSound.Stop(0.08f);
+		}
 
 		// The phone sends minigame_action as a held action; use its rising edge to
 		// pick or place just like a Space tap.
@@ -662,6 +680,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	// Bloque 5a: remachar placa
 	private void Rivet(int hole)
 	{
+		AudioManager.PlaySfx(SoundIds.OpenDoor, -10f, 1.4f);
 		_rejectTween?.Kill();
 		_rejectTween = null;
 		_held.Position = HoleCenters[hole];
@@ -870,6 +889,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	// Bloque 11a: deshacer parte de la soldadura y dañar el casco
 	private void Overheat()
 	{
+		_weldingSound?.Stop(0.05f);
 		_progress = (int)(_progress * (1f - UndoFraction));
 		_heat = 0f;
 		_stillTime = 0f;
@@ -933,6 +953,7 @@ public partial class HullRepairMinigame : Control, IControllerCommandSink, ICont
 	// Bloque 12: emitir completed
 	private void Finish()
 	{
+		_weldingSound?.Stop(0.1f);
 		SetPhase(Phase.Done);
 		_progress = _seam.Length - 1;
 		RedrawBead();

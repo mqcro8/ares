@@ -1,6 +1,7 @@
 namespace ares.scripts.player;
 
 using Godot;
+using Ares.Systems.Audio;
 
 public partial class PlayerAnimation : AnimatedSprite2D
 {
@@ -13,6 +14,7 @@ public partial class PlayerAnimation : AnimatedSprite2D
 	private CharacterBody2D _body;
 	private SpriteFrames _frames;
 	private string _facing = "down";
+	private float _stepClock;
 	public string Facing => _facing;
 	public void RestoreFacing(string facing, bool flip)
 	{
@@ -42,7 +44,16 @@ public partial class PlayerAnimation : AnimatedSprite2D
 		if (moving)
 		{
 			UpdateFacing(velocity);
+			_stepClock -= (float)delta;
+			if (_stepClock <= 0f)
+			{
+				string sound = (_body as Player)?.FootstepSoundId;
+				if (string.IsNullOrWhiteSpace(sound)) sound = SoundIds.FootstepsMetal;
+				AudioManager.PlaySfx2D(sound, _body.GlobalPosition);
+				_stepClock = 0.42f / Mathf.Clamp(velocity.Length() / ReferenceSpeed, 0.65f, 1.4f);
+			}
 		}
+		else _stepClock = 0f;
 
 		string state = moving ? "walk" : "idle";
 		string animation = $"{state}_{_facing}";
