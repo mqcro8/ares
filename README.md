@@ -35,7 +35,7 @@ In the gym, small in-world prompts introduce movement, jumping near hurdles, and
 
 Launching needs 25 taps within five seconds, but 22 taps (85%) still lift the rocket with ignition faults that become repair work after landing. The green hold band now moves to random positions along the gauge and narrows slightly as the hold progresses.
 
-The ending player uses `data/cinematics/ending_good.tres` and `ending_bad.tres` for whole-game outcomes. Rover is an intermediate stage: losing its five local hearts shows the rover failure image and allows a retry; recovering the rover shows its success image and continues toward the Mars walk. Both cinematic sequences use timed crossfades and dialogue beats; score values remain unavailable until the scoring system exists.
+The ending player uses `data/cinematics/ending_good.tres` and `ending_bad.tres` for whole-game outcomes. Final score weights training 10%, launch 20%, repairs 25%, rover 20%, and resources 25%; 80% overall passes. A return also requires at least 25% of oxygen capacity at the Mars return trigger. Resource scoring gives 80% at that reserve and 100% at 50% remaining. Rover is an intermediate stage: losing its five local hearts shows the rover failure image and allows a retry; recovering the rover shows its success image and continues toward the Mars walk.
 
 ## Developer shortcuts
 

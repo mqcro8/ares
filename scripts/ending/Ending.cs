@@ -173,14 +173,15 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		var resultsOverlay = new Control { Name = "ResultsOverlay", Visible = false, ZIndex = 12 };
 		resultsOverlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		AddChild(resultsOverlay);
-		_scoreText = MakeOverlayLabel("SCORING COMING SOON", 12, new Color(0.83f, 0.67f, 0.4f));
+		_scoreText = MakeOverlayLabel("", 9, new Color(0.83f, 0.67f, 0.4f));
 		_scoreText.Name = "Score";
 		_scoreText.HorizontalAlignment = HorizontalAlignment.Center;
-		_scoreText.SetAnchorsPreset(LayoutPreset.BottomWide);
-		_scoreText.OffsetLeft = 450;
-		_scoreText.OffsetRight = -110;
-		_scoreText.OffsetTop = -116;
-		_scoreText.OffsetBottom = -78;
+		_scoreText.SetAnchorsPreset(LayoutPreset.Center);
+		_scoreText.OffsetLeft = -430;
+		_scoreText.OffsetRight = 430;
+		_scoreText.OffsetTop = -120;
+		_scoreText.OffsetBottom = 30;
+		_scoreText.AutowrapMode = TextServer.AutowrapMode.Word;
 		resultsOverlay.AddChild(_scoreText);
 		_returnButton = new Button { Name = "MissionControl", Text = "RETURN TO MISSION CONTROL", CustomMinimumSize = new Vector2(300, 42) };
 		_returnButton.SetAnchorsPreset(LayoutPreset.BottomRight);
@@ -323,9 +324,17 @@ public partial class Ending : Control, IControllerCommandSink, IControllerContex
 		_resultsOverlay.Visible = true;
 		_skipButton.Hide();
 		_pauseButton.Hide();
-		ResultsMessage = Outcome == MissionEnding.Good
-			? "MISSION COMPLETE — SCORING COMING SOON"
-			: "MISSION FAILED — SCORING COMING SOON";
+		var score = _mission.Scoring;
+		string status = Outcome == MissionEnding.Good
+			? score.Passed ? "MISSION COMPLETE — PASS" : "MISSION COMPLETE — BELOW 80%"
+			: "MISSION FAILED";
+		ResultsMessage = $"{status}\n" +
+			$"OVERALL {score.Overall:0}% (PASS: {MissionScoring.PassingGrade:0}%)\n" +
+			$"TRAINING {score.Training:0}%  LAUNCH {score.Launch:0}%  REPAIRS {score.Repairs:0}%\n" +
+			$"ROVER {score.Rover:0}%  RESOURCES {score.Resources:0}%\n" +
+			$"OXYGEN RETURN RESERVE: {score.FinalOxygenSeconds:0}s / " +
+			$"{_mission.Oxygen.ReturnReserveSeconds:0}s " +
+			(score.HasReturnReserve ? "SECURED" : "FAILED");
 		_scoreText.Text = ResultsMessage;
 		_returnButton.GrabFocus();
 		PublishControllerContext();

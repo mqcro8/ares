@@ -103,8 +103,9 @@ public partial class EndingSequenceTest : Node
 		ending.SkipToResults();
 		await Wait(1.3);
 		await Capture("good-results");
-		Check(ending.IsResultsVisible && ending.ResultsMessage.Contains("SCORING COMING SOON"),
-			"Skip reaches honest results without inventing score values");
+		Check(ending.IsResultsVisible && ending.ResultsMessage.Contains("OVERALL") &&
+			ending.ResultsMessage.Contains("RESOURCES"),
+			"Skip reaches results with weighted score and resource breakdown");
 		Check(ending.GetNode<Label>("ResultsOverlay/Score").Text.Contains("MISSION COMPLETE"),
 			"Good result is presented as mission complete");
 		ending.QueueFree();
