@@ -2,22 +2,17 @@ using Godot;
 
 public partial class Background : Sprite2D
 {
+	private static readonly Vector2 LaunchSocket = new(280, 1814);
 	private float initialY;
 	private float _scrollOffset;
 	[Export] public Texture2D PracticeTexture { get; set; }
-	private Vector2 _launchSocket = new(510, 614);
+	private Vector2 _launchSocket = LaunchSocket;
 	public void Configure(bool practice)
 	{
-		if (practice)
-		{
-			if (PracticeTexture != null)
-				Texture = PracticeTexture;
-			_launchSocket = new Vector2(300, 1340);
-		}
-		else
-		{
-			_launchSocket = new Vector2(510, 614);
-		}
+		if (practice && PracticeTexture != null)
+			Texture = PracticeTexture;
+		_launchSocket = LaunchSocket;
+		ResetScroll();
 		Resize();
 	}
 

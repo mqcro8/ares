@@ -169,12 +169,17 @@ public partial class RocketLaunchTest : Node
         await Load(); await Capture("ready");
         Check(launch.GetNode<Background>("Background").Texture.ResourcePath.EndsWith("launching_background.jpeg"),
             "Launch-site background is used");
+        var launchBackground = launch.GetNode<Background>("Background");
         var launchRocketSprite = launch.GetNode<Sprite2D>("Rocket/Rocket");
         Check(launchRocketSprite.Texture.ResourcePath.EndsWith("rocket_sprite.png") &&
             launchRocketSprite.Texture.GetWidth() == 952 && launchRocketSprite.Texture.GetHeight() == 1599 &&
             Mathf.IsEqualApprox(launchRocketSprite.Scale.X, 0.19275205f) &&
             Mathf.IsEqualApprox(launchRocketSprite.Scale.Y, 0.21775326f),
             "Replacement rocket sprite preserves native resolution and launch-scale alignment");
+        Check(launchRocketSprite.GlobalPosition.Y > 0 &&
+            launchRocketSprite.GlobalPosition.Y < GetViewport().GetVisibleRect().Size.Y &&
+            launchBackground.LaunchGround.Y > 0 && launchBackground.LaunchGround.Y < GetViewport().GetVisibleRect().Size.Y,
+            "Rocket and launch pad begin inside the visible viewport");
         Check(launch.GetNode<Control>("IntroUI/Briefing").Visible && !launch.GetNode<Control>("IntroUI/Panel").Visible,
             "Launch Pad shows a compact ready dialog");
         var launchBriefing = launch.GetNode<PanelContainer>("IntroUI/Briefing");
@@ -351,13 +356,17 @@ public partial class RocketLaunchTest : Node
             "Real launch has no energy penalty and keeps prior practice completion");
         var successFire = launch.GetNode<AnimatedSprite2D>("Rocket/Fire"); successFire.SpeedScale = 0;
         await Capture("success"); successFire.SpeedScale = 1;
+        float backgroundStartY = launch.GetNode<Background>("Background").Position.Y;
         await WaitFor(RocketLaunch.Phase.Ascending);
         float ascentStartY = launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y;
         launch.SetProcess(true);
         await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
+        var backgroundEndY = launch.GetNode<Background>("Background").Position.Y;
         Check(launch.IsInsideTree() && launch.State == RocketLaunch.Phase.Complete &&
             launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y < ascentStartY,
             $"Rocket visibly ascends and remains in scene without auto-return ({launch.State}, {ascentStartY:F2}->{launch.GetNode<Sprite2D>("Rocket/Rocket").GlobalPosition.Y:F2})");
+        Check(backgroundEndY > backgroundStartY,
+            "Launch background scrolls down as rocket climbs");
         launch.QueueFree(); launch = null; await Frames();
 
         mission.BeginLaunchSequence(); mission.Energy = 50;

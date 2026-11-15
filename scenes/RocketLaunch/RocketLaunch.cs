@@ -360,6 +360,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 				ascentProgress = Math.Min(1, ascentProgress + Math.Max(0, delta) / 2.8);
 			float eased = 1 - Mathf.Pow(1 - (float)ascentProgress, 3);
 			ascentOffset = -ascentTravel * eased;
+			background.SetScrollOffset(-ascentOffset);
 			if (ascentProgress >= 1 && State == Phase.Ascending)
 			{
 				State = Phase.Complete;
@@ -521,6 +522,7 @@ public partial class RocketLaunch : Node2D, IControllerCommandSink, IControllerC
 		State = Phase.Ascending;
 		ascentProgress = 0; ascentOffset = 0;
 		ascentTravel = GetViewportRect().Size.Y * .72f;
+		background.ResetScroll();
 		rocket.StartAscending(); Refresh();
 	}
 

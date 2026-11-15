@@ -92,11 +92,14 @@ public partial class TrainingPracticeTest : Node
         for (int i = 0; i < 150 && launch.State != RocketLaunch.Phase.Ascending; i++) await Frames();
         Check(launch.State == RocketLaunch.Phase.Ascending,
             "Simulator success animation starts the ascent");
+        var background = launch.GetNode<Background>("Background");
+        float backgroundStartY = background.Position.Y;
         var rocket = launch.GetNode<Sprite2D>("Rocket/Rocket");
         float ascentStartY = rocket.GlobalPosition.Y;
         for (int i = 0; i < 15; i++) await Frames();
-        Check(launch.State == RocketLaunch.Phase.Ascending && rocket.GlobalPosition.Y < ascentStartY,
-            "Practice rocket visibly rises before returning to the gym");
+        Check(launch.State == RocketLaunch.Phase.Ascending && rocket.GlobalPosition.Y < ascentStartY &&
+            background.Position.Y > backgroundStartY,
+            "Practice rocket rises as the background scrolls before returning to the gym");
         await Capture("launch-practice-ascent");
         for (int i = 0; i < 240 && Scene is RocketLaunch; i++) await Frames();
         Check(Scene is TrainingLab, "Completed practice returns to the lab after ascent");
