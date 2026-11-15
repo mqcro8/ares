@@ -19,10 +19,6 @@
 [ext_resource type="Texture2D" uid="uid://deuurlxftfk12" path="res://art/training/stations/fuse_cabinet.png" id="14_fuse"]
 [ext_resource type="Texture2D" uid="uid://c7ivrocqbfmlp" path="res://art/training/stations/frequency_workbench.png" id="15_frequency"]
 [ext_resource type="Texture2D" uid="uid://begn8rj0pamf1" path="res://art/training/stations/hull_repair_workbench.png" id="16_hull"]
-[ext_resource type="Texture2D" uid="uid://4sk40dtnsrrq" path="res://art/training/equipment/casillero_cerrado.png" id="17_locker"]
-[ext_resource type="Texture2D" uid="uid://ccb5h6hp2e20p" path="res://art/training/equipment/casillero_abierto.png" id="18_locker_open"]
-[ext_resource type="Script" uid="uid://b87ve2noy0ntc" path="res://scripts/training/EquipmentLocker.cs" id="19_locker_script"]
-[ext_resource type="Resource" uid="uid://ct7ihndubc4ww" path="res://data/equipment/items/maintenance_kit.tres" id="20_kit"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MissionMonitor.tscn" id="21_monitor"]
 [ext_resource type="Script" uid="uid://nse3jdelmdk8" path="res://scripts/systems/inventory/Hotbar.cs" id="22_hotbar"]
 [ext_resource type="PackedScene" uid="uid://b6cu1c4qklpis" path="res://scripts/hotbar_scene.tscn" id="23_slot"]
@@ -220,9 +216,9 @@ shape = SubResource("StationShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="Annex/WiringRoom" unique_id=1070635889]
 offset_left = -50.0
-offset_top = -30.0
+offset_top = -50.0
 offset_right = 36.0
-offset_bottom = 35.0
+offset_bottom = 23.0
 mouse_filter = 2
 
 [node name="FuseRoom" type="Node2D" parent="Annex" unique_id=302923613]
@@ -248,9 +244,9 @@ texture = ExtResource("14_fuse")
 shape = SubResource("StationShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="Annex/FuseRoom" unique_id=456612633]
-offset_left = -48.0
+offset_left = -34.0
 offset_top = -54.0
-offset_right = 48.0
+offset_right = 34.0
 offset_bottom = 18.0
 mouse_filter = 2
 
@@ -282,7 +278,7 @@ offset_bottom = 72.0
 mouse_filter = 2
 
 [node name="HullRoom" type="Node2D" parent="Annex" unique_id=1025876997]
-position = Vector2(1330, 630)
+position = Vector2(1329, 612)
 
 [node name="Label" type="Label" parent="Annex/HullRoom" unique_id=1599651120]
 offset_left = -154.0
@@ -298,14 +294,17 @@ scale = Vector2(1.21875, 1.3125004)
 texture = ExtResource("16_hull")
 
 [node name="Base" type="StaticBody2D" parent="Annex/HullRoom" unique_id=1429257942]
+position = Vector2(-7, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Annex/HullRoom/Base" unique_id=211636679]
+position = Vector2(1, 20)
 shape = SubResource("StationShape")
 
 [node name="FrontZone" type="ReferenceRect" parent="Annex/HullRoom" unique_id=547129712]
-offset_left = -48.0
-offset_right = 48.0
-offset_bottom = 72.0
+offset_left = -40.0
+offset_top = 14.0
+offset_right = 28.0
+offset_bottom = 66.0
 mouse_filter = 2
 
 [node name="Perimeter" type="StaticBody2D" parent="." unique_id=1493540423]
