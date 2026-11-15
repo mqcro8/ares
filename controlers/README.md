@@ -5,43 +5,42 @@ or enable a phone from **Options → Controls & controller**. The toggle, room c
 join link and QR code all live on that screen, and the choice is remembered in
 `user://controller.cfg`.
 
-## One server for the page and the relay
+## Vercel hosting
 
-`controlers/server.js` serves the controller page, the art it needs, and the
-WebSocket relay from the same port. One tunnel is enough:
+The controller page deploys as static files. The WebSocket relay runs as a
+Vercel Function, and Redis shares room presence and context across function
+instances.
 
 ```powershell
-cd controlers
 npm install
-npm start          # http://localhost:8000
-ngrok http 8000    # copy the https URL it prints
+npm run build
+npx vercel
 ```
 
-`PORT` and `HOST` environment variables change the listen address if 8000 is taken.
+Create a Redis database that accepts standard Redis connections. Add its
+`redis://` or `rediss://` URL as `REDIS_URL` in Vercel project settings. Deploy
+from the repository root and enable Fluid Compute. The game defaults to
+`https://ares-seven-fawn.vercel.app`; change the address in **Relay address** if
+you use a different domain.
 
 In the game:
 
 1. Open **Options → Controls & controller**.
 2. Turn on **Phone controller**.
-3. Paste the ngrok address into **Relay address** (`https://...` is accepted and
-   converted to `wss://...`) and press **Apply**.
+3. Paste the Vercel site address into **Relay address** and press **Apply**.
 4. Scan the QR code with the phone, or open the join link manually.
 5. The status changes to **Phone linked** when the game and phone share a room.
 
-The page derives its WebSocket URL from its own origin, so the QR join link and
-the relay always use the same tunnel. `?relay=wss://host` is still supported for
-split hosting.
+HTTPS site addresses are converted to the `/api/relay` WebSocket endpoint. The
+QR link uses the site root. `?relay=wss://host/path` remains supported for split
+hosting.
 
-For a local network without ngrok, use `ws://<your-lan-ip>:8000`. The field pad
-works, but the rover-wheel mode needs HTTPS because browsers only expose motion
-sensors on secure origins.
-
-ngrok's free tier shows an interstitial page the first time a browser opens the
-tunnel; tap through it and the page reconnects on its own.
+For local development, run `npm start` in `controlers` and set the game relay to
+`ws://<your-lan-ip>:8000`. Rover-wheel motion sensors need HTTPS in the browser.
 
 ## Pages
 
-The join link is `https://your-site/?room=ABCDE`. Without `?room=` the page shows
+The join link is `https://your-project.vercel.app/?room=ABCDE`. Without `?room=` the page shows
 an error, so add one when previewing.
 
 - `#pad` has the joystick, JUMP, an E button and slots 1–5.
@@ -162,9 +161,9 @@ Configuration precedence:
 3. `user://controller.cfg`
 4. `ares_controller/relay_url`, `ares_controller/enabled` in `project.godot`
 
-`https://` and `http://` inputs are normalized to `wss://` and `ws://`. The QR
-code is generated in-game with `Net.Codecrete.QrCodeGenerator`; no extra endpoint
-or network request is needed.
+HTTPS site addresses use the secure `/api/relay` endpoint; local HTTP addresses
+remain `ws://`. The QR code is generated in-game with
+`Net.Codecrete.QrCodeGenerator`; no extra network request is needed.
 
 ## Tests
 

@@ -129,7 +129,9 @@ ares/
 │   ├── music/                    menu_test_music.mp3, rover_scene_ambient_wind.mp3
 │   └── sfx/                      rover_collision.wav, rover_explode.wav,
 │                                 rover_moving.mp3, rover_victory.wav
-├── controlers/                   phone controller page + Node relay (`npm start`)
+├── controlers/                   phone controller page + local Node relay
+├── api/relay.js                   Vercel WebSocket relay (Redis-backed)
+├── scripts/build-controller.js   publishes only the controller page and required art
 └── hardware/                     optional Arduino firmware, .gdignore + README.md
 ```
 
