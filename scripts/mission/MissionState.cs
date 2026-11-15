@@ -10,7 +10,7 @@ using ares.scripts.systems.items;
 // Every scene reads and writes here; nothing is duplicated locally.
 public partial class MissionState : Node
 {
-	public const int OxygenTankCargoCost = 1;
+	public const int OxygenTankCargoCost = ToolEffects.OxygenTankCargoCost;
 	public static MissionState Instance { get; private set; }
 
 	public const int DoorAccessCount = 4;
@@ -19,7 +19,7 @@ public partial class MissionState : Node
 	public double MissionTime { get; set; }
 	public Inventory PlayerInventory { get; private set; }
 	public Inventory LockerInventory { get; private set; }
-	public int CargoCapacity { get; set; } = 6;
+	public int CargoCapacity { get; set; } = ToolEffects.CargoCapacity;
 	public const float MaxStamina = 100f;
 	public const float StaminaRestDelay = 1f;
 	public const float StaminaRecoveryPerSecond = 25f;
@@ -168,12 +168,22 @@ public partial class MissionState : Node
 		if (created) PlayerInventory = new Inventory { Size = size };
 		return PlayerInventory;
 	}
-	public Inventory GetOrCreateLocker(int size, ItemData starterItem)
+	public bool HasEquipped(string itemId)
+	{
+		if (string.IsNullOrEmpty(itemId) || PlayerInventory == null) return false;
+		for (int i = 0; i < PlayerInventory.SlotCount; i++)
+			if (PlayerInventory.GetStack(i)?.Item.Id == itemId) return true;
+		return false;
+	}
+	public Inventory GetOrCreateLocker(int size, ItemData starterItem, ItemData[] extraItems = null)
 	{
 		if (LockerInventory == null)
 		{
 			LockerInventory = new Inventory { Size = size };
 			if (starterItem != null) LockerInventory.AddItem(starterItem);
+			if (extraItems != null)
+				foreach (ItemData item in extraItems)
+					if (item != null) LockerInventory.AddItem(item);
 		}
 		return LockerInventory;
 	}
@@ -181,7 +191,7 @@ public partial class MissionState : Node
 	{
 		PlayerInventory = null;
 		LockerInventory = null;
-		CargoCapacity = 6;
+		CargoCapacity = ToolEffects.CargoCapacity;
 		LoadoutConfirmed = false;
 		Oxygen.Reset();
 	}
@@ -241,6 +251,7 @@ public partial class MissionState : Node
 		Outcome.BeginRun(LaunchSequence);
 		RoverStageCompleted = false;
 		ResetPuzzleProgress();
+		RoverImpacts = RoverCollisions = 0;
 		TrainingCourseComplete = TrainingWiresComplete = TrainingFusesComplete = false;
 		TrainingFrequencyComplete = TrainingHullRepairComplete = TrainingLaunchPracticeComplete = false;
 		TrainingCompletionPending = TrainingCompletionShown = false;

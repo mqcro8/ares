@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 Id = "maintenance_kit"
 DisplayName = "Maintenance Kit"
 Icon = ExtResource("1_icon")
+HotbarLabel = "KIT"
 MaxStackSize = 1
 CargoCost = 3
 Capabilities = 1

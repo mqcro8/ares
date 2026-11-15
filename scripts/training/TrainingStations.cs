@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ares.scripts.systems.items;
+using ares.scripts.mission;
 
 /// <summary>Room-local front zones and nearest usable, release-gated interaction.</summary>
 public partial class TrainingStations : Node
@@ -30,12 +31,26 @@ public partial class TrainingStations : Node
     private Target _near;
     public static string Instructions(PracticeSession.Exercise exercise) => exercise switch
     {
-        PracticeSession.Exercise.Wires => "Drag each cable to the terminal with the matching color. Keyboard: 1–4, Up/Down, Enter.",
-        PracticeSession.Exercise.Fuses => "Turn all six switches ON within four presses. DOUBLE toggles the linked pair too.",
+        PracticeSession.Exercise.Wires => WireInstructions(),
+        PracticeSession.Exercise.Fuses => FuseInstructions(),
         PracticeSession.Exercise.Frequency => "Select amplitude, frequency or phase with 1/2/3. Hold Left/Right to match the target wave; Shift adjusts slowly.",
         PracticeSession.Exercise.HullRepair => "Place each plate over its matching hole, then weld along each seam without overheating.",
         _ => "Complete the repair task."
     };
+
+    private static string WireInstructions()
+    {
+        bool equipped = MissionState.Instance?.HasEquipped(ToolEffects.WirePliers) == true;
+        return equipped
+            ? $"{ToolEffects.WirePreconnectedCount} of {ToolEffects.WireConnectionCount} cables is already connected. Connect the remaining {ToolEffects.WireConnectionsFor(true)}. Keyboard: 1–4, Up/Down, Enter."
+            : $"Connect all {ToolEffects.WireConnectionCount} cables to matching colors. Keyboard: 1–4, Up/Down, Enter.";
+    }
+
+    private static string FuseInstructions()
+    {
+        bool equipped = MissionState.Instance?.HasEquipped(ToolEffects.SpareFuses) == true;
+        return $"Turn all six switches ON within {ToolEffects.FusePressesFor(equipped)} presses. DOUBLE toggles the linked pair too.";
+    }
     public string MonitorPrompt { get; private set; } = "";
     public string ContextPrompt { get; private set; } = "";
     public Vector2 ContextPosition { get; private set; }
