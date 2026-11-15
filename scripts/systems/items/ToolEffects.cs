@@ -112,8 +112,8 @@ public static class ToolEffects
 
 	public static string Describe(string id) => id switch
 	{
-		MaintenanceKit => "Acceso a las cuatro prácticas de reparación. Desventaja: ocupa carga.",
-		OxygenTank => $"Reserva: {Number(OxygenBaseSecondsPerTank)} s por tanque. Desventaja: ocupa carga.",
+		MaintenanceKit => "Acceso a las cuatro prácticas de reparación. Desventaja: ocupa cargo.",
+		OxygenTank => $"Reserva: {Number(OxygenBaseSecondsPerTank)} s por tanque. Desventaja: ocupa cargo.",
 		SpareFuses or FrequencyAnalyzer or PrecisionWelder or WirePliers or RoverBumper or RoverServos or OxygenRegulator =>
 			$"{BenefitText(id)}. Desventaja: {DrawbackText(id)}.",
 		_ => "Sin efecto de herramienta registrado."

@@ -88,9 +88,9 @@ public partial class EquipmentPanel : CanvasLayer
 		_kitButton = new Button { Name = "KitButton", Text = "TOMAR", CustomMinimumSize = new Vector2(84, 26) };
 		_kitButton.Pressed += ToggleKit;
 		kitRow.AddChild(_kitButton);
-		column.AddChild(MakeLabel($"KIT: {Locker?.StarterKit?.CargoCost ?? 0} CARGA", new Color(0.65f, 0.77f, 0.82f), 7));
+		column.AddChild(MakeLabel($"KIT: {Locker?.StarterKit?.CargoCost ?? 0} CARGO", new Color(0.65f, 0.77f, 0.82f), 7));
 
-		column.AddChild(MakeLabel($"TANQUES DE OXÍGENO ({MissionState.OxygenTankCargoCost} CARGA C/U)", new Color(0.75f, 0.82f, 0.86f), 8));
+		column.AddChild(MakeLabel($"TANQUES DE OXÍGENO ({MissionState.OxygenTankCargoCost} CARGO C/U)", new Color(0.75f, 0.82f, 0.86f), 8));
 		var tankRow = new HBoxContainer { Name = "TankRow" };
 		tankRow.AddThemeConstantOverride("separation", 8);
 		column.AddChild(tankRow);
@@ -145,9 +145,17 @@ public partial class EquipmentPanel : CanvasLayer
 			name.ClipText = false;
 			name.TooltipText = tool.DisplayName;
 			identity.AddChild(name);
-			identity.AddChild(MakeLabel($"{tool.CargoCost} CARGA", new Color(0.65f, 0.77f, 0.82f), 6));
+			identity.AddChild(MakeLabel($"{tool.CargoCost} CARGO", new Color(0.65f, 0.77f, 0.82f), 6));
 			row.AddChild(identity);
-			var button = new Button { Name = tool.Id + "Button", Text = "TOMAR", CustomMinimumSize = new Vector2(56, 24) };
+			var button = new Button
+			{
+				Name = tool.Id + "Button",
+				Text = "TOMAR",
+				CustomMinimumSize = new Vector2(44, 18),
+				SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+				SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+			};
+			button.AddThemeFontSizeOverride("font_size", 7);
 			Action handler = () => ToggleTool(tool);
 			button.Pressed += handler;
 			row.AddChild(button);
@@ -177,9 +185,9 @@ public partial class EquipmentPanel : CanvasLayer
 			drawbackRow.AddThemeConstantOverride("separation", 4);
 			drawbackRow.AddChild(MakeLabel("COSTE", new Color("ffb24a"), 5));
 			var cargoMeter = MakeMeter(tool.CargoCost / (float)ToolEffects.MaximumToolCargoCost, new Color("e79a35"));
-			cargoMeter.TooltipText = $"{tool.CargoCost} de {ToolEffects.MaximumToolCargoCost} cargas máximas por herramienta.";
+			cargoMeter.TooltipText = $"{tool.CargoCost} de {ToolEffects.MaximumToolCargoCost} unidades máximas de cargo.";
 			drawbackRow.AddChild(cargoMeter);
-			var drawback = MakeLabel($"{tool.CargoCost}/{ToolEffects.MaximumToolCargoCost} CARGA · {ToolEffects.DrawbackText(tool.Id)}",
+			var drawback = MakeLabel($"{tool.CargoCost}/{ToolEffects.MaximumToolCargoCost} CARGO · {ToolEffects.DrawbackText(tool.Id)}",
 				new Color(1f, 0.78f, 0.52f), 5);
 			drawback.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			drawback.ClipText = false;
@@ -314,8 +322,8 @@ public partial class EquipmentPanel : CanvasLayer
 
 		_tankCount.Text = $"{mission.OxygenTankCount} / {OxygenSupply.MaxTanks} TANQUES";
 		var capacity = TimeSpan.FromSeconds(mission.Oxygen.CapacitySeconds);
-		_tankCapacity.Text = $"RESERVA {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({mission.OxygenCargoUsed} CARGA)";
-		_cargoStatus.Text = $"CARGA {mission.CargoUsed}/{mission.CargoCapacity}";
+		_tankCapacity.Text = $"RESERVA {capacity.Minutes:D2}:{capacity.Seconds:D2}  ({mission.OxygenCargoUsed} CARGO)";
+		_cargoStatus.Text = $"CARGO {mission.CargoUsed}/{mission.CargoCapacity}";
 		_oxygenWarning.Visible = mission.OxygenTankCount == 0;
 		foreach (var (tool, button, _) in _tools)
 		{
