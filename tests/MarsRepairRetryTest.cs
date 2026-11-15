@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ares.scripts.dialogue;
 using ares.scripts.mars;
@@ -123,12 +124,22 @@ public partial class MarsRepairRetryTest : Node
 		Check(AudioManager.TryGetSfx(SoundIds.RoverWindSfx, out SoundDef windDef) &&
 			windDef.Loop && windDef.Stream != null,
 			"The ambient wind sound is a configured looping SFX");
+		CheckRandomFootsteps(SoundIds.FootstepsPlanet, "soil");
+		CheckRandomFootsteps(SoundIds.FootstepsMetal, "metal");
 		foreach (string id in new[]
 		{
-			SoundIds.Enter, SoundIds.FootstepsPlanet, SoundIds.FootstepsMetal,
-			SoundIds.OpenDoor, SoundIds.RoverPowerUp, SoundIds.SystemMalfunction,
+			SoundIds.Enter, SoundIds.OpenDoor, SoundIds.RoverPowerUp, SoundIds.SystemMalfunction,
 		})
 			Check(AudioManager.TryGetSfx(id, out _), $"Mars sound id resolves: {id}");
+	}
+
+	private void CheckRandomFootsteps(string id, string surface)
+	{
+		Check(AudioManager.TryGetSfx(id, out SoundDef def) &&
+			def.Stream is AudioStreamRandomizer randomizer &&
+			randomizer.StreamsCount == 4 &&
+			Enumerable.Range(0, 4).All(i => randomizer.GetStream(i) != null),
+			$"{surface} footsteps choose randomly from four per-step sounds");
 	}
 
 	private async Task TestNoToolRetryForEachStation()

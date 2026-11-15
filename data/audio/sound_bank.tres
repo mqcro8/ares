@@ -16,12 +16,18 @@
 [ext_resource type="AudioStream" uid="uid://c2yhmev8navt4" path="res://audio/sfx/rover_power_up.wav" id="10_ar03j"]
 [ext_resource type="AudioStream" uid="uid://q62yvd7wp44k" path="res://audio/sfx/open_door.mp3" id="11_7hx3i"]
 [ext_resource type="AudioStream" path="res://audio/sfx/enter_sfx.wav" id="12_enter"]
-[ext_resource type="AudioStream" path="res://audio/sfx/Pasos planeta.wav" id="13_planet_steps"]
-[ext_resource type="AudioStream" path="res://audio/sfx/Pasos metal.wav" id="14_metal_steps"]
 [ext_resource type="AudioStream" path="res://audio/sfx/Soplete.wav" id="15_welding"]
 [ext_resource type="AudioStream" path="res://audio/sfx/Cohete despegue_vuelo .wav" id="16_takeoff"]
 [ext_resource type="AudioStream" path="res://audio/sfx/Cohete aterriza .wav" id="17_landing"]
 [ext_resource type="AudioStream" path="res://audio/sfx/system-malfunction-sound-effects.wav" id="18_malfunction"]
+[ext_resource type="AudioStream" path="res://audio/sfx/soil-step1.mp3" id="19_soil1"]
+[ext_resource type="AudioStream" path="res://audio/sfx/soil-step2.mp3" id="20_soil2"]
+[ext_resource type="AudioStream" path="res://audio/sfx/soil-step3.mp3" id="21_soil3"]
+[ext_resource type="AudioStream" path="res://audio/sfx/soil-step4.mp3" id="22_soil4"]
+[ext_resource type="AudioStream" path="res://audio/sfx/metal-step1.mp3" id="23_metal1"]
+[ext_resource type="AudioStream" path="res://audio/sfx/metal-step2.mp3" id="24_metal2"]
+[ext_resource type="AudioStream" path="res://audio/sfx/metal-step3.mp3" id="25_metal3"]
+[ext_resource type="AudioStream" path="res://audio/sfx/metal-step4.mp3" id="26_metal4"]
 
 [sub_resource type="Resource" id="SoundDef_menu"]
 script = ExtResource("2_def")
@@ -115,17 +121,35 @@ Id = "enter"
 Stream = ExtResource("12_enter")
 VolumeDb = -5.0
 
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_soil_steps"]
+playback_mode = 1
+random_pitch = 0.0
+streams_count = 4
+stream_0/stream = ExtResource("19_soil1")
+stream_1/stream = ExtResource("20_soil2")
+stream_2/stream = ExtResource("21_soil3")
+stream_3/stream = ExtResource("22_soil4")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_metal_steps"]
+playback_mode = 1
+random_pitch = 0.0
+streams_count = 4
+stream_0/stream = ExtResource("23_metal1")
+stream_1/stream = ExtResource("24_metal2")
+stream_2/stream = ExtResource("25_metal3")
+stream_3/stream = ExtResource("26_metal4")
+
 [sub_resource type="Resource" id="SoundDef_planet_steps"]
 script = ExtResource("2_def")
 Id = "footsteps_planet"
-Stream = ExtResource("13_planet_steps")
+Stream = SubResource("AudioStreamRandomizer_soil_steps")
 VolumeDb = -8.0
 PitchVariation = 0.08
 
 [sub_resource type="Resource" id="SoundDef_metal_steps"]
 script = ExtResource("2_def")
 Id = "footsteps_metal"
-Stream = ExtResource("14_metal_steps")
+Stream = SubResource("AudioStreamRandomizer_metal_steps")
 VolumeDb = -8.0
 PitchVariation = 0.08
 
