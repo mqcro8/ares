@@ -2,7 +2,7 @@
 
 ## Nasa Space Apps Challenge 2026
 
-We will (probably) participate in the Space Mission Design Game challenge.
+We are participating in the Space Mission Design Game challenge.
 
 Built with **Godot 4.7 (.NET)** and **C# (`net8.0`)**.
 
